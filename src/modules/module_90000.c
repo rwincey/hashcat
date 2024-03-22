@@ -19,7 +19,8 @@ static const u32   DGST_SIZE      = DGST_SIZE_4_4;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_CHECKSUM;
 static const char *HASH_NAME      = "MurmurHash64A";
 static const u64   KERN_TYPE      = 90000;
-static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE;
+static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
+                                  | OPTI_TYPE_USES_BITS_64;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
                                   | OPTS_TYPE_SUGGEST_KG;
@@ -83,11 +84,13 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   // digest
 
   const u8 *hash_pos = token.buf[0];
-
+  
   digest[0] = hex_to_u32 (hash_pos +  0);
   digest[1] = hex_to_u32 (hash_pos +  8);
   digest[2] = 0;
   digest[3] = 0;
+  //printf ("digest[0] = %08x\n", digest[0]);
+  //printf ("digest[1] = %08x\n", digest[1]);
 
   digest[0] = byte_swap_32 (digest[0]);
   digest[1] = byte_swap_32 (digest[1]);

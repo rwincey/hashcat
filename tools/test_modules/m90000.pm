@@ -7,6 +7,7 @@
 
 use strict;
 use warnings;
+use Math::BigInt;
 
 sub module_constraints { [[0, 256], [8, 8], [0, 63], [8, 8], [-1, -1]] }
 
@@ -15,7 +16,10 @@ sub wrapping_mul
   my $a = shift;
   my $b = shift;
 
-  return ($a * $b) % 2**64;
+  # 2**64
+  my $width = Math::BigInt->new("0x10000000000000000");
+
+  return ($a * $b)->bmod($width);
 }
 
 sub murmurhash64a
@@ -29,7 +33,8 @@ sub murmurhash64a
   # 'm' and 'r' are mixing constants generated offline.
   # They're not really 'magic', they just happen to work well.
 
-  my $m = 0xc6a4a7935bd1e995;
+  my $m = Math::BigInt->new("0xc6a4a7935bd1e995");
+  #my $m = 0xc6a4a7935bd1e995;
   my $r = 47;
 
   my @chars = unpack ("C*", $word);
@@ -37,7 +42,7 @@ sub murmurhash64a
 
   my $hash = $seed ^ wrapping_mul ($len, $m);
 
-  my $endpos = $len - ($len & 7)
+  my $endpos = $len - ($len & 7);
   my $i;
 
   for ($i = 0; $i < $endpos; $i += 8)
@@ -116,9 +121,13 @@ sub module_generate_hash
   my $word = shift;
   my $salt = shift;
 
-  my $salt_bin = pack ("H*", $salt);
+  #say ("%s", $word);
+  #say ("%0x", $salt);
 
-  my $seed = unpack ("I>", pack ("H*", $salt_bin));
+  #my $salt_bin = pack ("H*", $salt);
+
+  #my $seed = unpack ("I>", pack ("H*", $salt_bin));
+  my $seed = $salt;
 
   my $digest = murmurhash64a ($word, $seed);
 
@@ -132,21 +141,22 @@ sub module_verify_hash
 {
   my $line = shift;
 
-  my ($hash, $seed, $word) = split (':', $line);
+  my ($hash, $seed, $word) = split (':', $line, 3);
 
   return unless defined $hash;
   return unless defined $seed;
   return unless defined $word;
 
   return unless length $hash == 16;
-  return unless length $salt == 8;
+  return unless length $seed == 8;
 
-  return unless ($hash =~ m/^[0-9a-fA-F]{8}$/);
+  return unless ($hash =~ m/^[0-9a-fA-F]{16}$/);
   return unless ($seed =~ m/^[0-9a-fA-F]{8}$/);
 
   my $word_packed = pack_if_HEX_notation ($word);
+  my $seed_packed = pack_if_HEX_notation ($seed);
 
-  my $new_hash = module_generate_hash ($word_packed, $seed);
+  my $new_hash = module_generate_hash ($word_packed, $seed_packed);
 
   return ($new_hash, $word);
 }

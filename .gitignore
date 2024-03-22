@@ -25,3 +25,5 @@ obj/*.a
 include/CL
 tools/luks_tests
 src/Makefile
+.vscode/
+tools/.venv/

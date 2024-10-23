@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Math::BigInt;
 
-sub module_constraints { [[0, 256], [8, 8], [0, 63], [8, 8], [-1, -1]] }
+sub module_constraints { [[-1, -1], [16, 16], [0, 63], [16, 16], [-1, -1]] }
 
 sub wrapping_mul
 {
@@ -130,7 +130,7 @@ sub module_generate_hash
   $digest = unpack ("H*", pack ("Q>", $digest));
 
   my $hash = sprintf ("%s:%016x", $digest, $seed);
-  
+
   return $hash;
 }
 

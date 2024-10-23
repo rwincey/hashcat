@@ -121,19 +121,16 @@ sub module_generate_hash
   my $word = shift;
   my $salt = shift;
 
-  #say ("%s", $word);
-  #say ("%0x", $salt);
+  my $salt_bin = pack ("H*", $salt);
 
-  #my $salt_bin = pack ("H*", $salt);
-
-  #my $seed = unpack ("I>", pack ("H*", $salt_bin));
-  my $seed = $salt;
+  my $seed = unpack ("Q>", $salt_bin);
 
   my $digest = murmurhash64a ($word, $seed);
 
   $digest = unpack ("H*", pack ("Q>", $digest));
 
-  my $hash = sprintf ("%s:%s", $digest, $seed);
+  my $hash = sprintf ("%s:%016x", $digest, $seed);
+  
   return $hash;
 }
 
@@ -148,10 +145,10 @@ sub module_verify_hash
   return unless defined $word;
 
   return unless length $hash == 16;
-  return unless length $seed == 8;
+  return unless length $seed == 16;
 
   return unless ($hash =~ m/^[0-9a-fA-F]{16}$/);
-  return unless ($seed =~ m/^[0-9a-fA-F]{8}$/);
+  return unless ($seed =~ m/^[0-9a-fA-F]{16}$/);
 
   my $word_packed = pack_if_HEX_notation ($word);
   my $seed_packed = pack_if_HEX_notation ($seed);

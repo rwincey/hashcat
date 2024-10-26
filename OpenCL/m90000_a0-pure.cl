@@ -41,16 +41,61 @@ DECLSPEC u64 MurmurHash64A_round (PRIVATE_AS const u8 *data, u64 hash, const u32
   return hash;
 }
 
+DECLSPEC u64 MurmurHash64A_final (PRIVATE_AS const u8 *data, u64 hash, const u32 cur_pos, const u32 len) {
+  #define M 0xc6a4a7935bd1e995
+  #define R 47
+
+  const u32 overflow = len & 7;
+
+  if (overflow == 7)
+  {
+    hash ^= ((u64) data[cur_pos + 6] << 48);
+  }
+  if (overflow >= 6)
+  {
+    hash ^= ((u64) data[cur_pos + 5] << 40);
+  }
+  if (overflow >= 5)
+  {
+    hash ^= ((u64) data[cur_pos + 4] << 32);
+  }
+  if (overflow >= 4)
+  {
+    hash ^= ((u64) data[cur_pos + 3] << 24);
+  }
+  if (overflow >= 3)
+  {
+    hash ^= ((u64) data[cur_pos + 2] << 16);
+  }
+  if (overflow >= 2)
+  {
+    hash ^= ((u64) data[cur_pos + 1] << 8);
+  }
+  if (overflow >= 1)
+  {
+    hash ^= ((u64) data[cur_pos]);
+  }
+  if (overflow > 0)
+  {
+    hash *= M;
+  }
+
+  hash ^= hash >> R;
+  hash *= M;
+  hash ^= hash >> R;
+
+  #undef M
+  #undef R
+
+  return hash;
+}
+
 DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
-  //const char* tmp = (const char*) data;
-  //printf ("%.*s\n", (int) len, tmp);
-
-  //printf ("data = %x\n", data);
-
+  //Initialize hash
   u64 hash = seed ^ (len * M);
 
   const u64 INITIAL = hash;
@@ -69,82 +114,16 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
 
     i += 8;
   }
-  /*
-  
-  if (endpos >= 8)
-  {
-    for (i = 0; i < endpos; i += 8)
-    {
-      u64 k = data2[i]
-        | data2[i + 1] << 8
-        | data2[i + 2] << 16
-        | data2[i + 3] << 24
-        | data2[i + 4] << 32
-        | data2[i + 5] << 40
-        | data2[i + 6] << 48
-        | data2[i + 7] << 56;
-
-      k *= M;
-      k ^= k >> R;
-      k *= M;
-
-      hash ^= k;
-      hash *= M;
-    }
-  }
-  */
-
-  
 
   // Overflow
 
-  const u64 BEFORE_OVERFLOW = hash;
+  const u64 BEFORE_FINAL = hash;
 
-  const u32 overflow = len & 7;
+  hash = MurmurHash64A_final (data2, hash, i, len);
 
-  if (overflow == 7)
-  {
-    hash ^= ((u64) data2[i + 6] << 48);
-    //const u64 AFTER_OVERFLOW_7 = hash;
-  }
-  if (overflow >= 6)
-  {
-    hash ^= ((u64) data2[i + 5] << 40);
-  }
-  if (overflow >= 5)
-  {
-    hash ^= ((u64) data2[i + 4] << 32);
-  }
-  if (overflow >= 4)
-  {
-    hash ^= ((u64) data2[i + 3] << 24);
-  }
-  if (overflow >= 3)
-  {
-    hash ^= ((u64) data2[i + 2] << 16);
-  }
-  if (overflow >= 2)
-  {
-    hash ^= ((u64) data2[i + 1] << 8);
-  }
-  if (overflow >= 1)
-  {
-    hash ^= ((u64) data2[i]);
-  }
-  if (overflow > 0)
-  {
-    hash *= M;
-  }
+  const u64 AFTER_FINAL = hash;
 
-  const u64 AFTER_OVERFLOW = hash;
-
-  hash ^= hash >> R;
-  hash *= M;
-  hash ^= hash >> R;
-
-
-
-  //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4OVERFLOW: %016lx overflow: %d AFTER_OVERFLOW: %016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_OVERFLOW, overflow, AFTER_OVERFLOW);
+  //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4FINAL: %016lx overflow: %d AFTER_FINAL: %016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_FINAL, overflow, AFTER_FINAL);
   //printf("data2 = %.2s, len = %d\n", data2[0], len);
 
   #undef M

@@ -15,18 +15,18 @@ static const u32   DGST_POS0      = 0;
 static const u32   DGST_POS1      = 1;
 static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
-static const u32   DGST_SIZE      = DGST_SIZE_4_4;
+static const u32   DGST_SIZE      = DGST_SIZE_8_2;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_CHECKSUM;
 static const char *HASH_NAME      = "MurmurHash64A";
 static const u64   KERN_TYPE      = 90000;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_USES_BITS_64;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
-                                  | OPTS_TYPE_PT_GENERATE_LE
+                                  | OPTS_TYPE_ST_HEX
                                   | OPTS_TYPE_SUGGEST_KG;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
 static const char *ST_PASS        = "hashcat";
-static const char *ST_HASH        = "73f8142b4326d36a:00000000";
+static const char *ST_HASH        = "ef3014941bf1102d:837163b2348dfae1";
 
 u32         module_attack_exec    (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ATTACK_EXEC;     }
 u32         module_dgst_pos0      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS0;       }
@@ -45,21 +45,21 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 
 u32 module_salt_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
-  const u32 salt_max = 4;
+  const u32 salt_max = 8;
 
   return salt_max;
 }
 
 u32 module_salt_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
-  const u32 salt_min = 4;
+  const u32 salt_min = 8;
 
   return salt_min;
 }
 
 int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED void *digest_buf, MAYBE_UNUSED salt_t *salt, MAYBE_UNUSED void *esalt_buf, MAYBE_UNUSED void *hook_salt_buf, MAYBE_UNUSED hashinfo_t *hash_info, const char *line_buf, MAYBE_UNUSED const int line_len)
 {
-  u32 *digest = (u32 *) digest_buf;
+  u64 *digest = (u64 *) digest_buf;
 
   hc_token_t token;
 
@@ -73,7 +73,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[1]     = hashconfig->separator;
-  token.len[1]     = 8;
+  token.len[1]     = 16;
   token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
@@ -84,38 +84,96 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   // digest
 
   const u8 *hash_pos = token.buf[0];
-  
-  digest[0] = hex_to_u32 (hash_pos +  0);
-  digest[1] = hex_to_u32 (hash_pos +  8);
-  digest[2] = 0;
-  digest[3] = 0;
-  //printf ("digest[0] = %08x\n", digest[0]);
-  //printf ("digest[1] = %08x\n", digest[1]);
+  // we have 16 chars (hash hex string, big endian)
+  /*
+  printf("hash_pos = ");
+  for (size_t i = 0; i < 16; ++i) {
+    printf("%c", hash_pos[i]);
+  }
+  printf("\n");
+  */
 
-  digest[0] = byte_swap_32 (digest[0]);
-  digest[1] = byte_swap_32 (digest[1]);
+  digest[0] = ((hex_to_u64 (&hash_pos[0])));
+
+  digest[0] = byte_swap_64 (digest[0]);
+
+  // now `digest` contains a proper little endian u64
+  /*
+  u8 *temp_ref = (u8*) &digest[0];
+  printf("digest[0] = ");
+  for (size_t i = 0; i < 8; ++i) {
+    printf("%02x", temp_ref[i]);
+  }
+  printf("\n");
+  */
 
   // seed
 
   const u8 *salt_pos = token.buf[1];
-  const int salt_len = token.len[1];
+  // const int salt_len = token.len[1];
 
-  salt->salt_buf[0] = hex_to_u32 (&salt_pos[0]);
+  // `salt_pos` is an array of 16 chars (salt hex string, big endian)
+  /*
+  printf("salt_pos = ");
+  for (size_t i = 0; i < 16; ++i) {
+    printf("%c", salt_pos[i]);
+  }
+  printf("\n");
+  */
 
-  salt->salt_buf[0] = byte_swap_32 (salt->salt_buf[0]);
+  u64 temp_salt = hex_to_u64 (&salt_pos[0]); // convert hex to u64
+  temp_salt = byte_swap_64 (temp_salt); // byte swap
 
-  salt->salt_len = salt_len / 2; // 4
+  salt->salt_buf[0] = (u32) (temp_salt & 0xffffffff); // lo 32 bits
+  salt->salt_buf[1] = (u32) (temp_salt >> 32); // hi 32 bits
+
+  salt->salt_len = 8;
+  // now salt->salt_buf[0] has the first half of a u64
+  // and salt->salt_buf[1] has the other half
+
+  /*
+  u8 *temp_ref = (u8*) salt->salt_buf;
+  printf("salt->salt_buf[0] = ");
+  for (size_t i = 0; i < 8; ++i) {
+    printf("%02x", temp_ref[i]);
+  }
+  printf("\n");
+  */
 
   return (PARSER_OK);
 }
 
 int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const void *digest_buf, MAYBE_UNUSED const salt_t *salt, MAYBE_UNUSED const void *esalt_buf, MAYBE_UNUSED const void *hook_salt_buf, MAYBE_UNUSED const hashinfo_t *hash_info, char *line_buf, MAYBE_UNUSED const int line_size)
 {
-  const u32 *digest = (const u32 *) digest_buf;
+  const u64 *digest = (const u64 *) digest_buf;
 
-  const int line_len = snprintf (line_buf, line_size, "%016x%c%08x", digest[0], hashconfig->separator, salt->salt_buf[0]);
+  const u64 *salt_b = (const u64 *) salt->salt_buf;
 
-  return line_len;
+  // we can not change anything in the original buffer, otherwise destroying sorting
+  // therefore create some local buffer
+
+  u8 *out_buf = (u8 *) line_buf;
+
+  int out_len = 0;
+
+  u64_to_hex (byte_swap_64 (digest[0]), out_buf + out_len); out_len += 16;
+
+  out_buf[out_len] = (u8) hashconfig->separator;
+
+  out_len += 1;
+
+  u64_to_hex (byte_swap_64 (salt_b[0]), out_buf + out_len); out_len += 16;
+
+  /*
+  printf("out_buf = ");
+  for (int i = 0; i < out_len; ++i) {
+    printf("%c", out_buf[i]);
+  }
+  printf("\n");
+  */
+
+  // len should be 33 (16 + 1 + 16)
+  return out_len;
 }
 
 void module_init (module_ctx_t *module_ctx)

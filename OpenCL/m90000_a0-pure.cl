@@ -12,34 +12,74 @@
 #include M2S(INCLUDE_PATH/inc_common.cl)
 #include M2S(INCLUDE_PATH/inc_rp.h)
 #include M2S(INCLUDE_PATH/inc_rp.cl)
+#include M2S(INCLUDE_PATH/inc_scalar.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (const u32 seed, PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u64 Wrapping_Mul (u64 a, u64 b)
 {
-  #define M 0xc6a4a7935bd1e995
-  #define R 47
+  return (a * b);
+}
 
-  //if ((gid == 0) && (lid == 0)) printf ("%016x\n", data);
-  //printf ("%016llx\n", test);
+DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
+{
+  const u64 M = 0xc6a4a7935bd1e995;
+  const u64 R = 47;
+
+  //const char* tmp = (const char*) data;
+  //printf ("%.*s\n", (int) len, tmp);
+
+  //printf ("data = %x\n", data);
 
   u64 hash = seed ^ (len * M);
+
+  const u64 INITIAL = hash;
   
   const u32 endpos = len - (len & 7);
 
-  // Loop over blocks of 8
+  const u32 nBlocks = len >> 3; // number of 8 byte blocks
+  const u8 *data2 = (const u8*) data;
+
+  u64 MIDDLE_OF_BLOCK = 0;
+
+  // Loop over blocks of 8 bytes
   u32 i = 0;
+  while (i != endpos) {
+    u64 k = ((u64) data2[i])
+      | ((u64) data2[i + 1] << 8)
+      | ((u64) data2[i + 2] << 16)
+      | ((u64) data2[i + 3] << 24)
+      | ((u64) data2[i + 4] << 32)
+      | ((u64) data2[i + 5] << 40)
+      | ((u64) data2[i + 6] << 48)
+      | ((u64) data2[i + 7] << 56);
+    
+    if (i == 0) {
+      MIDDLE_OF_BLOCK = k;
+    }
+
+    k *= M;
+    k ^= k >> R;
+    k *= M;
+
+    hash ^= k;
+    hash *= M;
+
+    i += 8;
+  }
+  /*
+  
   if (endpos >= 8)
   {
     for (i = 0; i < endpos; i += 8)
     {
-      u64 k = data[i]
-        | data[i + 1] << 8
-        | data[i + 2] << 16
-        | data[i + 3] << 24
-        | data[i + 4] << 32
-        | data[i + 5] << 40
-        | data[i + 6] << 48
-        | data[i + 7] << 56;
+      u64 k = data2[i]
+        | data2[i + 1] << 8
+        | data2[i + 2] << 16
+        | data2[i + 3] << 24
+        | data2[i + 4] << 32
+        | data2[i + 5] << 40
+        | data2[i + 6] << 48
+        | data2[i + 7] << 56;
 
       k *= M;
       k ^= k >> R;
@@ -49,46 +89,60 @@ DECLSPEC u64 MurmurHash64A (const u32 seed, PRIVATE_AS const u32 *data, const u3
       hash *= M;
     }
   }
+  */
+
+  
 
   // Overflow
+
+  const u64 BEFORE_OVERFLOW = hash;
+
   const u32 overflow = len & 7;
 
   if (overflow == 7)
   {
-    hash ^= data[i + 6] << 48;
+    hash ^= ((u64) data2[i + 6] << 48);
+    //const u64 AFTER_OVERFLOW_7 = hash;
   }
   if (overflow >= 6)
   {
-    hash ^= data[i + 5] << 40;
+    hash ^= ((u64) data2[i + 5] << 40);
   }
   if (overflow >= 5)
   {
-    hash ^= data[i + 4] << 32;
+    hash ^= ((u64) data2[i + 4] << 32);
   }
   if (overflow >= 4)
   {
-    hash ^= data[i + 3] << 24;
+    hash ^= ((u64) data2[i + 3] << 24);
   }
   if (overflow >= 3)
   {
-    hash ^= data[i + 2] << 16;
+    hash ^= ((u64) data2[i + 2] << 16);
   }
   if (overflow >= 2)
   {
-    hash ^= data[i + 1] << 8;
+    hash ^= ((u64) data2[i + 1] << 8);
   }
   if (overflow >= 1)
   {
-    hash ^= data[i];
+    hash ^= ((u64) data2[i]);
   }
   if (overflow > 0)
   {
     hash *= M;
   }
 
+  const u64 AFTER_OVERFLOW = hash;
+
   hash ^= hash >> R;
   hash *= M;
   hash ^= hash >> R;
+
+  const u64 TEST = Wrapping_Mul (0xC6A4A7935BD1E995, 0x773e34d9d52c9ef8);
+
+  //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4OVERFLOW: %016lx overflow: %d AFTER_OVERFLOW: %016lx TEST:%016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_OVERFLOW, overflow, AFTER_OVERFLOW, TEST);
+  //printf("data2 = %.2s, len = %d\n", data2[0], len);
 
   #undef M
   #undef R
@@ -112,27 +166,28 @@ KERNEL_FQ void m90000_mxx (KERN_ATTR_RULES ())
    */
 
   COPY_PW (pws[gid]);
-  u32 pw_buf0[4];
-  u32 pw_buf1[4];
 
-  //if ((gid == 0) && (lid == 0)) printf ("%08x\n", pw_buf0);
+  //if ((gid == 0) && (lid == 0)) printf ("%016lx\n", pw_buf0);
+  //printf("Hello world\n");
 
-  pw_buf0[0] = pws[gid].i[0];
-  pw_buf0[1] = pws[gid].i[1];
-  pw_buf0[2] = pws[gid].i[2];
-  pw_buf0[3] = pws[gid].i[3];
-  pw_buf1[0] = pws[gid].i[4];
-  pw_buf1[1] = pws[gid].i[5];
-  pw_buf1[2] = pws[gid].i[6];
-  pw_buf1[3] = pws[gid].i[7];
-
-  const u32 pw_len = pws[gid].pw_len & 63;
+  // why is this here?
+  // const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * seed
    */
 
-  const u32 seed = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  
+  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64 seed = ((u64) seed_hi << 32) | ((u64) seed_lo); // seems to work?
+
+  //u8 *temp_ref_lo = (u8*) &seed_lo;
+  //u8 *temp_ref_hi = (u8*) &seed_hi;
+  //u8 *temp_ref = (u8*) &seed;
+  //if ((gid == 0) && (lid == 0)) printf ("seed = %02x%02x%02x%02x%02x%02x%02x%02x\n", temp_ref_lo[0], temp_ref_lo[1], temp_ref_lo[2], temp_ref_lo[3], temp_ref_hi[0], temp_ref_hi[1], temp_ref_hi[2], temp_ref_hi[3]);
+  //if ((gid == 0) && (lid == 0)) printf ("seed = %02x%02x%02x%02x%02x%02x%02x%02x\n", temp_ref_lo[0], temp_ref_lo[1], temp_ref_lo[2], temp_ref_lo[3], temp_ref_lo[4], temp_ref_lo[5], temp_ref_lo[6], temp_ref_lo[7]);
+  //if ((gid == 0) && (lid == 0)) printf ("seed = %02x%02x%02x%02x%02x%02x%02x%02x\n", temp_ref[0], temp_ref[1], temp_ref[2], temp_ref[3], temp_ref[4], temp_ref[5], temp_ref[6], temp_ref[7]);
 
   /**
    * loop
@@ -144,16 +199,21 @@ KERNEL_FQ void m90000_mxx (KERN_ATTR_RULES ())
 
     tmp.pw_len = apply_rules (rules_buf[il_pos].cmds, tmp.i, tmp.pw_len);
 
-    u64x hash = MurmurHash64A (seed, tmp, tmp.pw_len);
+    //if ((gid == 0) && (lid == 0) && (il_pos == 0)) printf ("tmp.i = %08x, tmp.pw_len = %x\n", *tmp.i, tmp.pw_len);
 
-    //if ((gid == 0) && (lid == 0)) printf ("%016llx\n", hash);
+    u64x hash = MurmurHash64A (seed, tmp.i, tmp.pw_len);
 
-    const u32x r0 = (hash >> 32) & 0xffffffff;
-    const u32x r1 = (hash) & 0xffffffff;
+    //if ((gid == 0) && (lid == 0)) printf ("hash = %lu\n", hash);
+
+    //if (il_pos == 0) printf("tmp.i = %lu, tmp.pw_len = %lu\n", tmp.i, tmp.pw_len);
+    //if (il_pos == 0) printf("seed = %llu\n", seed);
+
+    const u32x r0 = l32_from_64(hash);
+    const u32x r1 = h32_from_64(hash);
     const u32x r2 = 0;
     const u32x r3 = 0;
 
-    COMPARE_M_SIMD (r0, r1, r2, r3);
+    COMPARE_M_SCALAR (r0, r1, r2, r3);
   }
 }
 
@@ -172,7 +232,7 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
    * seed
    */
 
-  const u32 seed = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u64 seed = salt_bufs[SALT_POS_HOST].salt_buf[0];
 
   /**
    * digest
@@ -192,6 +252,9 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
 
   COPY_PW (pws[gid]);
 
+  //printf ("%016lx\n", seed);
+  printf("Hello world\n");
+
   /**
    * loop
    */
@@ -204,8 +267,8 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
 
     u64x hash = MurmurHash64A (seed, tmp.i, tmp.pw_len);
 
-    const u32 r0 = (hash >> 32) & 0xffffffff;
-    const u32 r1 = (hash) & 0xffffffff;
+    const u32 r0 = l32_from_64 (hash);
+    const u32 r1 = h32_from_64 (hash);
     const u32 r2 = 0;
     const u32 r3 = 0;
 

@@ -157,13 +157,14 @@ KERNEL_FQ void m90000_mxx (KERN_ATTR_RULES ())
    */
 
   const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-
-  if (gid >= GID_CNT) return;
 
   /**
    * base
    */
+
+  const u64 gid = get_global_id (0);
+
+  if (gid >= GID_CNT) return;
 
   COPY_PW (pws[gid]);
 
@@ -174,10 +175,9 @@ KERNEL_FQ void m90000_mxx (KERN_ATTR_RULES ())
   // const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
-   * seed
+   * salt
    */
 
-  
   const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
   const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
   const u64 seed = ((u64) seed_hi << 32) | ((u64) seed_lo); // seems to work?
@@ -210,10 +210,9 @@ KERNEL_FQ void m90000_mxx (KERN_ATTR_RULES ())
 
     const u32x r0 = l32_from_64(hash);
     const u32x r1 = h32_from_64(hash);
-    const u32x r2 = 0;
-    const u32x r3 = 0;
+    const u32x z = 0;
 
-    COMPARE_M_SCALAR (r0, r1, r2, r3);
+    COMPARE_M_SCALAR (r0, r1, z, z);
   }
 }
 
@@ -224,15 +223,22 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
    */
 
   const u64 lid = get_local_id (0);
+
+  /**
+   * base
+   */
+
   const u64 gid = get_global_id (0);
 
   if (gid >= GID_CNT) return;
 
   /**
-   * seed
+   * salt
    */
 
-  const u64 seed = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64 seed = ((u64) seed_hi << 32) | ((u64) seed_lo);
 
   /**
    * digest
@@ -242,8 +248,8 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R2],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R3]
+    0,
+    0
   };
 
   /**
@@ -253,7 +259,7 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
   COPY_PW (pws[gid]);
 
   //printf ("%016lx\n", seed);
-  printf("Hello world\n");
+  //printf("Hello world\n");
 
   /**
    * loop
@@ -269,9 +275,8 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
 
     const u32 r0 = l32_from_64 (hash);
     const u32 r1 = h32_from_64 (hash);
-    const u32 r2 = 0;
-    const u32 r3 = 0;
+    const u32x z = 0;
 
-    COMPARE_S_SCALAR (r0, r1, r2, r3);
+    COMPARE_S_SCALAR (r0, r1, z, z);
   }
 }

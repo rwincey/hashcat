@@ -15,15 +15,36 @@
 #include M2S(INCLUDE_PATH/inc_scalar.cl)
 #endif
 
-DECLSPEC u64 Wrapping_Mul (u64 a, u64 b)
-{
-  return (a * b);
+DECLSPEC u64 MurmurHash64A_round (PRIVATE_AS const u8 *data, u64 hash, const u32 cur_pos) {
+  #define M 0xc6a4a7935bd1e995
+  #define R 47
+
+  u64 k = ((u64) data[cur_pos])
+    | ((u64) data[cur_pos + 1] << 8)
+    | ((u64) data[cur_pos + 2] << 16)
+    | ((u64) data[cur_pos + 3] << 24)
+    | ((u64) data[cur_pos + 4] << 32)
+    | ((u64) data[cur_pos + 5] << 40)
+    | ((u64) data[cur_pos + 6] << 48)
+    | ((u64) data[cur_pos + 7] << 56);
+  
+  k *= M;
+  k ^= k >> R;
+  k *= M;
+
+  hash ^= k;
+  hash *= M;
+
+  #undef M
+  #undef R
+
+  return hash;
 }
 
 DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
 {
-  const u64 M = 0xc6a4a7935bd1e995;
-  const u64 R = 47;
+  #define M 0xc6a4a7935bd1e995
+  #define R 47
 
   //const char* tmp = (const char*) data;
   //printf ("%.*s\n", (int) len, tmp);
@@ -44,25 +65,7 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   // Loop over blocks of 8 bytes
   u32 i = 0;
   while (i != endpos) {
-    u64 k = ((u64) data2[i])
-      | ((u64) data2[i + 1] << 8)
-      | ((u64) data2[i + 2] << 16)
-      | ((u64) data2[i + 3] << 24)
-      | ((u64) data2[i + 4] << 32)
-      | ((u64) data2[i + 5] << 40)
-      | ((u64) data2[i + 6] << 48)
-      | ((u64) data2[i + 7] << 56);
-    
-    if (i == 0) {
-      MIDDLE_OF_BLOCK = k;
-    }
-
-    k *= M;
-    k ^= k >> R;
-    k *= M;
-
-    hash ^= k;
-    hash *= M;
+    hash = MurmurHash64A_round(data2, hash, i);
 
     i += 8;
   }
@@ -139,9 +142,9 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   hash *= M;
   hash ^= hash >> R;
 
-  const u64 TEST = Wrapping_Mul (0xC6A4A7935BD1E995, 0x773e34d9d52c9ef8);
 
-  //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4OVERFLOW: %016lx overflow: %d AFTER_OVERFLOW: %016lx TEST:%016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_OVERFLOW, overflow, AFTER_OVERFLOW, TEST);
+
+  //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4OVERFLOW: %016lx overflow: %d AFTER_OVERFLOW: %016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_OVERFLOW, overflow, AFTER_OVERFLOW);
   //printf("data2 = %.2s, len = %d\n", data2[0], len);
 
   #undef M

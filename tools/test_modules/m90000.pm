@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Math::BigInt;
 
-sub module_constraints { [[-1, -1], [16, 16], [0, 63], [16, 16], [-1, -1]] }
+sub module_constraints { [[0, 256], [16, 16], [0, 63], [16, 16], [-1, -1]] }
 
 sub wrapping_mul
 {

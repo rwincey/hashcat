@@ -13,7 +13,7 @@
 #include M2S(INCLUDE_PATH/inc_scalar.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A_round_g (GLOBAL_AS const u8 *data, u64 hash, const u32 cur_pos) {
+DECLSPEC u64 MurmurHash64A_round_g (const u8 *data, u64 hash, const u32 cur_pos) {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
@@ -39,7 +39,7 @@ DECLSPEC u64 MurmurHash64A_round_g (GLOBAL_AS const u8 *data, u64 hash, const u3
   return hash;
 }
 
-DECLSPEC u64 MurmurHash64A_final_g (GLOBAL_AS const u8 *data, u64 hash, const u32 cur_pos, const u32 len) {
+DECLSPEC u64 MurmurHash64A_final_g (const u8 *data, u64 hash, const u32 cur_pos, const u32 len) {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
@@ -88,7 +88,7 @@ DECLSPEC u64 MurmurHash64A_final_g (GLOBAL_AS const u8 *data, u64 hash, const u3
   return hash;
 }
 
-DECLSPEC u64 MurmurHash64A_g (const u64 seed, GLOBAL_AS const u32 *data, const u32 len)
+DECLSPEC u64 MurmurHash64A_g (const u64 seed, const u8 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
@@ -101,7 +101,7 @@ DECLSPEC u64 MurmurHash64A_g (const u64 seed, GLOBAL_AS const u32 *data, const u
   const u32 endpos = len - (len & 7);
 
   //const u32 nBlocks = len >> 3; // number of 8 byte blocks
-  GLOBAL_AS const u8 *data2 = (GLOBAL_AS const u8*) data;
+  const u8 *data2 = (const u8*) data;
 
   // Loop over blocks of 8 bytes
   u32 i = 0;
@@ -171,15 +171,32 @@ KERNEL_FQ void m90000_mxx (KERN_ATTR_BASIC ())
    */
   
   //printf("Running a1 m90000_mxx\n");
-  
 
+  // probably really bad for performance. fix later
+  GLOBAL_AS const u8 *left = (GLOBAL_AS const u8*) pws[gid].i;
+  // create combined buffer
+  u8 combined_buf[256];
+
+  // copy left buffer
+  for (u32 i = 0; i < pws[gid].pw_len; i++) {
+    combined_buf[i] = left[i];
+  }
+  
   for (u32 il_pos = 0; il_pos < IL_CNT; il_pos++)
   {
     //const u32 tmp_buf = combs_buf[il_pos].i;
     //if ((gid == 0) && (lid == 0)) printf ("combs_buf[il_pos].i = %08x\n", tmp_buf);
 
     //u64x hash = MurmurHash64A_g (seed, pws[gid].i, pws[gid].pw_len, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
-    u64x hash = MurmurHash64A_g (seed, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
+
+    GLOBAL_AS const u8 *right = (GLOBAL_AS const u8*) combs_buf[il_pos].i;
+
+    // copy right buffer
+    for (u32 i = 0; i < combs_buf[il_pos].pw_len; i++) {
+      combined_buf[i + pws[gid].pw_len] = right[i];
+    }
+
+    u64x hash = MurmurHash64A_g (seed, combined_buf, pws[gid].pw_len + combs_buf[il_pos].pw_len);
 
     const u32x r0 = l32_from_64(hash);
     const u32x r1 = h32_from_64(hash);
@@ -230,14 +247,31 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_BASIC ())
    */
 
   printf("Running a1 m90000_sxx\n");
+  
+
+  u8 combined_buf[256];
+
+  // copy left buffer
+  GLOBAL_AS const u8 *left = (GLOBAL_AS const u8*) pws[gid].i;
+  for (u32 i = 0; i < pws[gid].pw_len; i++) {
+    combined_buf[i] = left[i];
+  }
+
 
   for (u32 il_pos = 0; il_pos < IL_CNT; il_pos++)
   {
-    u64x hash = MurmurHash64A_g (seed, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
+    
+    // copy right buffer
+    GLOBAL_AS const u8 *right = (GLOBAL_AS const u8*) combs_buf[il_pos].i;
+    for (u32 i = 0; i < combs_buf[il_pos].pw_len; i++) {
+      combined_buf[i + pws[gid].pw_len] = right[i];
+    }
+
+    u64 hash = MurmurHash64A_g (seed, combined_buf, pws[gid].pw_len + combs_buf[il_pos].pw_len);
 
     const u32 r0 = l32_from_64 (hash);
     const u32 r1 = h32_from_64 (hash);
-    const u32x z = 0;
+    const u32 z = 0;
 
     COMPARE_S_SCALAR (r0, r1, z, z);
   }

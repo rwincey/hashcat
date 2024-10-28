@@ -142,8 +142,8 @@ print(result_int)
 
 
 
-data = "root_point"
-seed = 0xfeebdaeddeadbeef
+data = "bardin_complete_all_levels_desc"
+seed = 0x0
 
 # s = bytes.fromhex(data)[::-1].decode("utf-8")
 
@@ -162,3 +162,14 @@ print(s)
 """
 
 # print(f"{wrapping_mul(0xC6A4A7935BD1E995, 0x773e34d9d52c9ef8):016x}")
+
+reverse = "69686361 6d657665 5f746e65 6c6c6f68 00005f79"
+r_s = reverse.split(" ")
+r_s = [bytearray.fromhex(s) for s in r_s]
+for x in r_s:
+    x.reverse()
+fnl = bytearray()
+for x in r_s:
+    fnl += x
+
+print(fnl.decode("utf-8"))

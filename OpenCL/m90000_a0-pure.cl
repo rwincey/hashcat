@@ -47,36 +47,14 @@ DECLSPEC u64 MurmurHash64A_final (PRIVATE_AS const u8 *data, u64 hash, const u32
 
   const u32 overflow = len & 7;
 
-  if (overflow == 7)
-  {
-    hash ^= ((u64) data[cur_pos + 6] << 48);
-  }
-  if (overflow >= 6)
-  {
-    hash ^= ((u64) data[cur_pos + 5] << 40);
-  }
-  if (overflow >= 5)
-  {
-    hash ^= ((u64) data[cur_pos + 4] << 32);
-  }
-  if (overflow >= 4)
-  {
-    hash ^= ((u64) data[cur_pos + 3] << 24);
-  }
-  if (overflow >= 3)
-  {
-    hash ^= ((u64) data[cur_pos + 2] << 16);
-  }
-  if (overflow >= 2)
-  {
-    hash ^= ((u64) data[cur_pos + 1] << 8);
-  }
-  if (overflow >= 1)
-  {
-    hash ^= ((u64) data[cur_pos]);
-  }
-  if (overflow > 0)
-  {
+  switch (overflow) {
+    case 7: hash ^= ((u64) data[cur_pos + 6]) << 48;
+    case 6: hash ^= ((u64) data[cur_pos + 5]) << 40;
+    case 5: hash ^= ((u64) data[cur_pos + 4]) << 32;
+    case 4: hash ^= ((u64) data[cur_pos + 3]) << 24;
+    case 3: hash ^= ((u64) data[cur_pos + 2]) << 16;
+    case 2: hash ^= ((u64) data[cur_pos + 1]) << 8;
+    case 1: hash ^= ((u64) data[cur_pos]);
     hash *= M;
   }
 
@@ -98,14 +76,14 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   //Initialize hash
   u64 hash = seed ^ (len * M);
 
-  const u64 INITIAL = hash;
+  //const u64 INITIAL = hash;
   
   const u32 endpos = len - (len & 7);
 
-  const u32 nBlocks = len >> 3; // number of 8 byte blocks
+  //const u32 nBlocks = len >> 3; // number of 8 byte blocks
   const u8 *data2 = (const u8*) data;
 
-  u64 MIDDLE_OF_BLOCK = 0;
+  //u64 MIDDLE_OF_BLOCK = 0;
 
   // Loop over blocks of 8 bytes
   u32 i = 0;
@@ -117,11 +95,11 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
 
   // Overflow
 
-  const u64 BEFORE_FINAL = hash;
+  //const u64 BEFORE_FINAL = hash;
 
   hash = MurmurHash64A_final (data2, hash, i, len);
 
-  const u64 AFTER_FINAL = hash;
+  //const u64 AFTER_FINAL = hash;
 
   //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4FINAL: %016lx overflow: %d AFTER_FINAL: %016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_FINAL, overflow, AFTER_FINAL);
   //printf("data2 = %.2s, len = %d\n", data2[0], len);

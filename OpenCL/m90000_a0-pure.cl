@@ -235,7 +235,7 @@ KERNEL_FQ void m90000_sxx (KERN_ATTR_RULES ())
 
     const u32 r0 = l32_from_64 (hash);
     const u32 r1 = h32_from_64 (hash);
-    const u32x z = 0;
+    const u32 z = 0;
 
     COMPARE_S_SCALAR (r0, r1, z, z);
   }

@@ -244,7 +244,7 @@ KERNEL_FQ void m90000_s04 (KERN_ATTR_RULES ())
     const u32x r1 = h32_from_64(hash);
     const u32x z = 0;
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_S_SIMD (r0, r1, z, z);
   }
 }
 

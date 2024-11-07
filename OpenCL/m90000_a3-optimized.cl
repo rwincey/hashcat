@@ -22,15 +22,15 @@ DECLSPEC u64x MurmurHash64A (const u64x seed, PRIVATE_AS const u32x *data, const
   //Initialize hash
   u64x hash = seed ^ (len * M);
 
-  printf("INITIAL = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
+  //printf("INITIAL = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   const u32 endpos = len - (len & 7);
 
   const u8 *data2 = (const u8*) data;
 
-  printf("seed = %08x%08x\n", h32_from_64(seed), l32_from_64(seed));
-  printf("data2 = %c%c%c%c%c%c%c%c\n", data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7]);
-  printf("len = %d\n", len);
+  //printf("seed = %08x%08x\n", h32_from_64(seed), l32_from_64(seed));
+  //printf("data2 = %c%c%c%c%c%c%c%c\n", data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7]);
+  //printf("len = %d\n", len);
 
   
   // Loop over blocks of 8 bytes
@@ -54,13 +54,13 @@ DECLSPEC u64x MurmurHash64A (const u64x seed, PRIVATE_AS const u32x *data, const
 
     i += 8;
   }
-  printf("BEFORE_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
+  //printf("BEFORE_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   // Overflow
 
   const u32 overflow = len & 7;
 
-  printf("OVERFLOW = %d\n", overflow);
+  //printf("OVERFLOW = %d\n", overflow);
 
   switch (overflow) {
     case 7: hash ^= ((u64) data2[i + 6]) << 48;
@@ -73,7 +73,7 @@ DECLSPEC u64x MurmurHash64A (const u64x seed, PRIVATE_AS const u32x *data, const
     hash *= M;
   }
 
-  printf("AFTER_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
+  //printf("AFTER_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   hash ^= hash >> R;
   hash *= M;
@@ -82,7 +82,7 @@ DECLSPEC u64x MurmurHash64A (const u64x seed, PRIVATE_AS const u32x *data, const
   #undef M
   #undef R
 
-  printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
+  //printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   return hash;
 }
@@ -124,7 +124,7 @@ DECLSPEC void m90000m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
   w[14] = data[14];
   w[15] = data[15];
 
-  const u8 *data2 = (const u8*) data;
+  //const u8 *data2 = (const u8*) data;
   //printf("w = %c%c%c%c%c%c%c%c\n", data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7]);
 
   /**
@@ -149,7 +149,7 @@ DECLSPEC void m90000m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
     const u32x r1 = h32_from_64(hash);
     const u32x z = 0;
 
-    printf("hash = %08x%08x\n", r1, r0);
+    //printf("hash = %08x%08x\n", r1, r0);
 
     COMPARE_M_SIMD (r0, r1, z, z);
   }
@@ -165,7 +165,7 @@ DECLSPEC void m90000s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
    * digest
    */
   
-  printf("Hello world m90000s\n");
+  //printf("Hello world m90000s\n");
 
   const u32 search[4] =
   {
@@ -227,7 +227,7 @@ DECLSPEC void m90000s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
     const u32x z = 0;
 
     //printf("r1 = %08x r0 = %08x\n", r1, r0);
-    printf("hash = %08x%08x\n", r1, r0);
+    //printf("hash = %08x%08x\n", r1, r0);
 
     COMPARE_S_SIMD (r0, r1, z, z);
   }
@@ -283,7 +283,7 @@ KERNEL_FQ void m90000_m08 (KERN_ATTR_VECTOR ())
    * base
    */
   
-  printf("Hello world m90000_m08\n");
+  //printf("Hello world m90000_m08\n");
 
   const u64 lid = get_local_id (0);
   const u64 gid = get_global_id (0);

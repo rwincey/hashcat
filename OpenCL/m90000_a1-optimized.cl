@@ -278,7 +278,7 @@ KERNEL_FQ void m90000_s04 (KERN_ATTR_BASIC ())
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    0,
+    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
     0,
     0
   };

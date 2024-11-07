@@ -22,6 +22,7 @@ static const u64   KERN_TYPE      = 90000;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_USES_BITS_64;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
+                                  | OPTS_TYPE_PT_GENERATE_LE
                                   | OPTS_TYPE_ST_HEX
                                   | OPTS_TYPE_SUGGEST_KG;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
@@ -94,6 +95,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   */
 
   digest[0] = ((hex_to_u64 (&hash_pos[0])));
+  digest[1] = 0;
 
   digest[0] = byte_swap_64 (digest[0]);
 

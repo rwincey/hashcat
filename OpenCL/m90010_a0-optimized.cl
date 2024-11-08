@@ -112,7 +112,7 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 
 
 
-KERNEL_FQ void m90000_m04 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90010_m04 (KERN_ATTR_RULES ())
 {
   /**
    * modifier
@@ -166,15 +166,15 @@ KERNEL_FQ void m90000_m04 (KERN_ATTR_RULES ())
   }
 }
 
-KERNEL_FQ void m90000_m08 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90010_m08 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90000_m16 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90010_m16 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90000_s04 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90010_s04 (KERN_ATTR_RULES ())
 {
   /**
    * modifier
@@ -240,10 +240,10 @@ KERNEL_FQ void m90000_s04 (KERN_ATTR_RULES ())
   }
 }
 
-KERNEL_FQ void m90000_s08 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90010_s08 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90000_s16 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90010_s16 (KERN_ATTR_RULES ())
 {
 }

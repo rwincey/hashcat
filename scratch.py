@@ -142,7 +142,7 @@ print(result_int)
 
 
 
-data = "bardin_complete_all_levels_desc"
+data = "hashcat"
 seed = 0x0
 
 # s = bytes.fromhex(data)[::-1].decode("utf-8")
@@ -151,7 +151,7 @@ seed = 0x0
 
 h = get_hash(data, seed)
 
-pretty = f"{h:016x}:{seed:016x}:{data} INITIAL: {INITIAL:016x} MIDDLE_OF_BLOCK: {MIDDLE_OF_BLOCK:016x} B4OVERFLOW: {BEFORE_OVERFLOW:016x} overflow: {OVERFLOW} AFTER_OVERFLOW = {AFTER_OVERFLOW:016x}"
+pretty = f"{h:016x}:{seed:016x}:{data} INITIAL: {INITIAL:016x} B4OVERFLOW: {BEFORE_OVERFLOW:016x} overflow: {OVERFLOW} AFTER_OVERFLOW = {AFTER_OVERFLOW:016x}"
 
 print(pretty)
 

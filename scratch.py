@@ -122,7 +122,9 @@ def get_hash(string: str, seed: int) -> int:
     key = [ord(char) for char in string]
     return hash64(key, seed)
 
-
+def get_short_hash(string: str, seed: int) -> int:
+    key = [ord(char) for char in string]
+    return hash32(key, seed)
 
 
 

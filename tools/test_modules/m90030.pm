@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Math::BigInt;
 
-sub module_constraints { [[0, 256], [-1, -1], [0, 63], [-1, -1], [0, 63]] }
+sub module_constraints { [[0, 256], [-1, -1], [0, 32], [-1, -1], [0, 32]] }
 
 sub wrapping_mul
 {
@@ -22,7 +22,7 @@ sub wrapping_mul
   return ($a * $b)->bmod($width);
 }
 
-sub murmurhash64a
+sub murmurhash64a_32
 {
   use integer;
 
@@ -113,6 +113,7 @@ sub murmurhash64a
   $hash = wrapping_mul ($hash, $m);
   $hash ^= $hash >> $r;
 
+  # use only high 32 bits from hash
   $hash = $hash >> 32;
 
   return $hash;
@@ -122,9 +123,9 @@ sub module_generate_hash
 {
   my $word = shift;
 
-  my $digest = murmurhash64a ($word);
+  my $digest = murmurhash64a_32 ($word);
 
-  $digest = unpack ("H*", pack ("Q>", $digest));
+  $digest = unpack ("H*", pack ("L>", $digest));
 
   my $hash = sprintf ("%s", $digest);
 
@@ -140,9 +141,9 @@ sub module_verify_hash
   return unless defined $hash;
   return unless defined $word;
 
-  return unless length $hash == 16;
+  return unless length $hash == 8;
 
-  return unless ($hash =~ m/^[0-9a-fA-F]{16}$/);
+  return unless ($hash =~ m/^[0-9a-fA-F]{8}$/);
 
   my $word_packed = pack_if_HEX_notation ($word);
 

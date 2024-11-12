@@ -14,7 +14,7 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u32 MurmurHash64A_32 (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
@@ -87,10 +87,10 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 
   //printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
-  return hash;
+  return (u32) (hash >> 32);
 }
 
-KERNEL_FQ void m90010_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ void m90030_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -193,25 +193,23 @@ KERNEL_FQ void m90010_m04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u64x hash = MurmurHash64A (w, pw_len);
+    u32x hash = MurmurHash64A_32 (w, pw_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
     const u32x z = 0;
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_M_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ void m90010_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ void m90030_m08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m90010_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ void m90030_m16 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m90010_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ void m90030_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -251,7 +249,7 @@ KERNEL_FQ void m90010_s04 (KERN_ATTR_BASIC ())
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
+    0,
     0,
     0
   };
@@ -326,20 +324,18 @@ KERNEL_FQ void m90010_s04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u64 hash = MurmurHash64A (w, pw_len);
+    u32 hash = MurmurHash64A_32 (w, pw_len);
 
-    const u32 r0 = l32_from_64(hash);
-    const u32 r1 = h32_from_64(hash);
     const u32 z = 0;
 
-    COMPARE_S_SIMD (r0, r1, z, z);
+    COMPARE_S_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ void m90010_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ void m90030_s08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m90010_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ void m90030_s16 (KERN_ATTR_BASIC ())
 {
 }

@@ -15,7 +15,7 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u32 MurmurHash64A_32 (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
@@ -74,9 +74,6 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
     hash *= M;
   }
 
-  //u64 test = hl32_to_64 (0x0a16869e, 0xcb107f54);
-  //printf("hl32_to_64 test = %08x%08x\n", h32_from_64(test), l32_from_64(test));
-
   //printf("AFTER_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   hash ^= hash >> R;
@@ -88,14 +85,14 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 
   //printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
-  return hash;
+  return (u32) (hash >> 32);
 }
 
 
 
-KERNEL_FQ void m90010_m04 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90030_m04 (KERN_ATTR_RULES ())
 {
-  //printf("Hello world m90010_m04\n");
+  //printf("Hello world m90030_m04\n");
   /**
    * modifier
    */
@@ -135,27 +132,27 @@ KERNEL_FQ void m90010_m04 (KERN_ATTR_RULES ())
 
     const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    u64x hash = MurmurHash64A (w, out_len);
+    u32x hash = MurmurHash64A_32 (w, out_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
+    //printf("hash = %08x\n", hash);
+
     const u32x z = 0;
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_M_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ void m90010_m08 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90030_m08 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90010_m16 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90030_m16 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90010_s04 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90030_s04 (KERN_ATTR_RULES ())
 {
-  //printf("Hello world m90010_s04\n");
+  //printf("Hello world m90030_s04\n");
   /**
    * modifier
    */
@@ -192,7 +189,7 @@ KERNEL_FQ void m90010_s04 (KERN_ATTR_RULES ())
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
+    0,
     0,
     0
   };
@@ -207,20 +204,18 @@ KERNEL_FQ void m90010_s04 (KERN_ATTR_RULES ())
 
     const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    u64x hash = MurmurHash64A (w, out_len);
+    u32x hash = MurmurHash64A_32 (w, out_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
     const u32x z = 0;
 
-    COMPARE_S_SIMD (r0, r1, z, z);
+    COMPARE_S_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ void m90010_s08 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90030_s08 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90010_s16 (KERN_ATTR_RULES ())
+KERNEL_FQ void m90030_s16 (KERN_ATTR_RULES ())
 {
 }

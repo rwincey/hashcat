@@ -14,7 +14,7 @@
 #endif
 
 
-DECLSPEC u64x MurmurHash64A (PRIVATE_AS const u32x *data, const u32 len)
+DECLSPEC u32x MurmurHash64A_32 (PRIVATE_AS const u32x *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
@@ -87,10 +87,10 @@ DECLSPEC u64x MurmurHash64A (PRIVATE_AS const u32x *data, const u32 len)
 
   //printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
-  return hash;
+  return (u32) (hash >> 32);
 }
 
-DECLSPEC void m90010m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
+DECLSPEC void m90030m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
 {
   /**
    * modifiers are taken from args
@@ -142,19 +142,17 @@ DECLSPEC void m90010m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
 
     //printf("seed = %08x%08x\n", seed_hi, seed_lo);
 
-    const u64x hash = MurmurHash64A (w, pw_len);
+    const u32x hash = MurmurHash64A_32 (w, pw_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
     const u32x z = 0;
 
     //printf("hash = %08x%08x\n", r1, r0);
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_M_SIMD (hash, z, z, z);
   }
 }
 
-DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
+DECLSPEC void m90030s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
 {
   /**
    * modifiers are taken from args
@@ -164,12 +162,12 @@ DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
    * digest
    */
   
-  //printf("Hello world m90010s\n");
+  //printf("Hello world m90030s\n");
 
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
+    0,
     0,
     0
   };
@@ -215,26 +213,24 @@ DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
 
     w[0] = w0;
 
-    const u64x hash = MurmurHash64A (w, pw_len);
+    const u32x hash = MurmurHash64A_32 (w, pw_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
     const u32x z = 0;
 
     //printf("r1 = %08x r0 = %08x\n", r1, r0);
     //printf("hash = %08x%08x\n", r1, r0);
 
-    COMPARE_S_SIMD (r0, r1, z, z);
+    COMPARE_S_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ void m90010_m04 (KERN_ATTR_VECTOR ())
+KERNEL_FQ void m90030_m04 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
    */
   
-  //printf("Hello world m90010_m04\n");
+  //printf("Hello world m90030_m04\n");
   
 
   const u64 lid = get_local_id (0);
@@ -269,16 +265,16 @@ KERNEL_FQ void m90010_m04 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m90030m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ void m90010_m08 (KERN_ATTR_VECTOR ())
+KERNEL_FQ void m90030_m08 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
    */
   
-  //printf("Hello world m90010_m08\n");
+  //printf("Hello world m90030_m08\n");
 
   const u64 lid = get_local_id (0);
   const u64 gid = get_global_id (0);
@@ -311,10 +307,10 @@ KERNEL_FQ void m90010_m08 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m90030m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ void m90010_m16 (KERN_ATTR_VECTOR ())
+KERNEL_FQ void m90030_m16 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -351,10 +347,10 @@ KERNEL_FQ void m90010_m16 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m90030m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ void m90010_s04 (KERN_ATTR_VECTOR ())
+KERNEL_FQ void m90030_s04 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -391,10 +387,10 @@ KERNEL_FQ void m90010_s04 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m90030s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ void m90010_s08 (KERN_ATTR_VECTOR ())
+KERNEL_FQ void m90030_s08 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -431,10 +427,10 @@ KERNEL_FQ void m90010_s08 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m90030s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ void m90010_s16 (KERN_ATTR_VECTOR ())
+KERNEL_FQ void m90030_s16 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -471,5 +467,5 @@ KERNEL_FQ void m90010_s16 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m90030s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }

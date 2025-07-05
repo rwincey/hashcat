@@ -333,6 +333,21 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
 
     // v7 autotuner is a lot more straight forward
 
+    if (kernel_threads_min < kernel_threads_max)
+    {
+      // there could be a situation, like in 18600, where we have a thread_min which is not a multiple of
+      // kernel_preferred_wgs_multiple. As long as it's only a threads_min, but not a threads_max, we
+      // should stick to at least kernel_preferred_wgs_multiple
+
+      if (kernel_threads_min % device_param->kernel_preferred_wgs_multiple)
+      {
+        if ((device_param->kernel_preferred_wgs_multiple >= kernel_threads_min) && (device_param->kernel_preferred_wgs_multiple <= kernel_threads_max))
+        {
+          kernel_threads = device_param->kernel_preferred_wgs_multiple;
+        }
+      }
+    }
+
     if (hashes && hashes->st_salts_buf)
     {
       u32 start = kernel_loops_max;
@@ -356,15 +371,15 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
 
     for (u32 kernel_loops_test = kernel_loops; kernel_loops_test <= kernel_loops_max; kernel_loops_test <<= 1)
     {
-      double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel_min, kernel_loops_test, kernel_threads_min, 2);
+      double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops_test, kernel_threads, 2);
 
-      //printf ("loop %f %u %u %u\n", exec_msec, kernel_accel_min, kernel_loops_test, kernel_threads_min);
+      //printf ("loop %f %u %u %u\n", exec_msec, kernel_accel, kernel_loops_test, kernel_threads);
       if (exec_msec > target_msec) break;
 
       // we want a little room for threads to play with so not full target_msec
       // but of course only if we are going to make use of that :)
 
-      if ((kernel_accel_min < kernel_accel_max) || (kernel_threads_min < kernel_threads_max))
+      if ((kernel_accel < kernel_accel_max) || (kernel_threads < kernel_threads_max))
       {
         if (exec_msec > target_msec / 8) break;
 
@@ -378,11 +393,14 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
       kernel_loops = kernel_loops_test;
     }
 
-    for (u32 kernel_threads_test = kernel_threads_min; kernel_threads_test <= kernel_threads_max; kernel_threads_test <<= 1)
-    {
-      double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel_min, kernel_loops, kernel_threads_test, 2);
+    double exec_msec_init = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops, kernel_threads, 2);
 
-      //printf ("threads %f %u %u %u\n", exec_msec, kernel_accel_min, kernel_loops, kernel_threads_test);
+    float threads_eff_best = exec_msec_init / kernel_threads;
+
+    for (u32 kernel_threads_test = kernel_threads; kernel_threads_test <= kernel_threads_max; kernel_threads_test = (kernel_threads_test < device_param->kernel_preferred_wgs_multiple) ? kernel_threads_test << 1 : kernel_threads_test + device_param->kernel_preferred_wgs_multiple)
+    {
+      double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops, kernel_threads_test, 2);
+
       if (exec_msec > target_msec) break;
 
       if (kernel_threads >= 32)
@@ -392,7 +410,14 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
         if (exec_msec > target_msec / 8) break;
       }
 
-      kernel_threads = kernel_threads_test;
+      float threads_eff_cur = exec_msec / kernel_threads_test;
+
+      if ((threads_eff_cur * 1.05) < threads_eff_best)
+      {
+        threads_eff_best = threads_eff_cur;
+
+        kernel_threads = kernel_threads_test;
+      }
     }
 
     #define STEPS_CNT 12

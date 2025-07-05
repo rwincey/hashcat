@@ -6438,7 +6438,7 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
       device_param->has_lop3  = false;
       device_param->has_mov64 = false;
       device_param->has_prmt  = false;
-      device_param->has_shfw  = prop.arch.hasFunnelShift;
+      device_param->has_shfw  = true; // always reports false : prop.arch.hasFunnelShift;
 
       // device_available_mem
 

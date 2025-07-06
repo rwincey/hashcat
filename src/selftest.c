@@ -1272,7 +1272,7 @@ HC_API_CALL void *thread_selftest (void *p)
 
   if (device_param->is_hip == true)
   {
-    if (hc_hipCtxPushCurrent (hashcat_ctx, device_param->hip_context) == -1) return NULL;
+    if (hc_hipSetDevice (hashcat_ctx, device_param->hip_device) == -1) return NULL;
   }
 
   const int rc_selftest = process_selftest (hashcat_ctx, device_param);
@@ -1303,8 +1303,6 @@ HC_API_CALL void *thread_selftest (void *p)
   if (device_param->is_hip == true)
   {
     if (hc_hipStreamSynchronize (hashcat_ctx, device_param->hip_stream) == -1) return NULL;
-
-    if (hc_hipCtxPopCurrent (hashcat_ctx, &device_param->hip_context) == -1) return NULL;
   }
 
   if (bridge_ctx->enabled == true)

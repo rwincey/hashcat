@@ -1955,8 +1955,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
    || user_options->progress_only    == true
    || user_options->identify         == true
    || user_options->usage             > 0
-   || 
-      > 0
+   || user_options->hash_info         > 0
    || user_options->backend_info      > 0)
   {
     user_options->hwmon               = false;

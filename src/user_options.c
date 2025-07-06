@@ -93,6 +93,7 @@ static const struct option long_options[] =
   {"kernel-threads",            required_argument, NULL, IDX_KERNEL_THREADS},
   {"keyboard-layout-mapping",   required_argument, NULL, IDX_KEYBOARD_LAYOUT_MAPPING},
   {"keyspace",                  no_argument,       NULL, IDX_KEYSPACE},
+  {"total-candidates",          no_argument,       NULL, IDX_TOTAL_CANDIDATES},
   {"left",                      no_argument,       NULL, IDX_LEFT},
   {"limit",                     required_argument, NULL, IDX_LIMIT},
   {"logfile-disable",           no_argument,       NULL, IDX_LOGFILE_DISABLE},
@@ -246,6 +247,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->kernel_threads            = KERNEL_THREADS;
   user_options->keyboard_layout_mapping   = NULL;
   user_options->keyspace                  = KEYSPACE;
+  user_options->total_candidates          = TOTAL_CANDIDATES;
   user_options->left                      = LEFT;
   user_options->limit                     = LIMIT;
   user_options->logfile                   = LOGFILE;
@@ -449,6 +451,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
                                           user_options->limit_chgd                = true;                            break;
       case IDX_KEEP_GUESSING:             user_options->keep_guessing             = true;                            break;
       case IDX_KEYSPACE:                  user_options->keyspace                  = true;                            break;
+      case IDX_TOTAL_CANDIDATES:          user_options->total_candidates          = true;                            break;
       case IDX_BENCHMARK:                 user_options->benchmark                 = true;                            break;
       case IDX_BENCHMARK_ALL:             user_options->benchmark_all             = true;                            break;
       case IDX_BENCHMARK_MAX:             user_options->benchmark_max             = hc_strtoul (optarg, NULL, 10);   break;
@@ -1870,6 +1873,11 @@ void user_options_session_auto (hashcat_ctx_t *hashcat_ctx)
       user_options->session = "progress_only";
     }
 
+    if (user_options->total_candidates == true)
+    {
+      user_options->session = "candidates";
+    }
+
     if (user_options->keyspace == true)
     {
       user_options->session = "keyspace";
@@ -1942,11 +1950,13 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
   }
 
   if (user_options->keyspace         == true
+   || user_options->total_candidates == true
    || user_options->speed_only       == true
    || user_options->progress_only    == true
    || user_options->identify         == true
    || user_options->usage             > 0
-   || user_options->hash_info         > 0
+   || 
+      > 0
    || user_options->backend_info      > 0)
   {
     user_options->hwmon               = false;
@@ -2013,6 +2023,11 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
     user_options->speed_only = true;
   }
 
+  if (user_options->total_candidates == true)
+  {
+    user_options->quiet = true;
+  }
+
   if (user_options->keyspace == true)
   {
     user_options->quiet = true;
@@ -2021,6 +2036,11 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
   if (user_options->slow_candidates == true)
   {
     user_options->backend_vector_width = 1;
+  }
+
+  if (user_options->total_candidates == true)
+  {
+    user_options->keyspace = true;
   }
 
   if (user_options->stdout_flag == true)
@@ -3381,6 +3401,7 @@ void user_options_logger (hashcat_ctx_t *hashcat_ctx)
   logfile_top_uint   (user_options->kernel_loops);
   logfile_top_uint   (user_options->kernel_threads);
   logfile_top_uint   (user_options->keyspace);
+  logfile_top_uint   (user_options->total_candidates);
   logfile_top_uint   (user_options->left);
   logfile_top_uint   (user_options->logfile);
   logfile_top_uint   (user_options->loopback);

@@ -115,9 +115,9 @@ int potfile_init (hashcat_ctx_t *hashcat_ctx)
 
   if (user_options->usage            > 0)     return 0;
   if (user_options->backend_info     > 0)     return 0;
+  if (user_options->hash_info        > 0)     return 0;
 
   if (user_options->benchmark       == true)  return 0;
-  if (user_options->hash_info       == true)  return 0;
   if (user_options->keyspace        == true)  return 0;
   if (user_options->stdout_flag     == true)  return 0;
   if (user_options->speed_only      == true)  return 0;

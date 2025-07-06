@@ -679,7 +679,7 @@ HC_API_CALL void *thread_autotune (void *p)
 
   if (device_param->is_hip == true)
   {
-    if (hc_hipCtxPushCurrent (hashcat_ctx, device_param->hip_context) == -1) return NULL;
+    if (hc_hipSetDevice (hashcat_ctx, device_param->hip_device) == -1) return NULL;
   }
 
   // check for autotune failure
@@ -693,11 +693,6 @@ HC_API_CALL void *thread_autotune (void *p)
   if (device_param->is_cuda == true)
   {
     if (hc_cuCtxPopCurrent (hashcat_ctx, &device_param->cuda_context) == -1) return NULL;
-  }
-
-  if (device_param->is_hip == true)
-  {
-    if (hc_hipCtxPopCurrent (hashcat_ctx, &device_param->hip_context) == -1) return NULL;
   }
 
   return NULL;

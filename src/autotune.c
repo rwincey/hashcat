@@ -332,6 +332,22 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
     }
 
     // v7 autotuner is a lot more straight forward
+    // we start with some purely theoretical values as a base, then move on to some meassured tests
+
+    if (hashconfig->attack_exec == ATTACK_EXEC_INSIDE_KERNEL)
+    {
+      if (kernel_accel_min < kernel_accel_max)
+      {
+        // let's also do some minimal accel, this is only to improve early meassurements taken with try_run()
+
+        const u32 kernel_accel_start = previous_power_of_two (kernel_accel_max / 8);
+
+        if ((kernel_accel_start >= kernel_accel_min) && (kernel_accel_start <= kernel_accel_max))
+        {
+          kernel_accel = kernel_accel_start;
+        }
+      }
+    }
 
     if (kernel_threads_min < kernel_threads_max)
     {
@@ -348,24 +364,42 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
       }
     }
 
-    if (hashes && hashes->st_salts_buf)
+    if (hashconfig->attack_exec == ATTACK_EXEC_OUTSIDE_KERNEL)
     {
-      u32 start = kernel_loops_max;
-
-      const u32 salt_iter = hashes->st_salts_buf->salt_iter;
-
-      if (salt_iter)
+      if (hashes && hashes->salts_buf)
       {
-        start = MIN (start, smallest_repeat_double (hashes->st_salts_buf->salt_iter));
-        start = MIN (start, smallest_repeat_double (hashes->st_salts_buf->salt_iter + 1));
+        u32 start = kernel_loops_max;
 
-        if (((hashes->st_salts_buf->salt_iter + 0) % 125) == 0) start = MIN (start, 125);
-        if (((hashes->st_salts_buf->salt_iter + 1) % 125) == 0) start = MIN (start, 125);
+        const u32 salt_iter = hashes->salts_buf->salt_iter; // we use the first salt as reference
 
-        if ((start >= kernel_loops_min) && (start <= kernel_loops_max))
+        if (salt_iter)
         {
-          kernel_loops = start;
+          start = MIN (start, smallest_repeat_double (hashes->salts_buf->salt_iter));
+          start = MIN (start, smallest_repeat_double (hashes->salts_buf->salt_iter + 1));
+
+          if (((hashes->salts_buf->salt_iter + 0) % 125) == 0) start = MIN (start, 125);
+          if (((hashes->salts_buf->salt_iter + 1) % 125) == 0) start = MIN (start, 125);
+
+          if ((start >= kernel_loops_min) && (start <= kernel_loops_max))
+          {
+            kernel_loops = start;
+          }
         }
+        else
+        {
+          // how can there be a slow hash with no iterations?
+        }
+      }
+    }
+    else
+    {
+      // let's also do some minimal loops, this is only to improve early meassurements taken with try_run()
+
+      const u32 kernel_loops_start = previous_power_of_two (kernel_loops_max / 4);
+
+      if ((kernel_loops_start >= kernel_loops_min) && (kernel_loops_start <= kernel_loops_max))
+      {
+        kernel_loops = kernel_loops_start;
       }
     }
 
@@ -396,28 +430,43 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
     double exec_msec_init = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops, kernel_threads, 2);
 
     float threads_eff_best = exec_msec_init / kernel_threads;
+    u32   threads_cnt_best = kernel_threads;
+
+    float threads_eff_prev = 0;
+    u32   threads_cnt_prev = 0;
 
     for (u32 kernel_threads_test = kernel_threads; kernel_threads_test <= kernel_threads_max; kernel_threads_test = (kernel_threads_test < device_param->kernel_preferred_wgs_multiple) ? kernel_threads_test << 1 : kernel_threads_test + device_param->kernel_preferred_wgs_multiple)
     {
       double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops, kernel_threads_test, 2);
 
+      //printf ("thread %f %u %u %u\n", exec_msec, kernel_accel, kernel_loops, kernel_threads_test);
       if (exec_msec > target_msec) break;
 
       if (kernel_threads >= 32)
       {
         // we want a little room for accel to play with so not full target_msec
 
-        if (exec_msec > target_msec / 8) break;
+        if (exec_msec > target_msec / 4) break;
       }
 
-      float threads_eff_cur = exec_msec / kernel_threads_test;
+      kernel_threads = kernel_threads_test;
 
-      if ((threads_eff_cur * 1.05) < threads_eff_best)
+      threads_eff_prev = exec_msec / kernel_threads_test;
+      threads_cnt_prev = kernel_threads_test;
+
+      //printf ("%f\n", threads_eff_prev);
+
+      if (threads_eff_prev < threads_eff_best)
       {
-        threads_eff_best = threads_eff_cur;
-
-        kernel_threads = kernel_threads_test;
+        threads_eff_best = threads_eff_prev;
+        threads_cnt_best = threads_cnt_prev;
       }
+    }
+
+    // now we decide to choose either maximum or in some extreme cases prefer more efficient ones
+    if ((threads_eff_best * 1.06) < threads_eff_prev)
+    {
+      kernel_threads = threads_cnt_best;
     }
 
     #define STEPS_CNT 12

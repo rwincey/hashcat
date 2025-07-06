@@ -10217,10 +10217,10 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           {
             const u64 device_available_mem_sav = device_param->device_available_mem;
 
-            const u64 device_available_mem_new = device_available_mem_sav - (device_available_mem_sav * 0.2);
+            const u64 device_available_mem_new = device_available_mem_sav - (device_available_mem_sav * 0.34);
 
             event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
-            event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 20%%: %" PRIu64, device_available_mem_new);
+            event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
             event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
             event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
             event_log_warning (hashcat_ctx, NULL);
@@ -16275,12 +16275,23 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
     {
       const u64 GiB4 = 4ULL * 1024 * 1024 * 1024;
 
-      event_log_warning (hashcat_ctx, "Couldn't query the OS for free memory, assuming 4GiB");
+      event_log_warning (hashcat_ctx, "Couldn't query the OS for free memory, assuming 4GiB is available per compute device");
 
       accel_limit_host = GiB4;
     }
     else
     {
+      if (user_options->backend_devices_keepfree)
+      {
+        accel_limit_host = ((u64) accel_limit_host * (100 - user_options->backend_devices_keepfree)) / 100;
+      }
+      else
+      {
+        accel_limit_host = accel_limit_host - (accel_limit_host * 0.34);
+      }
+
+      accel_limit_host /= backend_ctx->backend_devices_active;
+
       // even tho let's not be greedy
 
       const u64 GiB8 = 8ULL * 1024 * 1024 * 1024;

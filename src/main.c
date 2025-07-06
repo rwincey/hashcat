@@ -643,7 +643,17 @@ static void main_backend_session_hostmem (MAYBE_UNUSED hashcat_ctx_t *hashcat_ct
 
   const u64 *hostmem = (const u64 *) buf;
 
-  event_log_info (hashcat_ctx, "Host memory required for this attack: %" PRIu64 " MB", *hostmem / (1024 * 1024));
+  u64 free_memory = 0;
+
+  if (get_free_memory (&free_memory) == false)
+  {
+    event_log_info (hashcat_ctx, "Host memory allocated for this attack: %" PRIu64 " MB", *hostmem / (1024 * 1024));
+  }
+  else
+  {
+    event_log_info (hashcat_ctx, "Host memory allocated for this attack: %" PRIu64 " MB (%" PRIu64 " MB free)", *hostmem / (1024 * 1024), free_memory / (1024 * 1024));
+  }
+
   event_log_info (hashcat_ctx, NULL);
 }
 

@@ -17,6 +17,7 @@ sub module_generate_hash
 {
   my $word  = shift;
   my $salt  = shift;
+  my $sign  = shift // ("argon2d","argon2i","argon2id")[random_number (0, 2)];
   my $m     = shift // 65536;
   my $t     = shift // 3;
   my $p     = shift // 1;
@@ -24,12 +25,12 @@ sub module_generate_hash
 
   my $salt_bin = pack ("H*", $salt);
 
-  my $digest_bin = argon2_raw ('argon2id', $word, $salt_bin, $t, $m . "k", $p, $len);
+  my $digest_bin = argon2_raw ($sign, $word, $salt_bin, $t, $m . "k", $p, $len);
 
   my $salt_base64   = encode_base64 ($salt_bin,   ""); $salt_base64   =~ s/=+$//;
   my $digest_base64 = encode_base64 ($digest_bin, ""); $digest_base64 =~ s/=+$//;
 
-  my $hash = sprintf ('$argon2id$v=19$m=%d,t=%d,p=%d$%s$%s', $m, $t, $p, $salt_base64, $digest_base64);
+  my $hash = sprintf ('$%s$v=19$m=%d,t=%d,p=%d$%s$%s', $sign, $m, $t, $p, $salt_base64, $digest_base64);
 
   return $hash;
 }
@@ -45,7 +46,9 @@ sub module_verify_hash
   my $hash = substr ($line, 0, $idx);
   my $word = substr ($line, $idx + 1);
 
-  return unless substr ($hash, 0, 10) eq '$argon2id$';
+  return unless ((substr ($hash, 0,  9) eq '$argon2d$')
+              || (substr ($hash, 0,  9) eq '$argon2i$')
+              || (substr ($hash, 0, 10) eq '$argon2id$'));              
 
   my (undef, $signature, $version, $config, $salt, $digest) = split '\$', $hash;
 
@@ -68,7 +71,7 @@ sub module_verify_hash
 
   my $word_packed = pack_if_HEX_notation ($word);
 
-  my $new_hash = module_generate_hash ($word_packed, unpack ("H*", $salt), $m, $t, $p, length ($digest));
+  my $new_hash = module_generate_hash ($word_packed, unpack ("H*", $salt), $signature, $m, $t, $p, length ($digest));
 
   return ($new_hash, $word);
 }

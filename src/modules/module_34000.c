@@ -1,5 +1,5 @@
 /**
- * Author......: See docs/credits.txt
+ * Author......: Netherlands Forensic Institute
  * License.....: MIT
  */
 
@@ -9,27 +9,26 @@
 #include "bitops.h"
 #include "convert.h"
 #include "shared.h"
+#include "memory.h"
 
-static const u32   ATTACK_EXEC    = ATTACK_EXEC_INSIDE_KERNEL;
-static const u32   DGST_POS0      = 3;
-static const u32   DGST_POS1      = 7;
+static const u32   ATTACK_EXEC    = ATTACK_EXEC_OUTSIDE_KERNEL;
+static const u32   DGST_POS0      = 0;
+static const u32   DGST_POS1      = 1;
 static const u32   DGST_POS2      = 2;
-static const u32   DGST_POS3      = 6;
-static const u32   DGST_SIZE      = DGST_SIZE_4_8;
-static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_HASH_SALTED;
-static const char *HASH_NAME      = "sha256($salt.$pass.$salt)";
-static const u64   KERN_TYPE      = 22300;
+static const u32   DGST_POS3      = 3;
+static const u32   DGST_SIZE      = DGST_SIZE_8_16;
+static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
+static const char *HASH_NAME      = "Argon2";
+static const u64   KERN_TYPE      = 34000;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
-                                  | OPTI_TYPE_REGISTER_LIMIT
-                                  | OPTI_TYPE_PRECOMPUTE_INIT
-                                  | OPTI_TYPE_EARLY_SKIP
-                                  | OPTI_TYPE_NOT_ITERATED
-                                  | OPTI_TYPE_RAW_HASH;
+                                  | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
-                                  | OPTS_TYPE_PT_GENERATE_BE;
-static const u32   SALT_TYPE      = SALT_TYPE_GENERIC;
+                                  | OPTS_TYPE_PT_GENERATE_LE
+                                  | OPTS_TYPE_THREAD_MULTI_DISABLE
+                                  | OPTS_TYPE_MP_MULTI_DISABLE;
+static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
 static const char *ST_PASS        = "hashcat";
-static const char *ST_HASH        = "755a8ce4e0cf0baee41d714aa35c9fca803106608f718f973eab006578285007:11265";
+static const char *ST_HASH        = "$argon2id$v=19$m=65536,t=3,p=1$FBMjI4RJBhIykCgol1KEJA$2ky5GAdhT1kH4kIgPN/oERE3Taiy43vNN70a3HpiKQU";
 
 u32         module_attack_exec    (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ATTACK_EXEC;     }
 u32         module_dgst_pos0      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS0;       }
@@ -46,136 +45,169 @@ u32         module_salt_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 const char *module_st_hash        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ST_HASH;         }
 const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ST_PASS;         }
 
+#include "argon2_common.c"
+
+static const char *SIGNATURE_ARGON2D  = "$argon2d$";
+static const char *SIGNATURE_ARGON2I  = "$argon2i$";
+static const char *SIGNATURE_ARGON2ID = "$argon2id$";
+
+u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
+{
+  const u64 esalt_size = (const u64) sizeof (argon2_options_t);
+
+  return esalt_size;
+}
+
 int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED void *digest_buf, MAYBE_UNUSED salt_t *salt, MAYBE_UNUSED void *esalt_buf, MAYBE_UNUSED void *hook_salt_buf, MAYBE_UNUSED hashinfo_t *hash_info, const char *line_buf, MAYBE_UNUSED const int line_len)
 {
   u32 *digest = (u32 *) digest_buf;
+
+  argon2_options_t *options  = (argon2_options_t *) esalt_buf;
 
   hc_token_t token;
 
   memset (&token, 0, sizeof (hc_token_t));
 
-  token.token_cnt  = 2;
+  token.token_cnt  = 7;
 
-  token.sep[0]     = hashconfig->separator;
-  token.len[0]     = 64;
-  token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
-                   | TOKEN_ATTR_VERIFY_HEX;
+  token.signatures_cnt    = 3;
+  token.signatures_buf[0] = SIGNATURE_ARGON2D;
+  token.signatures_buf[1] = SIGNATURE_ARGON2I;
+  token.signatures_buf[2] = SIGNATURE_ARGON2ID;
 
-  token.len_min[1] = SALT_MIN;
-  token.len_max[1] = SALT_MAX;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH;
+  token.len_min[0] = 9;
+  token.len_max[0] = 10;
+  token.sep[0]     = 0;
+  token.attr[0]    = TOKEN_ATTR_VERIFY_SIGNATURE;
 
-  if (hashconfig->opts_type & OPTS_TYPE_ST_HEX)
-  {
-    token.len_min[1] *= 2;
-    token.len_max[1] *= 2;
+  // version
+  token.len[1]     = 4;
+  token.sep[1]     = '$';
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH;
 
-    token.attr[1] |= TOKEN_ATTR_VERIFY_HEX;
-  }
+  // memoryUsageInKib
+  token.len_min[2] = 3;
+  token.len_max[2] = 12;
+  token.sep[2]     = ',';
+  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH;
+
+  // iterations
+  token.len_min[3] = 3;
+  token.len_max[3] = 5;
+  token.sep[3]     = ',';
+  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH;
+
+  // parallelism
+  token.len_min[4] = 3;
+  token.len_max[4] = 5;
+  token.sep[4]     = '$';
+  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH;
+
+  // salt
+  token.len_min[5] = ((SALT_MIN * 8) / 6) + 0;
+  token.len_max[5] = ((SALT_MAX * 8) / 6) + 3;
+  token.sep[5]     = '$';
+  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
+                   | TOKEN_ATTR_VERIFY_BASE64A;
+
+  // target hash
+  token.len_min[6] = ((  1 * 8) / 6) + 0;
+  token.len_max[6] = ((128 * 8) / 6) + 3;
+  token.sep[6]     = '$';
+  token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH
+                   | TOKEN_ATTR_VERIFY_BASE64A;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
 
   if (rc_tokenizer != PARSER_OK) return (rc_tokenizer);
 
-  const u8 *hash_pos = token.buf[0];
+  // signature sets argon2 typ
 
-  digest[0] = hex_to_u32 (hash_pos +  0);
-  digest[1] = hex_to_u32 (hash_pos +  8);
-  digest[2] = hex_to_u32 (hash_pos + 16);
-  digest[3] = hex_to_u32 (hash_pos + 24);
-  digest[4] = hex_to_u32 (hash_pos + 32);
-  digest[5] = hex_to_u32 (hash_pos + 40);
-  digest[6] = hex_to_u32 (hash_pos + 48);
-  digest[7] = hex_to_u32 (hash_pos + 56);
+  const int sig_len = token.len[0];
+  const u8 *sig_pos = token.buf[0];
 
-  digest[0] = byte_swap_32 (digest[0]);
-  digest[1] = byte_swap_32 (digest[1]);
-  digest[2] = byte_swap_32 (digest[2]);
-  digest[3] = byte_swap_32 (digest[3]);
-  digest[4] = byte_swap_32 (digest[4]);
-  digest[5] = byte_swap_32 (digest[5]);
-  digest[6] = byte_swap_32 (digest[6]);
-  digest[7] = byte_swap_32 (digest[7]);
+  if      (memcmp (SIGNATURE_ARGON2D,  sig_pos, sig_len) == 0) options->type = 0;
+  else if (memcmp (SIGNATURE_ARGON2I,  sig_pos, sig_len) == 0) options->type = 1;
+  else if (memcmp (SIGNATURE_ARGON2ID, sig_pos, sig_len) == 0) options->type = 2;
+  else
+    return (PARSER_SIGNATURE_UNMATCHED);
 
-  if (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL)
-  {
-    digest[0] -= SHA256M_A;
-    digest[1] -= SHA256M_B;
-    digest[2] -= SHA256M_C;
-    digest[3] -= SHA256M_D;
-    digest[4] -= SHA256M_E;
-    digest[5] -= SHA256M_F;
-    digest[6] -= SHA256M_G;
-    digest[7] -= SHA256M_H;
-  }
+  // argon2id config
+  const u8 *ver_pos = token.buf[1];
+  const u8 *mem_pos = token.buf[2];
+  const u8 *it_pos  = token.buf[3];
+  const u8 *par_pos = token.buf[4];
 
-  const u8 *salt_pos = token.buf[1];
-  const int salt_len = token.len[1];
+  options->version             = hc_strtoul ((const char *) ver_pos + 2, NULL, 10);
+  options->memory_usage_in_kib = hc_strtoul ((const char *) mem_pos + 2, NULL, 10);
+  options->iterations          = hc_strtoul ((const char *) it_pos  + 2, NULL, 10);
+  options->parallelism         = hc_strtoul ((const char *) par_pos + 2, NULL, 10);
 
-  const bool parse_rc = generic_salt_decode (hashconfig, salt_pos, salt_len, (u8 *) salt->salt_buf, (int *) &salt->salt_len);
+  if (options->version != 19 && options->version != 16) return (PARSER_HASH_VALUE);
+  if (options->memory_usage_in_kib < 1) return (PARSER_HASH_VALUE);
+  if (options->iterations < 1) return (PARSER_HASH_VALUE);
+  if (options->parallelism < 1 || options->parallelism > 32) return (PARSER_HASH_VALUE);
 
-  if (parse_rc == false) return (PARSER_SALT_LENGTH);
+  options->segment_length     = MAX (2, (options->memory_usage_in_kib / (ARGON2_SYNC_POINTS * options->parallelism)));
+  options->lane_length        = options->segment_length * ARGON2_SYNC_POINTS;
+  options->memory_block_count = options->lane_length * options->parallelism;
+
+  // salt
+  const int salt_len = token.len[5];
+  const u8 *salt_pos = token.buf[5];
+
+  salt->salt_iter = options->iterations * ARGON2_SYNC_POINTS;
+  salt->salt_dimy = options->parallelism;
+  salt->salt_len = base64_decode (base64_to_int, (const u8 *) salt_pos, salt_len, (u8 *) salt->salt_buf);
+
+  // digest/ target hash
+  const int digest_len = token.len[6];
+  const u8 *digest_pos = token.buf[6];
+
+  options->digest_len = base64_decode (base64_to_int, (const u8 *) digest_pos, digest_len, (u8 *) digest);
 
   return (PARSER_OK);
 }
 
 int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const void *digest_buf, MAYBE_UNUSED const salt_t *salt, MAYBE_UNUSED const void *esalt_buf, MAYBE_UNUSED const void *hook_salt_buf, MAYBE_UNUSED const hashinfo_t *hash_info, char *line_buf, MAYBE_UNUSED const int line_size)
 {
-  const u32 *digest = (const u32 *) digest_buf;
+  u32 *digest = (u32 *) digest_buf;
 
-  // we can not change anything in the original buffer, otherwise destroying sorting
-  // therefore create some local buffer
+  argon2_options_t *options  = (argon2_options_t *) esalt_buf;
 
-  u32 tmp[8];
+  // salt
+  char base64_salt[512] = { 0 };
+  int len1 = base64_encode (int_to_base64, (const u8 *) salt->salt_buf, salt->salt_len, (u8 *) base64_salt);
 
-  tmp[0] = digest[0];
-  tmp[1] = digest[1];
-  tmp[2] = digest[2];
-  tmp[3] = digest[3];
-  tmp[4] = digest[4];
-  tmp[5] = digest[5];
-  tmp[6] = digest[6];
-  tmp[7] = digest[7];
+  for (int i = len1 - 1; i >=0; i--) if (base64_salt[i] == '=') base64_salt[i] = 0;
 
-  if (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL)
+  // digest
+  char base64_digest[512] = { 0 };
+  int len2 = base64_encode (int_to_base64, (const u8 *) digest, options->digest_len, (u8 *) base64_digest);
+
+  for (int i = len2 - 1; i >=0; i--) if (base64_digest[i] == '=') base64_digest[i] = 0;
+
+  // out
+
+  const char *signature = NULL;
+
+  switch (options->type)
   {
-    tmp[0] += SHA256M_A;
-    tmp[1] += SHA256M_B;
-    tmp[2] += SHA256M_C;
-    tmp[3] += SHA256M_D;
-    tmp[4] += SHA256M_E;
-    tmp[5] += SHA256M_F;
-    tmp[6] += SHA256M_G;
-    tmp[7] += SHA256M_H;
+    case 0: signature = SIGNATURE_ARGON2D;  break;
+    case 1: signature = SIGNATURE_ARGON2I;  break;
+    case 2: signature = SIGNATURE_ARGON2ID; break;
   }
-
-  tmp[0] = byte_swap_32 (tmp[0]);
-  tmp[1] = byte_swap_32 (tmp[1]);
-  tmp[2] = byte_swap_32 (tmp[2]);
-  tmp[3] = byte_swap_32 (tmp[3]);
-  tmp[4] = byte_swap_32 (tmp[4]);
-  tmp[5] = byte_swap_32 (tmp[5]);
-  tmp[6] = byte_swap_32 (tmp[6]);
-  tmp[7] = byte_swap_32 (tmp[7]);
 
   u8 *out_buf = (u8 *) line_buf;
 
-  int out_len = 0;
-
-  u32_to_hex (tmp[0], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[1], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[2], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[3], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[4], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[5], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[6], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[7], out_buf + out_len); out_len += 8;
-
-  out_buf[out_len] = hashconfig->separator;
-
-  out_len += 1;
-
-  out_len += generic_salt_encode (hashconfig, (const u8 *) salt->salt_buf, (const int) salt->salt_len, out_buf + out_len);
+  const int out_len = snprintf ((char *) out_buf, line_size, "%sv=%d$m=%d,t=%d,p=%d$%s$%s",
+    signature,
+    options->version,
+    options->memory_usage_in_kib,
+    options->iterations,
+    options->parallelism,
+    base64_salt,
+    base64_digest);
 
   return out_len;
 }
@@ -202,10 +234,10 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_dgst_pos3                = module_dgst_pos3;
   module_ctx->module_dgst_size                = module_dgst_size;
   module_ctx->module_dictstat_disable         = MODULE_DEFAULT;
-  module_ctx->module_esalt_size               = MODULE_DEFAULT;
-  module_ctx->module_extra_buffer_size        = MODULE_DEFAULT;
-  module_ctx->module_extra_tmp_size           = MODULE_DEFAULT;
-  module_ctx->module_extra_tuningdb_block     = MODULE_DEFAULT;
+  module_ctx->module_esalt_size               = module_esalt_size;
+  module_ctx->module_extra_buffer_size        = argon2_module_extra_buffer_size;
+  module_ctx->module_extra_tmp_size           = argon2_module_extra_tmp_size;
+  module_ctx->module_extra_tuningdb_block     = argon2_module_extra_tuningdb_block;
   module_ctx->module_forced_outfile_format    = MODULE_DEFAULT;
   module_ctx->module_hash_binary_count        = MODULE_DEFAULT;
   module_ctx->module_hash_binary_parse        = MODULE_DEFAULT;
@@ -231,14 +263,14 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_hook23                   = MODULE_DEFAULT;
   module_ctx->module_hook_salt_size           = MODULE_DEFAULT;
   module_ctx->module_hook_size                = MODULE_DEFAULT;
-  module_ctx->module_jit_build_options        = MODULE_DEFAULT;
+  module_ctx->module_jit_build_options        = argon2_module_jit_build_options;
   module_ctx->module_jit_cache_disable        = MODULE_DEFAULT;
   module_ctx->module_kernel_accel_max         = MODULE_DEFAULT;
   module_ctx->module_kernel_accel_min         = MODULE_DEFAULT;
   module_ctx->module_kernel_loops_max         = MODULE_DEFAULT;
   module_ctx->module_kernel_loops_min         = MODULE_DEFAULT;
-  module_ctx->module_kernel_threads_max       = MODULE_DEFAULT;
-  module_ctx->module_kernel_threads_min       = MODULE_DEFAULT;
+  module_ctx->module_kernel_threads_max       = argon2_module_kernel_threads_max;
+  module_ctx->module_kernel_threads_min       = argon2_module_kernel_threads_min;
   module_ctx->module_kern_type                = module_kern_type;
   module_ctx->module_kern_type_dynamic        = MODULE_DEFAULT;
   module_ctx->module_opti_type                = module_opti_type;
@@ -257,7 +289,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_separator                = MODULE_DEFAULT;
   module_ctx->module_st_hash                  = module_st_hash;
   module_ctx->module_st_pass                  = module_st_pass;
-  module_ctx->module_tmp_size                 = MODULE_DEFAULT;
+  module_ctx->module_tmp_size                 = argon2_module_tmp_size;
   module_ctx->module_unstable_warning         = MODULE_DEFAULT;
   module_ctx->module_warmup_disable           = MODULE_DEFAULT;
 }
+

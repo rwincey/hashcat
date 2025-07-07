@@ -334,7 +334,7 @@ int check_hash (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, pla
 
     if (device_param->is_cuda == true)
     {
-      rc = hc_cuMemcpyDtoHAsync (hashcat_ctx, tmps, device_param->cuda_d_tmps + (plain->gidvid * hashconfig->tmp_size), hashconfig->tmp_size, device_param->cuda_stream);
+      rc = hc_cuMemcpyDtoH (hashcat_ctx, tmps, device_param->cuda_d_tmps + (plain->gidvid * hashconfig->tmp_size), hashconfig->tmp_size);
 
       if (rc == 0)
       {
@@ -351,7 +351,7 @@ int check_hash (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, pla
 
     if (device_param->is_hip == true)
     {
-      rc = hc_hipMemcpyDtoHAsync (hashcat_ctx, tmps, device_param->hip_d_tmps + (plain->gidvid * hashconfig->tmp_size), hashconfig->tmp_size, device_param->hip_stream);
+      rc = hc_hipMemcpyDtoH (hashcat_ctx, tmps, device_param->hip_d_tmps + (plain->gidvid * hashconfig->tmp_size), hashconfig->tmp_size);
 
       if (rc == 0)
       {
@@ -382,7 +382,7 @@ int check_hash (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, pla
 
     if (device_param->is_opencl == true)
     {
-      rc = hc_clEnqueueReadBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_tmps, CL_FALSE, plain->gidvid * hashconfig->tmp_size, hashconfig->tmp_size, tmps, 0, NULL, &opencl_event);
+      rc = hc_clEnqueueReadBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_tmps, CL_TRUE, plain->gidvid * hashconfig->tmp_size, hashconfig->tmp_size, tmps, 0, NULL, &opencl_event);
 
       if (rc == 0)
       {
@@ -587,14 +587,14 @@ int check_cracked (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
 
   if (device_param->is_cuda == true)
   {
-    if (hc_cuMemcpyDtoHAsync (hashcat_ctx, &num_cracked, device_param->cuda_d_result, sizeof (u32), device_param->cuda_stream) == -1) return -1;
+    if (hc_cuMemcpyDtoH (hashcat_ctx, &num_cracked, device_param->cuda_d_result, sizeof (u32)) == -1) return -1;
 
     if (hc_cuStreamSynchronize (hashcat_ctx, device_param->cuda_stream) == -1) return -1;
   }
 
   if (device_param->is_hip == true)
   {
-    if (hc_hipMemcpyDtoHAsync (hashcat_ctx, &num_cracked, device_param->hip_d_result, sizeof (u32), device_param->hip_stream) == -1) return -1;
+    if (hc_hipMemcpyDtoH (hashcat_ctx, &num_cracked, device_param->hip_d_result, sizeof (u32)) == -1) return -1;
 
     if (hc_hipStreamSynchronize (hashcat_ctx, device_param->hip_stream) == -1) return -1;
   }
@@ -624,7 +624,7 @@ int check_cracked (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
 
   if (device_param->is_cuda == true)
   {
-    rc = hc_cuMemcpyDtoHAsync (hashcat_ctx, cracked, device_param->cuda_d_plain_bufs, num_cracked * sizeof (plain_t), device_param->cuda_stream);
+    rc = hc_cuMemcpyDtoH (hashcat_ctx, cracked, device_param->cuda_d_plain_bufs, num_cracked * sizeof (plain_t));
 
     if (rc == 0)
     {
@@ -641,7 +641,7 @@ int check_cracked (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
 
   if (device_param->is_hip == true)
   {
-    rc = hc_hipMemcpyDtoHAsync (hashcat_ctx, cracked, device_param->hip_d_plain_bufs, num_cracked * sizeof (plain_t), device_param->hip_stream);
+    rc = hc_hipMemcpyDtoH (hashcat_ctx, cracked, device_param->hip_d_plain_bufs, num_cracked * sizeof (plain_t));
 
     if (rc == 0)
     {
@@ -1133,7 +1133,7 @@ int hashes_init_stage1 (hashcat_ctx_t *hashcat_ctx)
 
     hashes_cnt = 1;
   }
-  else if (user_options->hash_info == true)
+  else if (user_options->hash_info > 0)
   {
   }
   else if (user_options->keyspace == true)
@@ -2386,13 +2386,13 @@ int hashes_init_stage5 (hashcat_ctx_t *hashcat_ctx)
 
         char *st_hash = strdup (tmp_buf);
 
-        event_log_error (hashcat_ctx, "ERROR: Incompatible self-test SCRYPT configuration detected.");
+        event_log_error (hashcat_ctx, "ERROR: Incompatible self-test configuration detected.");
 
         event_log_warning (hashcat_ctx, "The specified target hash:");
         event_log_warning (hashcat_ctx, "  -> %s", user_hash);
-        event_log_warning (hashcat_ctx, "does not match the SCRYPT configuration of the self-test hash:");
+        event_log_warning (hashcat_ctx, "does not match the configuration of the self-test hash:");
         event_log_warning (hashcat_ctx, "  -> %s", st_hash);
-        event_log_warning (hashcat_ctx, "The JIT-compiled kernel for this SCRYPT configuration may be incompatible.");
+        event_log_warning (hashcat_ctx, "The JIT-compiled kernel for this configuration may be incompatible.");
         event_log_warning (hashcat_ctx, "You must disable the self-test functionality or recompile the plugin with a matching self-test hash.");
         event_log_warning (hashcat_ctx, "To disable the self-test, use the --self-test-disable option.");
         event_log_warning (hashcat_ctx, NULL);
@@ -2414,11 +2414,11 @@ int hashes_init_stage5 (hashcat_ctx_t *hashcat_ctx)
 
         char *user_hash2 = strdup (tmp_buf);
 
-        event_log_error (hashcat_ctx, "ERROR: Mixed SCRYPT configuration detected.");
+        event_log_error (hashcat_ctx, "ERROR: Mixed configuration detected.");
 
         event_log_warning (hashcat_ctx, "The specified target hash:");
         event_log_warning (hashcat_ctx, "  -> %s", user_hash);
-        event_log_warning (hashcat_ctx, "does not match the SCRYPT configuration of another target hash:");
+        event_log_warning (hashcat_ctx, "does not match the configuration of another target hash:");
         event_log_warning (hashcat_ctx, "  -> %s", user_hash2);
         event_log_warning (hashcat_ctx, "Please run these hashes in separate cracking sessions.");
         event_log_warning (hashcat_ctx, NULL);

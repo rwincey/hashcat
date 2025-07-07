@@ -2936,13 +2936,15 @@ void status_display (hashcat_ctx_t *hashcat_ctx)
   if (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL)
   {
     event_log_info (hashcat_ctx,
-      "Kernel.Feature...: Optimized Kernel (max length: %u)",
+      "Kernel.Feature...: Optimized Kernel (password length %u-%u bytes)",
+      hashconfig->pw_min,
       hashconfig->pw_max);
   }
   else
   {
     event_log_info (hashcat_ctx,
-      "Kernel.Feature...: Pure Kernel (max length: %u)",
+      "Kernel.Feature...: Pure Kernel (password length %u-%u bytes)",
+      hashconfig->pw_min,
       hashconfig->pw_max);
   }
 

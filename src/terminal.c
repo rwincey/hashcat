@@ -1297,7 +1297,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
     if (user_options->machine_readable == false)
     {
       event_log_info (hashcat_ctx, "OS.Name......: Windows");
-      event_log_info (hashcat_ctx, "OS.Release...: %s", rc_version ? release_buf : "N/A");
+      event_log_info (hashcat_ctx, "OS.Release...: %s", release_buf);
       event_log_info (hashcat_ctx, "HW.Platform..: %s", platform_buf);
       event_log_info (hashcat_ctx, "HW.Model.....: N/A");
     }
@@ -1305,7 +1305,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
     {
       printf ("\"OS\": { ");
       printf ("\"Name\": \"%s\", ", "Windows");
-      printf ("\"Release\": \"%s\" }, ", rc_version ? release_buf : "N/A");
+      printf ("\"Release\": \"%s\" }, ", release_buf);
       printf ("\"Hardware\": { ");
       printf ("\"Platform\": \"%s\", ", platform_buf);
       printf ("\"Model\": \"%s\" } ", "N/A");

@@ -219,14 +219,9 @@ DECLSPEC void argon2_hash_block (u64 R[4], int argon2_thread, LOCAL_AS u64 *shuf
 
 DECLSPEC void argon2_next_addresses (PRIVATE_AS const argon2_options_t *options, PRIVATE_AS const argon2_pos_t *pos, PRIVATE_AS u32 *addresses, u32 start_index, u32 argon2_thread, LOCAL_AS u64 *shuffle_buf, u32 argon2_lsz)
 {
-  u64 Z[4];
+  u64 Z[4] = { 0 };
 
-  Z[0] = 0;
-  Z[1] = 0;
-  Z[2] = 0;
-  Z[3] = 0;
-
-  u64 tmp[4];
+  u64 tmp[4] = { 0 };
 
   tmp[0] = 0;
   tmp[1] = 0;
@@ -299,7 +294,7 @@ DECLSPEC void argon2_fill_subsegment (GLOBAL_AS argon2_block_t *blocks, PRIVATE_
 {
   for (u32 index = start_index; index < end_index; index++, cur_block += options->parallelism)
   {
-    u32 ref_address;
+    u32 ref_address = 0;
 
     if (indep_addr)
     {
@@ -340,7 +335,7 @@ DECLSPEC void argon2_fill_segment (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS 
   const u32 skip_blocks   = (pos->pass == 0) && (pos->slice == 0) ? 2 : 0;
   const u32 index_in_lane = (pos->slice * options->segment_length) + skip_blocks;
 
-  u64 R[4];
+  u64 R[4] = { 0 };
 
   GLOBAL_AS argon2_block_t *cur_block = argon2_get_current_block (blocks, options, pos->lane, index_in_lane, R, argon2_thread);
 
@@ -351,7 +346,7 @@ DECLSPEC void argon2_fill_segment (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS 
       const u32 start_index = (block_index == 0) ? skip_blocks : block_index;
       const u32 end_index   = MIN(((start_index | 127) + 1), options->segment_length);
 
-      u32 addresses[4] = { 0, 0, 0, 0 };
+      u32 addresses[4] = { 0 };
 
       argon2_next_addresses (options, pos, addresses, block_index, argon2_thread, shuffle_buf, argon2_lsz);
       argon2_fill_subsegment (blocks, options, pos, true, addresses, start_index, end_index, cur_block, R, argon2_thread, shuffle_buf, argon2_lsz);
@@ -379,8 +374,8 @@ DECLSPEC void argon2_final (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS const a
     for (u32 idx = 0; idx < 128; idx++) final_block.values[idx] ^= blocks[((lane_length - 1) * lanes) + l].values[idx];
   }
 
-  u32 output_len [32] = {0};
-  output_len [0] = options->digest_len;
+  u32 output_len[32] = { 0 };
+  output_len[0] = options->digest_len;
 
   blake2b_ctx_t ctx;
   blake2b_init (&ctx);
@@ -400,7 +395,7 @@ DECLSPEC void argon2_final (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS const a
   }
 }
 
-DECLSPEC GLOBAL_AS argon2_block_t *get_argon2_block (const argon2_options_t *options, GLOBAL_AS void *buf, const int idx)
+DECLSPEC GLOBAL_AS argon2_block_t *get_argon2_block (PRIVATE_AS const argon2_options_t *options, GLOBAL_AS void *buf, const int idx)
 {
   GLOBAL_AS u32 *buf32 = (GLOBAL_AS u32 *) buf;
 

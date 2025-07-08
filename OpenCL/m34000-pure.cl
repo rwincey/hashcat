@@ -16,19 +16,9 @@
 
 typedef struct argon2_tmp
 {
-  u32 state[4]; // just something for now
+  u32 state[4];
 
 } argon2_tmp_t;
-
-typedef struct argon2_extra
-{
-#ifndef ARGON2_TMP_ELEM
-#define ARGON2_TMP_ELEM 1
-#endif
-
-  argon2_block_t blocks[ARGON2_TMP_ELEM];
-
-} argon2_extra_t;
 
 KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2_options_t))
 {
@@ -39,21 +29,21 @@ KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
   const u32 gd4 = gid / 4;
   const u32 gm4 = gid % 4;
 
-  GLOBAL_AS argon2_extra_t *V;
+  GLOBAL_AS void *V;
 
   switch (gm4)
   {
-    case 0: V = (GLOBAL_AS argon2_extra_t *) d_extra0_buf; break;
-    case 1: V = (GLOBAL_AS argon2_extra_t *) d_extra1_buf; break;
-    case 2: V = (GLOBAL_AS argon2_extra_t *) d_extra2_buf; break;
-    case 3: V = (GLOBAL_AS argon2_extra_t *) d_extra3_buf; break;
+    case 0: V = d_extra0_buf; break;
+    case 1: V = d_extra1_buf; break;
+    case 2: V = d_extra2_buf; break;
+    case 3: V = d_extra3_buf; break;
   }
-
-  GLOBAL_AS argon2_extra_t *argon2_extra = V + gd4;
 
   const argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST];
 
-  argon2_init (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_extra->blocks);
+  GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
+
+  argon2_init (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
 KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2_options_t))
@@ -68,27 +58,34 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
   const u32 argon2_thread = get_local_id (0);
   const u32 argon2_lsz = get_local_size (0);
 
+  #ifdef ARGON2_PARALLELISM
   LOCAL_VK u64 shuffle_bufs[ARGON2_PARALLELISM][32];
+  #else
+  LOCAL_VK u64 shuffle_bufs[32][32];
+  #endif
+
   LOCAL_AS u64 *shuffle_buf = shuffle_bufs[lid];
 
   const u32 bd4 = bid / 4;
   const u32 bm4 = bid % 4;
 
-  GLOBAL_AS argon2_extra_t *V;
+  GLOBAL_AS void *V;
 
   switch (bm4)
   {
-    case 0: V = (GLOBAL_AS argon2_extra_t *) d_extra0_buf; break;
-    case 1: V = (GLOBAL_AS argon2_extra_t *) d_extra1_buf; break;
-    case 2: V = (GLOBAL_AS argon2_extra_t *) d_extra2_buf; break;
-    case 3: V = (GLOBAL_AS argon2_extra_t *) d_extra3_buf; break;
+    case 0: V = d_extra0_buf; break;
+    case 1: V = d_extra1_buf; break;
+    case 2: V = d_extra2_buf; break;
+    case 3: V = d_extra3_buf; break;
   }
-
-  GLOBAL_AS argon2_extra_t *argon2_extra = V + bd4;
 
   argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST_BID];
 
+  #ifdef ARGON2_PARALLELISM
   options.parallelism = ARGON2_PARALLELISM;
+  #endif
+
+  GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, bd4);
 
   argon2_pos_t pos;
 
@@ -99,7 +96,7 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
   {
     for (pos.lane = lid; pos.lane < options.parallelism; pos.lane += lsz)
     {
-      argon2_fill_segment (argon2_extra->blocks, &options, &pos, shuffle_buf, argon2_thread, argon2_lsz);
+      argon2_fill_segment (argon2_block, &options, &pos, shuffle_buf, argon2_thread, argon2_lsz);
     }
 
     SYNC_THREADS ();
@@ -123,23 +120,23 @@ KERNEL_FQ KERNEL_FA void m34000_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
   const u32 gd4 = gid / 4;
   const u32 gm4 = gid % 4;
 
-  GLOBAL_AS argon2_extra_t *V;
+  GLOBAL_AS void *V;
 
   switch (gm4)
   {
-    case 0: V = (GLOBAL_AS argon2_extra_t *) d_extra0_buf; break;
-    case 1: V = (GLOBAL_AS argon2_extra_t *) d_extra1_buf; break;
-    case 2: V = (GLOBAL_AS argon2_extra_t *) d_extra2_buf; break;
-    case 3: V = (GLOBAL_AS argon2_extra_t *) d_extra3_buf; break;
+    case 0: V = d_extra0_buf; break;
+    case 1: V = d_extra1_buf; break;
+    case 2: V = d_extra2_buf; break;
+    case 3: V = d_extra3_buf; break;
   }
 
-  GLOBAL_AS argon2_extra_t *argon2_extra = V + gd4;
+  argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST];
+
+  GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
   u32 out[8];
 
-  const argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST];
-
-  argon2_final (argon2_extra->blocks, &options, out);
+  argon2_final (argon2_block, &options, out);
 
   const u32 r0 = out[0];
   const u32 r1 = out[1];

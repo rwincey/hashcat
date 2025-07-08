@@ -399,3 +399,14 @@ DECLSPEC void argon2_final (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS const a
     out [i + 1] = h32_from_64_S (ctx.h[idx]);
   }
 }
+
+DECLSPEC GLOBAL_AS argon2_block_t *get_argon2_block (const argon2_options_t *options, GLOBAL_AS void *buf, const int idx)
+{
+  GLOBAL_AS u32 *buf32 = (GLOBAL_AS u32 *) buf;
+
+  #ifdef ARGON2_TMP_ELEM
+  return (GLOBAL_AS argon2_block_t *) buf32 + (ARGON2_TMP_ELEM * idx);
+  #else
+  return (GLOBAL_AS argon2_block_t *) buf32 + (options->memory_block_count * idx);
+  #endif
+}

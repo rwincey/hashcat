@@ -18,9 +18,9 @@ sub module_generate_hash
   my $word  = shift;
   my $salt  = shift;
   my $sign  = shift // ("argon2d","argon2i","argon2id")[random_number (0, 2)];
-  my $m     = shift // 65536;
-  my $t     = shift // 3;
-  my $p     = shift // 1;
+  my $m     = shift // (1 << random_number (12, 18));
+  my $t     = shift // random_number (1, 8);
+  my $p     = shift // random_number (1, 8);
   my $len   = shift // random_number (1, 2) * 16;
 
   my $salt_bin = pack ("H*", $salt);
@@ -48,7 +48,7 @@ sub module_verify_hash
 
   return unless ((substr ($hash, 0,  9) eq '$argon2d$')
               || (substr ($hash, 0,  9) eq '$argon2i$')
-              || (substr ($hash, 0, 10) eq '$argon2id$'));              
+              || (substr ($hash, 0, 10) eq '$argon2id$'));
 
   my (undef, $signature, $version, $config, $salt, $digest) = split '\$', $hash;
 

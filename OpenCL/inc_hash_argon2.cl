@@ -43,7 +43,7 @@ DECLSPEC void argon2_initial_block (PRIVATE_AS const u32 *in, const u32 lane, co
     for (u32 idx = 0; idx < 8; idx++) blake_buf[idx] = ctx.h[idx];
 
     blake2b_init (&ctx);
-    blake2b_transform (ctx.h, blake_buf, 64, BLAKE2B_FINAL);
+    blake2b_transform (ctx.h, blake_buf, 64, (u64) BLAKE2B_FINAL);
 
     out[off + 0] = ctx.h[0];
     out[off + 1] = ctx.h[1];
@@ -279,7 +279,7 @@ DECLSPEC u32 index_u32x4 (const u32 array[4], u32 index)
       return array[3];
   }
 
-  return -1;
+  return (u32) -1;
 }
 
 DECLSPEC GLOBAL_AS argon2_block_t *argon2_get_current_block (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS const argon2_options_t *options, u32 lane, u32 index_in_lane, u64 R[4], u32 argon2_thread)
@@ -386,7 +386,7 @@ DECLSPEC void argon2_final (GLOBAL_AS argon2_block_t *blocks, PRIVATE_AS const a
   blake2b_init (&ctx);
 
   // Override default (0x40) value in BLAKE2b
-  ctx.h[0] ^= 0x40 ^ options->digest_len; 
+  ctx.h[0] ^= 0x40 ^ options->digest_len;
 
   blake2b_update (&ctx, output_len, 4);
   blake2b_update (&ctx, (PRIVATE_AS u32 *) final_block.values, sizeof(final_block));

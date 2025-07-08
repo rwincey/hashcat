@@ -24,6 +24,7 @@ static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
+                                  | OPTS_TYPE_NATIVE_THREADS
                                   | OPTS_TYPE_THREAD_MULTI_DISABLE
                                   | OPTS_TYPE_MP_MULTI_DISABLE;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
@@ -44,6 +45,29 @@ u64         module_opts_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 u32         module_salt_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return SALT_TYPE;       }
 const char *module_st_hash        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ST_HASH;         }
 const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ST_PASS;         }
+
+typedef struct argon2_tmp
+{
+  u32 state[4]; // just something
+
+} argon2_tmp_t;
+
+typedef struct argon2_options
+{
+  u32 type;
+  u32 version;
+
+  u32 iterations;
+  u32 parallelism;
+  u32 memory_usage_in_kib;
+
+  u32 segment_length;
+  u32 lane_length;
+  u32 memory_block_count;
+
+  u32 digest_len;
+
+} argon2_options_t;
 
 #include "argon2_common.c"
 
@@ -269,8 +293,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_kernel_accel_min         = MODULE_DEFAULT;
   module_ctx->module_kernel_loops_max         = MODULE_DEFAULT;
   module_ctx->module_kernel_loops_min         = MODULE_DEFAULT;
-  module_ctx->module_kernel_threads_max       = argon2_module_kernel_threads_max;
-  module_ctx->module_kernel_threads_min       = argon2_module_kernel_threads_min;
+  module_ctx->module_kernel_threads_max       = MODULE_DEFAULT;
+  module_ctx->module_kernel_threads_min       = MODULE_DEFAULT;
   module_ctx->module_kern_type                = module_kern_type;
   module_ctx->module_kern_type_dynamic        = MODULE_DEFAULT;
   module_ctx->module_opti_type                = module_opti_type;

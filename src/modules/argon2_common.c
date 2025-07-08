@@ -15,43 +15,6 @@
 #define ARGON2_SYNC_POINTS  4
 #define ARGON2_BLOCK_SIZE   1024
 
-typedef struct argon2_tmp
-{
-  u32 state[4]; // just something for now
-
-} argon2_tmp_t;
-
-typedef struct argon2_options
-{
-  u32 type;
-  u32 version;
-
-  u32 iterations;
-  u32 parallelism;
-  u32 memory_usage_in_kib;
-
-  u32 segment_length;
-  u32 lane_length;
-  u32 memory_block_count;
-
-  u32 digest_len;
-
-} argon2_options_t;
-
-u32 argon2_module_kernel_threads_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
-{
-  const u32 kernel_threads_min = 32; // hard-coded in kernel
-
-  return kernel_threads_min;
-}
-
-u32 argon2_module_kernel_threads_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
-{
-  const u32 kernel_threads_max = 32; // hard-coded in kernel
-
-  return kernel_threads_max;
-}
-
 u64 argon2_module_tmp_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const u64 tmp_size = 0; // we'll add some later

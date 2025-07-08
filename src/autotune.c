@@ -403,6 +403,40 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
       }
     }
 
+    if (1)
+    {
+      // some algorithm start ways to high with these theoretical preset (for instance, 8700)
+      // so much that they can't be tuned anymore
+
+      while ((kernel_accel > kernel_accel_min) || (kernel_threads > kernel_threads_min) || (kernel_loops > kernel_loops_min))
+      {
+        double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops, kernel_threads, 2);
+
+        if (exec_msec < target_msec / 16) break;
+
+        if (kernel_accel > kernel_accel_min)
+        {
+          kernel_accel = MAX (kernel_accel / 2, kernel_accel_min);
+
+          continue;
+        }
+
+        if (kernel_threads > kernel_threads_min)
+        {
+          kernel_threads = MAX (kernel_threads / 2, kernel_threads_min);
+
+          continue;
+        }
+
+        if (kernel_loops > kernel_loops_min)
+        {
+          kernel_loops = MAX (kernel_loops / 2, kernel_loops_min);
+
+          continue;
+        }
+      }
+    }
+
     for (u32 kernel_loops_test = kernel_loops; kernel_loops_test <= kernel_loops_max; kernel_loops_test <<= 1)
     {
       double exec_msec = try_run_times (hashcat_ctx, device_param, kernel_accel, kernel_loops_test, kernel_threads, 2);

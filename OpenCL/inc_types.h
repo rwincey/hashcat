@@ -11,11 +11,13 @@
 #define BITMAP_SHIFT1       kernel_param->bitmap_shift1
 #define BITMAP_SHIFT2       kernel_param->bitmap_shift2
 #define SALT_POS_HOST       (kernel_param->pws_pos + gid)
+#define SALT_POS_HOST_BID   (kernel_param->pws_pos + bid)
 #define LOOP_POS            kernel_param->loop_pos
 #define LOOP_CNT            kernel_param->loop_cnt
 #define IL_CNT              kernel_param->il_cnt
 #define DIGESTS_CNT         1
-#define DIGESTS_OFFSET_HOST (kernel_param->pws_pos + gid)
+#define DIGESTS_OFFSET_HOST     (kernel_param->pws_pos + gid)
+#define DIGESTS_OFFSET_HOST_BID (kernel_param->pws_pos + bid)
 #define COMBS_MODE          kernel_param->combs_mode
 #define SALT_REPEAT         kernel_param->salt_repeat
 #define PWS_POS             kernel_param->pws_pos
@@ -25,11 +27,13 @@
 #define BITMAP_SHIFT1       kernel_param->bitmap_shift1
 #define BITMAP_SHIFT2       kernel_param->bitmap_shift2
 #define SALT_POS_HOST       kernel_param->salt_pos_host
+#define SALT_POS_HOST_BID   SALT_POS_HOST
 #define LOOP_POS            kernel_param->loop_pos
 #define LOOP_CNT            kernel_param->loop_cnt
 #define IL_CNT              kernel_param->il_cnt
 #define DIGESTS_CNT         kernel_param->digests_cnt
 #define DIGESTS_OFFSET_HOST kernel_param->digests_offset_host
+#define DIGESTS_OFFSET_HOST_BID DIGESTS_OFFSET_HOST
 #define COMBS_MODE          kernel_param->combs_mode
 #define SALT_REPEAT         kernel_param->salt_repeat
 #define PWS_POS             kernel_param->pws_pos

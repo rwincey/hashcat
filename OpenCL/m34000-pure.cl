@@ -86,7 +86,7 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
 
   GLOBAL_AS argon2_extra_t *argon2_extra = V + bd4;
 
-  argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST];
+  argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST_BID];
 
   options.parallelism = ARGON2_PARALLELISM;
 

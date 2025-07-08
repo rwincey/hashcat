@@ -1254,21 +1254,60 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
     }
 
     #if defined (_WIN) || defined (__CYGWIN__) || defined (__MSYS__)
-    // TODO
+    // Get Windows system information
+    SYSTEM_INFO sysinfo;
+    OSVERSIONINFO osvi;
+    char platform_buf[256] = "N/A";
+    char release_buf[256] = "N/A";
+    
+    GetSystemInfo (&sysinfo);
+    
+    // Initialize version info structure
+    ZeroMemory (&osvi, sizeof (OSVERSIONINFO));
+    osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+    
+    bool rc_version = (GetVersionEx (&osvi) != 0);
+    
+    // Get processor architecture string
+    switch (sysinfo.wProcessorArchitecture)
+    {
+      case PROCESSOR_ARCHITECTURE_AMD64:
+        snprintf (platform_buf, sizeof (platform_buf), "x86_64");
+        break;
+      case PROCESSOR_ARCHITECTURE_INTEL:
+        snprintf (platform_buf, sizeof (platform_buf), "x86");
+        break;
+      case PROCESSOR_ARCHITECTURE_ARM64:
+        snprintf (platform_buf, sizeof (platform_buf), "ARM64");
+        break;
+      case PROCESSOR_ARCHITECTURE_ARM:
+        snprintf (platform_buf, sizeof (platform_buf), "ARM");
+        break;
+      default:
+        snprintf (platform_buf, sizeof (platform_buf), "Unknown");
+    }
+    
+    // Get Windows version string
+    if (rc_version)
+    {
+      snprintf (release_buf, sizeof (release_buf), "%lu.%lu.%lu",
+               osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber);
+    }
+    
     if (user_options->machine_readable == false)
     {
       event_log_info (hashcat_ctx, "OS.Name......: Windows");
-      event_log_info (hashcat_ctx, "OS.Release...: N/A");
-      event_log_info (hashcat_ctx, "HW.Platform..: N/A");
+      event_log_info (hashcat_ctx, "OS.Release...: %s", rc_version ? release_buf : "N/A");
+      event_log_info (hashcat_ctx, "HW.Platform..: %s", platform_buf);
       event_log_info (hashcat_ctx, "HW.Model.....: N/A");
     }
     else
     {
       printf ("\"OS\": { ");
       printf ("\"Name\": \"%s\", ", "Windows");
-      printf ("\"Release\": \"%s\" }, ", "N/A");
+      printf ("\"Release\": \"%s\" }, ", rc_version ? release_buf : "N/A");
       printf ("\"Hardware\": { ");
-      printf ("\"Platform\": \"%s\", ", "N/A");
+      printf ("\"Platform\": \"%s\", ", platform_buf);
       printf ("\"Model\": \"%s\" } ", "N/A");
       printf ("}, ");
     }

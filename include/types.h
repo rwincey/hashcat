@@ -115,6 +115,7 @@ typedef enum event_identifier
   EVENT_BRIDGES_SALT_POST         = 0x00000122,
   EVENT_BRIDGES_SALT_PRE          = 0x00000123,
   EVENT_CALCULATED_WORDS_BASE     = 0x00000020,
+  EVENT_CALCULATED_WORDS_CNT      = 0x00000021,
   EVENT_CRACKER_FINISHED          = 0x00000030,
   EVENT_CRACKER_HASH_CRACKED      = 0x00000031,
   EVENT_CRACKER_STARTING          = 0x00000032,
@@ -705,7 +706,7 @@ typedef enum user_options_defaults
   #else
   HWMON_TEMP_ABORT         = 90,
   #endif
-  HASH_INFO                = false,
+  HASH_INFO                = 0,
   HASH_MODE                = 0,
   HCCAPX_MESSAGE_PAIR      = 0,
   HEX_CHARSET              = false,
@@ -721,6 +722,7 @@ typedef enum user_options_defaults
   KERNEL_LOOPS             = 0,
   KERNEL_THREADS           = 0,
   KEYSPACE                 = false,
+  TOTAL_CANDIDATES         = false,
   LEFT                     = false,
   LIMIT                    = 0,
   LOGFILE                  = true,
@@ -828,7 +830,7 @@ typedef enum user_options_map
   IDX_DYNAMIC_X                 = 0xff55,
   IDX_ENCODING_FROM             = 0xff15,
   IDX_ENCODING_TO               = 0xff16,
-  IDX_HASH_INFO                 = 0xff17,
+  IDX_HASH_INFO                 = 'H', // 0xff17
   IDX_FORCE                     = 0xff18,
   IDX_HWMON_DISABLE             = 0xff19,
   IDX_HWMON_TEMP_ABORT          = 0xff1a,
@@ -904,6 +906,7 @@ typedef enum user_options_map
   IDX_STATUS_TIMER              = 0xff4c,
   IDX_STDOUT_FLAG               = 0xff4d,
   IDX_STDIN_TIMEOUT_ABORT       = 0xff4e,
+  IDX_TOTAL_CANDIDATES          = 0xff58,
   IDX_TRUECRYPT_KEYFILES        = 0xff4f,
   IDX_USERNAME                  = 0xff50,
   IDX_VERACRYPT_KEYFILES        = 0xff51,
@@ -1516,6 +1519,7 @@ typedef struct hc_device_param
   bool    has_lop3;
   bool    has_mov64;
   bool    has_prmt;
+  bool    has_shfw;
 
   double  spin_damp;
 
@@ -2432,13 +2436,13 @@ typedef struct user_options
   bool         deprecated_check;
   bool         dynamic_x;
   bool         hwmon;
-  bool         hash_info;
   bool         hex_charset;
   bool         hex_salt;
   bool         hex_wordlist;
   bool         increment;
   bool         keep_guessing;
   bool         keyspace;
+  bool         total_candidates;
   bool         left;
   bool         logfile;
   bool         loopback;
@@ -2525,6 +2529,7 @@ typedef struct user_options
   #endif
   u32          debug_mode;
   u32          hwmon_temp_abort;
+  u32          hash_info;
   int          hash_mode;
   u32          hccapx_message_pair;
   u32          hook_threads;

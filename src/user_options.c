@@ -21,9 +21,9 @@
 #endif
 
 #ifdef WITH_BRAIN
-static const char *const short_options = "hVvm:a:r:j:k:g:o:t:d:D:n:u:T:c:p:s:l:1:2:3:4:iIbw:OMSY:R:z";
+static const char *const short_options = "hHVvm:a:r:j:k:g:o:t:d:D:n:u:T:c:p:s:l:1:2:3:4:iIbw:OMSY:R:z";
 #else
-static const char *const short_options = "hVvm:a:r:j:k:g:o:t:d:D:n:u:T:c:p:s:l:1:2:3:4:iIbw:OMSY:R:";
+static const char *const short_options = "hHVvm:a:r:j:k:g:o:t:d:D:n:u:T:c:p:s:l:1:2:3:4:iIbw:OMSY:R:";
 #endif
 
 static char *const SEPARATOR = ":";
@@ -93,6 +93,7 @@ static const struct option long_options[] =
   {"kernel-threads",            required_argument, NULL, IDX_KERNEL_THREADS},
   {"keyboard-layout-mapping",   required_argument, NULL, IDX_KEYBOARD_LAYOUT_MAPPING},
   {"keyspace",                  no_argument,       NULL, IDX_KEYSPACE},
+  {"total-candidates",          no_argument,       NULL, IDX_TOTAL_CANDIDATES},
   {"left",                      no_argument,       NULL, IDX_LEFT},
   {"limit",                     required_argument, NULL, IDX_LIMIT},
   {"logfile-disable",           no_argument,       NULL, IDX_LOGFILE_DISABLE},
@@ -246,6 +247,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->kernel_threads            = KERNEL_THREADS;
   user_options->keyboard_layout_mapping   = NULL;
   user_options->keyspace                  = KEYSPACE;
+  user_options->total_candidates          = TOTAL_CANDIDATES;
   user_options->left                      = LEFT;
   user_options->limit                     = LIMIT;
   user_options->logfile                   = LOGFILE;
@@ -440,7 +442,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_ENCODING_TO:               user_options->encoding_to               = optarg;                          break;
       case IDX_INDUCTION_DIR:             user_options->induction_dir             = optarg;                          break;
       case IDX_OUTFILE_CHECK_DIR:         user_options->outfile_check_dir         = optarg;                          break;
-      case IDX_HASH_INFO:                 user_options->hash_info                 = true;                            break;
+      case IDX_HASH_INFO:                 user_options->hash_info++;                                                 break;
       case IDX_FORCE:                     user_options->force                     = true;                            break;
       case IDX_SELF_TEST_DISABLE:         user_options->self_test                 = false;                           break;
       case IDX_SKIP:                      user_options->skip                      = hc_strtoull (optarg, NULL, 10);
@@ -449,6 +451,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
                                           user_options->limit_chgd                = true;                            break;
       case IDX_KEEP_GUESSING:             user_options->keep_guessing             = true;                            break;
       case IDX_KEYSPACE:                  user_options->keyspace                  = true;                            break;
+      case IDX_TOTAL_CANDIDATES:          user_options->total_candidates          = true;                            break;
       case IDX_BENCHMARK:                 user_options->benchmark                 = true;                            break;
       case IDX_BENCHMARK_ALL:             user_options->benchmark_all             = true;                            break;
       case IDX_BENCHMARK_MAX:             user_options->benchmark_max             = hc_strtoul (optarg, NULL, 10);   break;
@@ -1100,11 +1103,25 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     }
   }
 
+  if (user_options->stdout_flag == true && user_options->slow_candidates == true)
+  {
+    event_log_error (hashcat_ctx, "Slow candidates (-S) is not allowed in stdout mode.");
+
+    return -1;
+  }
+
   if ((user_options->show == true) && ((user_options->username == true) || (user_options->dynamic_x == true)))
   {
     event_log_error (hashcat_ctx, "Mixing --show with --username or --dynamic-x can cause exponential delay in output.");
 
     return 0;
+  }
+
+  if (user_options->show == true && user_options->restore == true)
+  {
+    event_log_error (hashcat_ctx, "Mixing --show and --restore is not allowed.");
+
+    return -1;
   }
 
   if (user_options->show == true || user_options->left == true)
@@ -1359,7 +1376,7 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
       return -1;
     }
 
-    if (user_options->hash_info == true)
+    if (user_options->hash_info > 0)
     {
       event_log_error (hashcat_ctx, "Use of --hash-info is not allowed in benchmark mode.");
 
@@ -1551,6 +1568,13 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     return -1;
   }
 
+  if (user_options->hash_info > 2)
+  {
+    event_log_error (hashcat_ctx, "Invalid --hash-info/-H value, must have a value greater or equal to 0 and lower than 3.");
+
+    return -1;
+  }
+
   #ifdef WITH_BRAIN
   if ((user_options->brain_client == true) && (user_options->remove == true))
   {
@@ -1645,7 +1669,7 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
       show_error = false;
     }
   }
-  else if (user_options->hash_info == true)
+  else if (user_options->hash_info > 0)
   {
     if (user_options->hc_argc == 0)
     {
@@ -1843,7 +1867,7 @@ void user_options_session_auto (hashcat_ctx_t *hashcat_ctx)
       user_options->session = "benchmark";
     }
 
-    if (user_options->hash_info == true)
+    if (user_options->hash_info > 0)
     {
       user_options->session = "hash_info";
     }
@@ -1861,6 +1885,11 @@ void user_options_session_auto (hashcat_ctx_t *hashcat_ctx)
     if (user_options->progress_only == true)
     {
       user_options->session = "progress_only";
+    }
+
+    if (user_options->total_candidates == true)
+    {
+      user_options->session = "candidates";
     }
 
     if (user_options->keyspace == true)
@@ -1934,12 +1963,13 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
     user_options->bitmap_max          = 1;
   }
 
-  if (user_options->hash_info        == true
-   || user_options->keyspace         == true
+  if (user_options->keyspace         == true
+   || user_options->total_candidates == true
    || user_options->speed_only       == true
    || user_options->progress_only    == true
    || user_options->identify         == true
    || user_options->usage             > 0
+   || user_options->hash_info         > 0
    || user_options->backend_info      > 0)
   {
     user_options->hwmon               = false;
@@ -1991,7 +2021,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
     }
   }
 
-  if (user_options->hash_info == true)
+  if (user_options->hash_info > 0)
   {
     user_options->quiet = true;
   }
@@ -2006,6 +2036,11 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
     user_options->speed_only = true;
   }
 
+  if (user_options->total_candidates == true)
+  {
+    user_options->quiet = true;
+  }
+
   if (user_options->keyspace == true)
   {
     user_options->quiet = true;
@@ -2014,6 +2049,11 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
   if (user_options->slow_candidates == true)
   {
     user_options->backend_vector_width = 1;
+  }
+
+  if (user_options->total_candidates == true)
+  {
+    user_options->keyspace = true;
   }
 
   if (user_options->stdout_flag == true)
@@ -2105,7 +2145,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
 
   if (user_options->attack_mode == ATTACK_MODE_BF)
   {
-    if (user_options->hash_info == true)
+    if (user_options->hash_info > 0)
     {
 
     }
@@ -2394,7 +2434,7 @@ void user_options_extra_init (hashcat_ctx_t *hashcat_ctx)
   {
 
   }
-  else if (user_options->hash_info == true)
+  else if (user_options->hash_info > 0)
   {
 
   }
@@ -3374,6 +3414,7 @@ void user_options_logger (hashcat_ctx_t *hashcat_ctx)
   logfile_top_uint   (user_options->kernel_loops);
   logfile_top_uint   (user_options->kernel_threads);
   logfile_top_uint   (user_options->keyspace);
+  logfile_top_uint   (user_options->total_candidates);
   logfile_top_uint   (user_options->left);
   logfile_top_uint   (user_options->logfile);
   logfile_top_uint   (user_options->loopback);

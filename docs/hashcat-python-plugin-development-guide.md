@@ -4,7 +4,7 @@ This document is a comprehensive guide for writing custom hash modes in Python v
 
 ## 1. Introduction
 
-The The Assimilation Bridge enables developers to implement complete hash mode logic in languages other than C, most notably Python. Traditionally, customizing Hashcat required writing a module in C and a kernel in OpenCL/CUDA. With the bridge, you can now implement a complete hash mode in Python.
+The Assimilation Bridge enables developers to implement complete hash mode logic in languages other than C, most notably Python. Traditionally, customizing Hashcat required writing a module in C and a kernel in OpenCL/CUDA. With the bridge, you can now implement a complete hash mode in Python.
 
 The bridge supports two hash modes to run python code:
 
@@ -72,7 +72,7 @@ Here:
 - `extract_esalts()` is an optional function to deserialize binary esalt blobs. Depends on your hash, if esalts (such as binary blobs for decryption) are required.
 - `hcsp.init()` stores these so that `handle_queue()` (described later) can call `calc_hash()` for each password in a batch.
 
-Note the the ctx will hold your salt data from all hashes. Whenever calc_hash() is called, this context is given. If you have multiple hashes with multiple salts, the context will have all of them. The helper module hcsp.init() will deserialze the static salt and the dynamic salt and store the data in your context.
+Note the the ctx will hold your salt data from all hashes. Whenever calc_hash() is called, this context is given. If you have multiple hashes with multiple salts, the context will have all of them. The helper module hcsp.init() will deserialize the static salt and the dynamic salt and store the data in your context.
 
 A typical `term()` might look like this:
 
@@ -81,7 +81,7 @@ def term(ctx):
   hcsp.term(ctx)
 ```
 
-This should be used in case you had open files, open networking connection, or similar. We are good citizen!
+This should be used in case you had open files, open networking connection, or similar. We are good citizens!
 
 Here's our main function `kernel_loop()` where we spend almost all our time:
 
@@ -90,7 +90,7 @@ def kernel_loop(ctx,passwords,salt_id,is_selftest):
   return hcsp.handle_queue(ctx,passwords,salt_id,is_selftest)
 ```
 
-Hashcat optimizes performance by sending password candidates in batches. The `passwords` parameter in `kernel_loop()` is a list. Instead of manually looping over them, the helper module will queue them, and call your callback function which you had specified in the `init()` function before. The idea is that whenever your calc_hash() is called, it will always be only about one password and one salt (and optional some binary blobs), and you do not have to deal with queuing, whatever it is threaded or not threaded.
+Hashcat optimizes performance by sending password candidates in batches. The `passwords` parameter in `kernel_loop()` is a list. Instead of manually looping over them, the helper module will queue them, and call your callback function which you had specified in the `init()` function before. The idea is that whenever your calc_hash() is called, it will always be only about one password and one salt (and optional some binary blobs), and you do not have to deal with queuing, whether it is threaded or not.
 
 Of course, you can also fully control this yourself:
 
@@ -103,7 +103,7 @@ def calc_hash(ctx, password, salt_id, is_selftest):
 If you want to control all by youself, here's what's important to know:
 
 - salt_id: Basically a index number which tells you about which salt your calculation is about. When you initially receive the context, it will hold all salts at once, and you need to store them in the context. The helper scripts do that for your, but just for you to know, its the salt_id which tells the handle_queue() which salt data to pick before it calls your hash_calc() function.
-- is_selftest: Historically hashcat keeps two parallel structures for the the selftest hash and real hash. As such they arrive in the context buffer, and you need to make a decision on that `is_selftest` flag which salt buffer to pick.
+- is_selftest: Historically hashcat keeps two parallel structures for the selftest hash and real hash. As such they arrive in the context buffer, and you need to make a decision on that `is_selftest` flag which salt buffer to pick.
 
 ## 5. Esalts and Structured Binary Blobs, and fixed Salts
 
@@ -180,7 +180,7 @@ The `salt` variable is one of the parameters from the calc_hash():
 def calc_hash(password: bytes, salt: dict) -> str:
 ```
 
-Note that if fully exhaust the Hashcat keyspace, your function has been called X times Y. X is the number of candidates, and Y is all the salts (except if a salt has been cracked). What's important to realize that within your function, you implement hashing logic only for precisely that situation where you have one password and one salt.
+Note that if you fully exhaust the Hashcat keyspace, your function has been called X times Y.. X is the number of candidates, and Y is all the salts (except if a salt has been cracked). What's important to realize that within your function, you implement hashing logic only for precisely that situation where you have one password and one salt.
 
 
 ### Merging Salts and Esalts into a Single Object
@@ -196,7 +196,7 @@ Initially, salts and esalts are unpacked separately from their respective binary
 
 ## 6. Python generic hash mode `-m 72000` and `-m 73000`
 
-The "generic hash" support in hashcat is using python. The main idea behind "generic" is the goal is to write freely ideal for rapid prototyping.
+The "generic hash" support in hashcat is using python. The main idea behind "generic" is to write freely. Ideal for rapid prototyping and achieving your goal.
 
 The most straight-forward way is to edit the following files directly:
 
@@ -206,17 +206,17 @@ The most straight-forward way is to edit the following files directly:
 Notes:
 
 - Even though `-m 72000` uses single-threaded Python, the bridge plugin above it manages multiple Python interpreters (one per thread) making it effectively multi-threaded.
-- On Windows, if `-m 73000` is selected, it silently falls back to `generic_hash_sp.py` due to limitations with multiprocessing. This behavior is important to understand and you might otherwise wonder why your code changes have no effect.
+- On Windows/macOS, if `-m 73000` is selected, it silently falls back to `generic_hash_sp.py` due to limitations with multiprocessing. This behavior is important to understand and you might otherwise wonder why your code changes have no effect.
 
 If you modify one of these plugin files, there's a trade-off: you won’t be able to contribute that code directly to the upstream Hashcat repository, since those files are meant to remain clean for demonstration purposes.
 
-To address this, the assimilation bridge provides a generic parameter that users can specify via the command line. In the case of the Python bridge, only the first parameter is used. You can override the Python script to be loaded using `--bridge-parameter1`:
+To address this, the assimilation bridge provides a generic parameter that users can specify via the command line. In the case of the Python bridge, only the first parameter is used. Using `--bridge-parameter1` allows you to override the Python script to be loaded:
 
 ```
-$ ./hashcat -m 73000 --bridge-parameter1 myimplementation.py hash.txt wordlist.txt ...
+$ ./hashcat -m 73000 --bridge-parameter1 ./Python/myimplementation.py hash.txt wordlist.txt ...
 ```
 
-This tells the Python bridge plugin to load `myimplementation.py` instead of the default `generic_hash_mp.py`. This approach is especially useful if you plan to contribute `myimplementation.py` to the upstream Hashcat repository. If you choose to stay within the generic mode, your Python code won’t have a dedicated hash mode, and you'll need to instruct users to use the `--bridge-parameter1` flag to load your implementation.
+This tells the Python bridge plugin to load `myimplementation.py` located in the local `Python` subdirectory instead of the default `generic_hash_mp.py`. This approach is especially useful if you plan to contribute `myimplementation.py` to the upstream Hashcat repository. If you choose to stay within the generic mode, your Python code won’t have a dedicated hash mode, and you'll need to instruct users to use the `--bridge-parameter1` flag to load your implementation.
 
 ### Design Tradeoffs and Format Considerations
 

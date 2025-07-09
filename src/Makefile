@@ -37,6 +37,8 @@ endif
 
 ifeq ($(DEBUG),1)
 $(info "## Detected Operating System : $(UNAME)")
+$(info "## Detected CC : $(CC)")
+$(info "## Detected CXX : $(CXX)")
 endif
 
 BUILD_MODE := native
@@ -197,15 +199,17 @@ CFLAGS                  += -Wextra
 endif
 
 ## because LZMA SDK
-ifeq ($(CC),clang)
-#No longer supported in clang 10.0.0
-#CFLAGS                  += -Wno-enum-conversion
+ifneq (,$(findstring clang, $(CC)))
 CFLAGS                  += -Wno-typedef-redefinition
+else
+ifeq ($(CC),cc)
+CFLAGS                  += -Wno-typedef-redefinition
+endif
 endif
 
 ifeq ($(USE_SYSTEM_LZMA),0)
 CFLAGS_LZMA             += -D_7ZIP_ST
-ifneq ($(CC),clang)
+ifeq (,$(findstring clang, $(CC)))
 CFLAGS_LZMA             += -Wno-misleading-indentation
 endif
 endif
@@ -217,6 +221,9 @@ CFLAGS_ZLIB             += -Wno-implicit-function-declaration
 CFLAGS_ZLIB             += -Wno-unused-parameter
 CFLAGS_ZLIB             += -DIOAPI_NO_64
 CFLAGS_ZLIB             += -DUNZ_BUFSIZE=262144
+ifneq (,$(findstring clang, $(CC)))
+CFLAGS_ZLIB             += -Wno-deprecated-non-prototype -Wno-unknown-warning-option
+endif
 endif
 
 ## because UNRAR
@@ -351,7 +358,7 @@ LFLAGS_NATIVE           += -lpthread
 endif # NetBSD
 
 ifeq ($(UNAME),Darwin)
-export MACOSX_DEPLOYMENT_TARGET=10.15
+export MACOSX_DEPLOYMENT_TARGET=15.0
 CFLAGS_NATIVE           := $(CFLAGS)
 CFLAGS_NATIVE           += -DWITH_HWMON
 
@@ -787,12 +794,9 @@ CXX_WIN                 := x86_64-w64-mingw32-g++
 AR_LINUX                := ar
 AR_WIN                  := x86_64-w64-mingw32-ar
 
-## To compile win-iconv with mingw clone from here: https://github.com/win-iconv/win-iconv
-##
-## Then patch the makefile with the patches from tools/win-iconv-64.diff and run make install
-##
-
+# See BUILD_WSL.md to make these
 WIN_ICONV               := /opt/win-iconv-64
+WIN_PYTHON              := /opt/win-python
 
 ##
 ## Compiler options
@@ -849,7 +853,7 @@ binaries: win
 host_win:   hashcat.exe
 
 .PHONY: win
-win:   host_win   modules_win
+win:   host_win   modules_win   bridges_win
 else
 .PHONY: binaries
 binaries: linux win

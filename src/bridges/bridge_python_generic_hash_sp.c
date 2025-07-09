@@ -8,6 +8,7 @@
 #include "bridges.h"
 #include "memory.h"
 #include "shared.h"
+#include "cpu_features.h"
 #include "dynloader.h"
 
 #if defined (_WIN)
@@ -71,6 +72,9 @@ typedef void                (PYTHON_API_CALL *PYEXITSTATUSEXCEPTION)            
 typedef PyStatus            (PYTHON_API_CALL *PYINITIALIZEFROMCONFIG)           (const PyConfig *);
 typedef void                (PYTHON_API_CALL *PYEVAL_RESTORETHREAD)             (PyThreadState *);
 typedef const char         *(PYTHON_API_CALL *PYGETVERSION)                     (void);
+typedef PyObject           *(PYTHON_API_CALL *PY_COMPILESTRINGEXFLAGS)          (const char *, const char *, int, PyCompilerFlags *, int);
+typedef PyObject           *(PYTHON_API_CALL *PYEVAL_EVALCODE)                  (PyObject *, PyObject *, PyObject *);
+typedef PyObject           *(PYTHON_API_CALL *PYEVAL_GETBUILTINS)               (void);
 
 typedef struct hc_python_lib
 {
@@ -124,6 +128,9 @@ typedef struct hc_python_lib
   PYINITIALIZEFROMCONFIG            Py_InitializeFromConfig;
   PYEVAL_RESTORETHREAD              PyEval_RestoreThread;
   PYGETVERSION                      Py_GetVersion;
+  PY_COMPILESTRINGEXFLAGS           Py_CompileStringExFlags;
+  PYEVAL_EVALCODE                   PyEval_EvalCode;
+  PYEVAL_GETBUILTINS                PyEval_GetBuiltins;
 
 } hc_python_lib_t;
 
@@ -165,7 +172,7 @@ typedef struct
 
   PyObject *pArgs;
   PyObject *pContext;
-  PyObject *pModule;
+  PyObject *pGlobals;
   PyObject *pFunc_Init;
   PyObject *pFunc_Term;
   PyObject *pFunc_kernel_loop;
@@ -185,16 +192,172 @@ typedef struct
 
 } python_interpreter_t;
 
-static char *DEFAULT_SOURCE_FILENAME = "generic_hash_sp";
+static char *DEFAULT_SOURCE_FILENAME = "Python/generic_hash_sp.py";
+
+const char *extract_module_name (const char *path)
+{
+  char *filename = strdup (path);
+
+  remove_file_suffix (filename, ".py");
+
+  const char *slash     = strrchr (filename, '/');
+  const char *backslash = strrchr (filename, '\\');
+
+  const char *module_name = NULL;
+
+  if (slash)
+  {
+    module_name = slash + 1;
+  }
+  else if (backslash)
+  {
+    module_name = backslash + 1;
+  }
+  else
+  {
+    module_name = filename;
+  }
+
+  return module_name;
+}
+
+static char *expand_pyenv_libpath (const char *prefix, const int maj, const int min)
+{
+  char *out = NULL;
+
+  #if defined (_WIN)
+  const int len = asprintf (&out, "%s/python%d%dt.dll",           prefix, maj, min); //untested
+  #elif defined (__MSYS__)
+  const int len = asprintf (&out, "%s/msys-python%d.%dt.dll",     prefix, maj, min); //untested could be wrong
+  #elif defined (__APPLE__)
+  const int len = asprintf (&out, "%s/lib/libpython%d.%dt.dylib", prefix, maj, min); //untested
+  #elif defined (__CYGWIN__)
+  const int len = asprintf (&out, "%s/lib/python%d%dt.dll",       prefix, maj, min); //untested
+  #else
+  const int len = asprintf (&out, "%s/lib/libpython%d.%dt.so",    prefix, maj, min);
+  #endif
+
+  if (len == -1) return NULL;
+
+  struct stat st;
+
+  if (stat (out, &st) != 0)
+  {
+    free (out);
+
+    return NULL;
+  }
+
+  return out;
+}
+
+static int resolve_pyenv_libpath (char *out_buf, const size_t out_sz)
+{
+  // prefix
+
+  FILE *fp1 = popen ("pyenv prefix", "r");
+
+  if (fp1 == NULL) return -1;
+
+  char prefix_path[PATH_MAX];
+
+  if (fgets (prefix_path, sizeof (prefix_path), fp1) == NULL)
+  {
+    pclose (fp1);
+
+    return -1;
+  }
+
+  pclose (fp1);
+
+  superchop_with_length (prefix_path, strlen (prefix_path));
+
+  int maj = 0;
+  int min = 0;
+
+  // local
+
+  FILE *fp2 = popen ("pyenv local", "r");
+
+  if (fp2 == NULL) return -1;
+
+  if (fscanf (fp2, "%d.%d", &maj, &min) == 2)
+  {
+    pclose (fp2);
+
+    char *pyenv_libpath = expand_pyenv_libpath (prefix_path, maj, min);
+
+    if (pyenv_libpath != NULL)
+    {
+      strncpy (out_buf, pyenv_libpath, out_sz - 1);
+
+      free (pyenv_libpath);
+
+      return 0;
+    }
+
+    return -1;
+  }
+
+  pclose (fp2);
+
+  // global
+
+  FILE *fp3 = popen ("pyenv global", "r");
+
+  if (fp3 == NULL) return -1;
+
+  if (fscanf (fp3, "%d.%d", &maj, &min) == 2)
+  {
+    pclose (fp3);
+
+    char *pyenv_libpath = expand_pyenv_libpath (prefix_path, maj, min);
+
+    if (pyenv_libpath != NULL)
+    {
+      strncpy (out_buf, pyenv_libpath, out_sz - 1);
+
+      free (pyenv_libpath);
+
+      return 0;
+    }
+
+    return -1;
+  }
+
+  pclose (fp3);
+
+  return -1;
+}
 
 static bool init_python (hc_python_lib_t *python)
 {
-  char *pythondll_path = NULL;
+  char pythondll_path[PATH_MAX];
 
   python->lib = NULL;
 
-  if (getenv ("PYTHON_GIL") == NULL)
-    putenv ((char *) "PYTHON_GIL=0");
+  // let's see if we have pyenv, that will save us a lot of guessing...
+
+  int saved_stderr = suppress_stderr ();
+
+  const int pyenv_rc = resolve_pyenv_libpath (pythondll_path, sizeof (pythondll_path));
+
+  restore_stderr (saved_stderr);
+
+  if (pyenv_rc == 0)
+  {
+    #if defined (_WIN)
+    python->lib = hc_dlopen (pythondll_path);
+    #elif defined (__MSYS__)
+    python->lib = dlopen (pythondll_path, RTLD_NOW | RTLD_GLOBAL);
+    #elif defined (__APPLE__)
+    python->lib = dlopen (pythondll_path, RTLD_NOW | RTLD_GLOBAL);
+    #elif defined (__CYGWIN__)
+    python->lib = hc_dlopen (pythondll_path);
+    #else
+    python->lib = dlopen (pythondll_path, RTLD_NOW | RTLD_GLOBAL);
+    #endif
+  }
 
   #define MIN_MAJ 3
   #define MAX_MAJ 8
@@ -202,14 +365,16 @@ static bool init_python (hc_python_lib_t *python)
   #define MIN_MIN 0
   #define MAX_MIN 50
 
-  #if defined (_WIN)
-
   for (int maj = MAX_MAJ; maj >= MIN_MAJ; --maj)
   {
+    if (python->lib != NULL) break;
+
     for (int min = MAX_MIN; min >= MIN_MIN; --min)
     {
+      #if defined (_WIN)
+
       // first try %LocalAppData% default path
-      char expandedPath[MAX_PATH];
+      char expandedPath[MAX_PATH - 1];
 
       char *libpython_namelocal = NULL;
 
@@ -223,7 +388,7 @@ static bool init_python (hc_python_lib_t *python)
 
         if (python->lib != NULL)
         {
-          pythondll_path = hcstrdup (expandedPath);
+          strncpy (pythondll_path, expandedPath, sizeof (pythondll_path) - 1);
 
           hcfree (libpython_namelocal);
 
@@ -244,7 +409,9 @@ static bool init_python (hc_python_lib_t *python)
 
       if (python->lib != NULL)
       {
-        pythondll_path = libpython_namepath;
+        strncpy (pythondll_path, libpython_namepath, sizeof (pythondll_path) - 1);
+
+        hcfree (libpython_namepath);
 
         break;
       }
@@ -253,27 +420,19 @@ static bool init_python (hc_python_lib_t *python)
         hcfree (libpython_namepath);
       };
 
-      if (python->lib != NULL) break;
-    }
+      #elif defined (__MSYS__)
 
-    if (python->lib != NULL) break;
-  }
-
-  #elif defined (__MSYS__)
-
-  for (int maj = MAX_MAJ; maj >= MIN_MAJ; --maj)
-  {
-    for (int min = MAX_MIN; min >= MIN_MIN; --min)
-    {
       char *libpython_name = NULL;
 
-      hc_asprintf (&libpython_name, "msys-python%d.%d.dll", maj, min);
+      hc_asprintf (&libpython_name, "msys-python%d.%dt.dll", maj, min);
 
       python->lib = dlopen (libpython_name, RTLD_NOW | RTLD_GLOBAL);
 
       if (python->lib != NULL)
       {
-        pythondll_path = libpython_name;
+        strncpy (pythondll_path, libpython_name, sizeof (pythondll_path) - 1);
+
+        hcfree (libpython_name);
 
         break;
       }
@@ -282,19 +441,8 @@ static bool init_python (hc_python_lib_t *python)
         hcfree (libpython_name);
       };
 
-      if (python->lib != NULL) break;
-    }
+      #elif defined (__APPLE__)
 
-    if (python->lib != NULL) break;
-  }    
-
-  #elif defined (__APPLE__)
-
-  // untested
-  for (int maj = MAX_MAJ; maj >= MIN_MAJ; --maj)
-  {
-    for (int min = MAX_MIN; min >= MIN_MIN; --min)
-    {
       char *libpython_name = NULL;
 
       hc_asprintf (&libpython_name, "libpython%d.%dt.dylib", maj, min);
@@ -303,7 +451,9 @@ static bool init_python (hc_python_lib_t *python)
 
       if (python->lib != NULL)
       {
-        pythondll_path = libpython_name;
+        strncpy (pythondll_path, libpython_name, sizeof (pythondll_path) - 1);
+
+        hcfree (libpython_name);
 
         break;
       }
@@ -312,19 +462,8 @@ static bool init_python (hc_python_lib_t *python)
         hcfree (libpython_name);
       };
 
-      if (python->lib != NULL) break;
-    }
+      #elif defined (__CYGWIN__)
 
-    if (python->lib != NULL) break;
-  }
-
-  #elif defined (__CYGWIN__)
-
-  // untested
-  for (int maj = MAX_MAJ; maj >= MIN_MAJ; --maj)
-  {
-    for (int min = MAX_MIN; min >= MIN_MIN; --min)
-    {
       char *libpython_name = NULL;
 
       hc_asprintf (&libpython_name, "python%d%dt.dll", maj, min);
@@ -333,7 +472,9 @@ static bool init_python (hc_python_lib_t *python)
 
       if (python->lib != NULL)
       {
-        pythondll_path = libpython_name;
+        strncpy (pythondll_path, libpython_name, sizeof (pythondll_path) - 1);
+
+        hcfree (libpython_name);
 
         break;
       }
@@ -342,18 +483,8 @@ static bool init_python (hc_python_lib_t *python)
         hcfree (libpython_name);
       };
 
-      if (python->lib != NULL) break;
-    }
+      #else
 
-    if (python->lib != NULL) break;
-  }
-
-  #else
-
-  for (int maj = MAX_MAJ; maj >= MIN_MAJ; --maj)
-  {
-    for (int min = MAX_MIN; min >= MIN_MIN; --min)
-    {
       char *libpython_name = NULL;
 
       hc_asprintf (&libpython_name, "libpython%d.%dt.so", maj, min);
@@ -362,7 +493,9 @@ static bool init_python (hc_python_lib_t *python)
 
       if (python->lib != NULL)
       {
-        pythondll_path = libpython_name;
+        strncpy (pythondll_path, libpython_name, sizeof (pythondll_path) - 1);
+
+        hcfree (libpython_name);
 
         break;
       }
@@ -371,21 +504,21 @@ static bool init_python (hc_python_lib_t *python)
         hcfree (libpython_name);
       };
 
+      #endif
+
       if (python->lib != NULL) break;
     }
 
     if (python->lib != NULL) break;
   }
 
-  #endif
-
   if (python->lib == NULL)
   {
     fprintf (stderr, "Unable to find suitable Python library for -m 72000.\n\n");
     fprintf (stderr, "Most users who encounter this error are just missing the so called 'free-threaded' library support.\n");
     fprintf (stderr, "* On Windows, during install, there's an option 'free-threaded' that you need to click, it's just disabled by default.\n");
-    fprintf (stderr, "* On Linux, use `pyenv` and select a version that ends with a `t` (for instance `3.13t`).\n");
-    fprintf (stderr, "  However, on Linux it's better to use -m 73000 instead. So you probably want to ignore this.\n");
+    fprintf (stderr, "* On Linux and MacOS, use `pyenv` and select a version that ends with a `t` (for instance `3.13t`).\n");
+    fprintf (stderr, "  However, on Linux (not MacOS) it's better to use -m 73000 instead. So you probably want to ignore this.\n");
     fprintf (stderr, "\n");
 
     return false;
@@ -395,15 +528,15 @@ static bool init_python (hc_python_lib_t *python)
     printf ("Loaded python library from: %s\n\n", pythondll_path);
   }
 
-  #if defined (_WIN)
+  #if defined (_WIN) || defined (__CYGWIN__) || defined (__APPLE__)
 
   #else
   fprintf (stderr, "Attention!!! The 'free-threaded' python library has some major downsides.\n");
-  fprintf (stderr, "  The main purpose of this module is to give windows users a multithreading option.\n");
-  fprintf (stderr, "  It seems to be a lot slower, and relevant modules such as cffi are incompatibile.\n");
-  fprintf (stderr, "  Since your are on Linux/MacOS we highly recommend to stick to multiprocessing module.\n");
+  fprintf (stderr, "  The main purpose of this module is to give Windows and macOS users a multithreading option.\n");
+  fprintf (stderr, "  It seems to be a lot slower, and relevant modules such as `cffi` are incompatibile.\n");
+  fprintf (stderr, "  Since your are on Linux we highly recommend to stick to multiprocessing module.\n");
   fprintf (stderr, "  Maybe 'free-threaded' mode will become more mature in the future.\n");
-  fprintf (stderr, "  For now, we high recommend to stick to -m 73000 instead.\n");
+  fprintf (stderr, "  For now, we high recommend to stick to -m 73000 instead.\n\n");
   #endif
 
   #define HC_LOAD_FUNC_PYTHON(ptr,name,pythonname,type,libname,noerr) \
@@ -491,6 +624,9 @@ static bool init_python (hc_python_lib_t *python)
   //HC_LOAD_FUNC_PYTHON (python, Py_ExitStatusException,            Py_ExitStatusException,             PYEXITSTATUSEXCEPTION,            PYTHON, 1);
   //HC_LOAD_FUNC_PYTHON (python, Py_InitializeFromConfig,           Py_InitializeFromConfig,            PYINITIALIZEFROMCONFIG,           PYTHON, 1);
   HC_LOAD_FUNC_PYTHON (python, PyEval_RestoreThread,              PyEval_RestoreThread,               PYEVAL_RESTORETHREAD,             PYTHON, 1);
+  HC_LOAD_FUNC_PYTHON (python, Py_CompileStringExFlags,           Py_CompileStringExFlags,            PY_COMPILESTRINGEXFLAGS,          PYTHON, 1);
+  HC_LOAD_FUNC_PYTHON (python, PyEval_EvalCode,                   PyEval_EvalCode,                    PYEVAL_EVALCODE,                  PYTHON, 1);
+  HC_LOAD_FUNC_PYTHON (python, PyEval_GetBuiltins,                PyEval_GetBuiltins,                 PYEVAL_GETBUILTINS,               PYTHON, 1);
 
   return true;
 }
@@ -548,6 +684,12 @@ static void units_term (python_interpreter_t *python_interpreter)
 
 void *platform_init (user_options_t *user_options)
 {
+  // Verify CPU features
+
+  if (cpu_chipset_test () == -1) return NULL;
+
+  // Allocate platform context
+
   python_interpreter_t *python_interpreter = (python_interpreter_t *) hcmalloc (sizeof (python_interpreter_t));
 
   hc_python_lib_t *python = (hc_python_lib_t *) hcmalloc (sizeof (hc_python_lib_t));
@@ -560,7 +702,7 @@ void *platform_init (user_options_t *user_options)
 
   python_interpreter->thread_state = python->PyEval_SaveThread ();
 
-  python_interpreter->source_filename = (user_options->bridge_parameter1) ? user_options->bridge_parameter1 : DEFAULT_SOURCE_FILENAME;
+  python_interpreter->source_filename = (user_options->bridge_parameter1 == NULL) ? DEFAULT_SOURCE_FILENAME : user_options->bridge_parameter1;
 
   if (units_init (python_interpreter) == false)
   {
@@ -626,30 +768,40 @@ bool thread_init (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
   PyObject *sys = python->PyImport_ImportModule ("sys");
   PyObject *path = python->PyObject_GetAttrString (sys, "path");
   python->PyList_Append (path, python->PyUnicode_FromString ("./Python"));
-  //python->Py_DecRef (path);
-  //python->Py_DecRef (sys);
+  python->Py_DecRef (path);
+  python->Py_DecRef (sys);
 
-  PyObject *pName = python->PyUnicode_DecodeFSDefault (python_interpreter->source_filename);
+  char *source = file_to_buffer (python_interpreter->source_filename);
 
-  if (pName == NULL)
+  if (source == NULL) return NULL;
+
+  PyObject *code = python->Py_CompileStringExFlags (source, python_interpreter->source_filename, Py_file_input, NULL, -1);
+
+  free (source);
+
+  if (code == NULL)
   {
     python->PyErr_Print ();
 
     return false;
   }
 
-  unit_buf->pModule = python->PyImport_Import (pName);
+  unit_buf->pGlobals = python->PyDict_New ();
 
-  if (unit_buf->pModule == NULL)
+  python->PyDict_SetItemString (unit_buf->pGlobals, "__builtins__", python->PyEval_GetBuiltins ());
+
+  PyObject *result = python->PyEval_EvalCode (code, unit_buf->pGlobals, unit_buf->pGlobals);
+
+  if (result == NULL)
   {
     python->PyErr_Print ();
 
     return false;
   }
 
-  //python->Py_DecRef (pName);
+  python->Py_DecRef (result);
 
-  unit_buf->pFunc_Init = python->PyObject_GetAttrString (unit_buf->pModule, "init");
+  unit_buf->pFunc_Init = python->PyDict_GetItemString (unit_buf->pGlobals, "init");
 
   if (unit_buf->pFunc_Init == NULL)
   {
@@ -658,7 +810,7 @@ bool thread_init (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
     return false;
   }
 
-  unit_buf->pFunc_Term = python->PyObject_GetAttrString (unit_buf->pModule, "term");
+  unit_buf->pFunc_Term = python->PyDict_GetItemString (unit_buf->pGlobals, "term");
 
   if (unit_buf->pFunc_Term == NULL)
   {
@@ -667,7 +819,7 @@ bool thread_init (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
     return false;
   }
 
-  unit_buf->pFunc_kernel_loop = python->PyObject_GetAttrString (unit_buf->pModule, "kernel_loop");
+  unit_buf->pFunc_kernel_loop = python->PyDict_GetItemString (unit_buf->pGlobals, "kernel_loop");
 
   if (unit_buf->pFunc_kernel_loop == NULL)
   {
@@ -687,8 +839,13 @@ bool thread_init (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
     return false;
   }
 
+  const char *module_name = extract_module_name (python_interpreter->source_filename);
+
   int rc = 0;
 
+
+
+  rc |= python->PyDict_SetItemString (unit_buf->pContext, "module_name",    python->PyUnicode_FromString ((const char *) module_name));
   rc |= python->PyDict_SetItemString (unit_buf->pContext, "salts_cnt",      python->PyLong_FromLong (hashes->salts_cnt));
   rc |= python->PyDict_SetItemString (unit_buf->pContext, "salts_size",     python->PyLong_FromLong (sizeof (salt_t)));
   rc |= python->PyDict_SetItemString (unit_buf->pContext, "salts_buf",      python->PyBytes_FromStringAndSize ((const char *) hashes->salts_buf, sizeof (salt_t) * hashes->salts_cnt));
@@ -720,7 +877,18 @@ bool thread_init (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
 
   python->PyTuple_SetItem (pArgs, 0, unit_buf->pContext);
 
-  python->PyObject_CallObject (unit_buf->pFunc_Init, pArgs);
+  PyObject *pReturn = python->PyObject_CallObject (unit_buf->pFunc_Init, pArgs);
+
+  if (pReturn == NULL)
+  {
+    python->PyErr_Print ();
+
+    return false;
+  }
+
+  python->Py_DecRef (pReturn);
+
+  //python->Py_DecRef (pArgs);
 
   // for later calls
 
@@ -750,19 +918,7 @@ void thread_term (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
 
   hc_python_lib_t *python = python_interpreter->python;
 
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "salts_cnt"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "salts_size"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "salts_buf"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "esalts_cnt"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "esalts_size"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "esalts_buf"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "st_salts_cnt"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "st_salts_size"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "st_salts_buf"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "st_esalts_cnt"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "st_esalts_size"));
-  //python->Py_DecRef (python->PyDict_GetItemString (unit_buf->pContext, "st_esalts_buf"));
-
+  python->PyDict_DelItemString (unit_buf->pContext, "module_name");
   python->PyDict_DelItemString (unit_buf->pContext, "salts_cnt");
   python->PyDict_DelItemString (unit_buf->pContext, "salts_size");
   python->PyDict_DelItemString (unit_buf->pContext, "salts_buf");
@@ -789,13 +945,14 @@ void thread_term (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
 
   python->PyObject_CallObject (unit_buf->pFunc_Term, pArgs);
 
-  //python->Py_DecRef (pArgs);
-  //python->Py_DecRef (unit_buf->pFunc_kernel_loop);
-  //python->Py_DecRef (unit_buf->pFunc_Term);
-  //python->Py_DecRef (unit_buf->pFunc_Init);
-  //python->Py_DecRef (unit_buf->pModule);
-  //python->Py_DecRef (unit_buf->pContext);
-  //python->Py_DecRef (unit_buf->pArgs);
+  python->Py_DecRef (pArgs);
+
+  python->Py_DecRef (unit_buf->pArgs);
+  python->Py_DecRef (unit_buf->pContext);
+  python->Py_DecRef (unit_buf->pFunc_kernel_loop);
+  python->Py_DecRef (unit_buf->pFunc_Term);
+  python->Py_DecRef (unit_buf->pFunc_Init);
+  python->Py_DecRef (unit_buf->pGlobals);
 
   python->Py_EndInterpreter (unit_buf->tstate);
 }
@@ -880,8 +1037,6 @@ bool launch_loop (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
     return false;
   }
 
-  //python->Py_DecRef (pws);
-
   Py_ssize_t retsz = python->PyList_Size (pReturn);
 
   if (retsz != (Py_ssize_t) pws_cnt) return false;
@@ -903,12 +1058,10 @@ bool launch_loop (MAYBE_UNUSED void *platform_context, MAYBE_UNUSED hc_device_pa
       generic_io_tmp->out_len = len;
     }
 
-    //python->Py_DecRef (hash);
-
     generic_io_tmp++;
   }
 
-  //python->Py_DecRef (pReturn);
+  python->Py_DecRef (pReturn);
 
   return true;
 }
@@ -921,35 +1074,50 @@ const char *st_update_hash (MAYBE_UNUSED void *platform_context)
 
   python->PyEval_RestoreThread (python_interpreter->thread_state);
 
+  // this is ugly to load that entire thing just to get that one variable
+
   PyObject *sys = python->PyImport_ImportModule ("sys");
   PyObject *path = python->PyObject_GetAttrString (sys, "path");
   python->PyList_Append (path, python->PyUnicode_FromString ("./Python"));
-  //python->Py_DecRef (path);
-  //python->Py_DecRef (sys);
+  python->Py_DecRef (path);
+  python->Py_DecRef (sys);
 
-  PyObject *pName = python->PyUnicode_DecodeFSDefault (python_interpreter->source_filename);
+  char *source = file_to_buffer (python_interpreter->source_filename);
 
-  if (pName == NULL)
+  if (source == NULL)
+  {
+    fprintf (stderr, "ERROR: %s: %s\n\n", python_interpreter->source_filename, strerror (errno));
+
+    return NULL;
+  }
+
+  PyObject *code = python->Py_CompileStringExFlags (source, python_interpreter->source_filename, Py_file_input, NULL, -1);
+
+  free (source);
+
+  if (code == NULL)
   {
     python->PyErr_Print ();
-
-    python_interpreter->thread_state = python->PyEval_SaveThread ();
 
     return false;
   }
 
-  PyObject *pModule = python->PyImport_Import (pName);
+  PyObject *pGlobals = python->PyDict_New ();
 
-  if (pModule == NULL)
+  python->PyDict_SetItemString (pGlobals, "__builtins__", python->PyEval_GetBuiltins ());
+
+  PyObject *result = python->PyEval_EvalCode (code, pGlobals, pGlobals);
+
+  if (result == NULL)
   {
     python->PyErr_Print ();
-
-    python_interpreter->thread_state = python->PyEval_SaveThread ();
 
     return false;
   }
 
-  PyObject *constant = python->PyObject_GetAttrString (pModule, "ST_HASH");
+  python->Py_DecRef (result);
+
+  PyObject *constant = python->PyDict_GetItemString (pGlobals, "ST_HASH");
 
   if (constant == NULL)
   {
@@ -959,6 +1127,8 @@ const char *st_update_hash (MAYBE_UNUSED void *platform_context)
   }
 
   const char *s = python->PyUnicode_AsUTF8 (constant);
+
+  python->Py_DecRef (constant);
 
   python_interpreter->thread_state = python->PyEval_SaveThread ();
 
@@ -976,32 +1146,42 @@ const char *st_update_pass (MAYBE_UNUSED void *platform_context)
   PyObject *sys = python->PyImport_ImportModule ("sys");
   PyObject *path = python->PyObject_GetAttrString (sys, "path");
   python->PyList_Append (path, python->PyUnicode_FromString ("./Python"));
-  //python->Py_DecRef (path);
-  //python->Py_DecRef (sys);
+  python->Py_DecRef (path);
+  python->Py_DecRef (sys);
 
-  PyObject *pName = python->PyUnicode_DecodeFSDefault (python_interpreter->source_filename);
+  // this is ugly to load that entire thing just to get that one variable
 
-  if (pName == NULL)
+  char *source = file_to_buffer (python_interpreter->source_filename);
+
+  if (source == NULL) return NULL;
+
+  PyObject *code = python->Py_CompileStringExFlags (source, python_interpreter->source_filename, Py_file_input, NULL, -1);
+
+  free (source);
+
+  if (code == NULL)
   {
     python->PyErr_Print ();
-
-    python_interpreter->thread_state = python->PyEval_SaveThread ();
 
     return false;
   }
 
-  PyObject *pModule = python->PyImport_Import (pName);
+  PyObject *pGlobals = python->PyDict_New ();
 
-  if (pModule == NULL)
+  python->PyDict_SetItemString (pGlobals, "__builtins__", python->PyEval_GetBuiltins ());
+
+  PyObject *result = python->PyEval_EvalCode (code, pGlobals, pGlobals);
+
+  if (result == NULL)
   {
     python->PyErr_Print ();
-
-    python_interpreter->thread_state = python->PyEval_SaveThread ();
 
     return false;
   }
 
-  PyObject *constant = python->PyObject_GetAttrString (pModule, "ST_PASS");
+  python->Py_DecRef (result);
+
+  PyObject *constant = python->PyDict_GetItemString (pGlobals, "ST_PASS");
 
   if (constant == NULL)
   {
@@ -1011,6 +1191,8 @@ const char *st_update_pass (MAYBE_UNUSED void *platform_context)
   }
 
   const char *s = python->PyUnicode_AsUTF8 (constant);
+
+  python->Py_DecRef (constant);
 
   python_interpreter->thread_state = python->PyEval_SaveThread ();
 

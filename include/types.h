@@ -103,6 +103,10 @@ typedef enum event_identifier
   EVENT_AUTODETECT_STARTING       = 0x00000101,
   EVENT_AUTOTUNE_FINISHED         = 0x00000000,
   EVENT_AUTOTUNE_STARTING         = 0x00000001,
+  EVENT_BACKEND_RUNTIMES_INIT_POST = 0x00000130,
+  EVENT_BACKEND_RUNTIMES_INIT_PRE  = 0x00000131,
+  EVENT_BACKEND_DEVICES_INIT_POST = 0x00000132,
+  EVENT_BACKEND_DEVICES_INIT_PRE  = 0x00000133,
   EVENT_BITMAP_INIT_POST          = 0x00000010,
   EVENT_BITMAP_INIT_PRE           = 0x00000011,
   EVENT_BITMAP_FINAL_OVERFLOW     = 0x00000012,
@@ -111,6 +115,7 @@ typedef enum event_identifier
   EVENT_BRIDGES_SALT_POST         = 0x00000122,
   EVENT_BRIDGES_SALT_PRE          = 0x00000123,
   EVENT_CALCULATED_WORDS_BASE     = 0x00000020,
+  EVENT_CALCULATED_WORDS_CNT      = 0x00000021,
   EVENT_CRACKER_FINISHED          = 0x00000030,
   EVENT_CRACKER_HASH_CRACKED      = 0x00000031,
   EVENT_CRACKER_STARTING          = 0x00000032,
@@ -408,6 +413,9 @@ typedef enum opti_type
   OPTI_TYPE_REGISTER_LIMIT        = (1 << 20), // We'll limit the register count to 128
   OPTI_TYPE_SLOW_HASH_SIMD_INIT2  = (1 << 21),
   OPTI_TYPE_SLOW_HASH_SIMD_LOOP2  = (1 << 22),
+  OPTI_TYPE_SLOW_HASH_DIMY_INIT   = (1 << 23),
+  OPTI_TYPE_SLOW_HASH_DIMY_LOOP   = (1 << 24),
+  OPTI_TYPE_SLOW_HASH_DIMY_COMP   = (1 << 25),
 
 } opti_type_t;
 
@@ -472,14 +480,17 @@ typedef enum opts_type
   OPTS_TYPE_DYNAMIC_SHARED    = (1ULL << 53), // use dynamic shared memory (note: needs special kernel changes)
   OPTS_TYPE_SELF_TEST_DISABLE = (1ULL << 54), // some algos use JiT in combinations with a salt or create too much startup time
   OPTS_TYPE_MP_MULTI_DISABLE  = (1ULL << 55), // do not multiply the kernel-accel with the multiprocessor count per device to allow more fine-tuned workload settings
-  OPTS_TYPE_NATIVE_THREADS    = (1ULL << 56), // forces "native" thread count: CPU=1, GPU-Intel=8, GPU-AMD=64 (wavefront), GPU-NV=32 (warps)
-  OPTS_TYPE_MAXIMUM_THREADS   = (1ULL << 57), // disable else branch in pre-compilation thread count optimization setting
-  OPTS_TYPE_POST_AMP_UTF16LE  = (1ULL << 58), // run the utf8 to utf16le conversion kernel after they have been processed from amplifiers
+  OPTS_TYPE_THREAD_MULTI_DISABLE              // do not multiply the kernel-power with the thread count per device for super slow algos
+                              = (1ULL << 56),
+  OPTS_TYPE_NATIVE_THREADS    = (1ULL << 57), // forces "native" thread count: CPU=1, GPU-Intel=8, GPU-AMD=64 (wavefront), GPU-NV=32 (warps)
+  OPTS_TYPE_MAXIMUM_THREADS   = (1ULL << 58), // disable else branch in pre-compilation thread count optimization setting
+  OPTS_TYPE_POST_AMP_UTF16LE  = (1ULL << 59), // run the utf8 to utf16le conversion kernel after they have been processed from amplifiers
   OPTS_TYPE_AUTODETECT_DISABLE
-                              = (1ULL << 59), // skip autodetect engine
-  OPTS_TYPE_STOCK_MODULE      = (1ULL << 60), // module included with hashcat default distribution
+                              = (1ULL << 60), // skip autodetect engine
+  OPTS_TYPE_STOCK_MODULE      = (1ULL << 61), // module included with hashcat default distribution
   OPTS_TYPE_MULTIHASH_DESPITE_ESALT
-                              = (1ULL << 61), // overrule multihash cracking check same salt but not same esalt
+                              = (1ULL << 62), // overrule multihash cracking check same salt but not same esalt
+  OPTS_TYPE_MAXIMUM_ACCEL     = (1ULL << 63)  // try to maximize kernel-accel during autotune
 
 } opts_type_t;
 
@@ -523,6 +534,7 @@ typedef enum dgst_size
   DGST_SIZE_4_6  = (6  * sizeof (u32)), // 24
   DGST_SIZE_4_7  = (7  * sizeof (u32)), // 28
   DGST_SIZE_4_8  = (8  * sizeof (u32)), // 32
+  DGST_SIZE_4_10 = (10 * sizeof (u32)), // 40
   DGST_SIZE_4_16 = (16 * sizeof (u32)), // 64 !!!
   DGST_SIZE_4_32 = (32 * sizeof (u32)), // 128 !!!
   DGST_SIZE_4_64 = (64 * sizeof (u32)), // 256
@@ -670,6 +682,7 @@ typedef enum user_options_defaults
   AUTODETECT               = false,
   BACKEND_DEVICES_VIRTMULTI = 1,
   BACKEND_DEVICES_VIRTHOST = 1,
+  BACKEND_DEVICES_KEEPFREE = 0,
   BENCHMARK_ALL            = false,
   BENCHMARK_MAX            = 99999,
   BENCHMARK_MIN            = 0,
@@ -694,7 +707,7 @@ typedef enum user_options_defaults
   #else
   HWMON_TEMP_ABORT         = 90,
   #endif
-  HASH_INFO                = false,
+  HASH_INFO                = 0,
   HASH_MODE                = 0,
   HCCAPX_MESSAGE_PAIR      = 0,
   HEX_CHARSET              = false,
@@ -710,6 +723,7 @@ typedef enum user_options_defaults
   KERNEL_LOOPS             = 0,
   KERNEL_THREADS           = 0,
   KEYSPACE                 = false,
+  TOTAL_CANDIDATES         = false,
   LEFT                     = false,
   LIMIT                    = 0,
   LOGFILE                  = true,
@@ -778,6 +792,7 @@ typedef enum user_options_map
   IDX_BACKEND_DEVICES           = 'd',
   IDX_BACKEND_DEVICES_VIRTMULTI = 'Y',
   IDX_BACKEND_DEVICES_VIRTHOST  = 'R',
+  IDX_BACKEND_DEVICES_KEEPFREE  = 0xff60,
   IDX_BACKEND_IGNORE_CUDA       = 0xff01,
   IDX_BACKEND_IGNORE_HIP        = 0xff02,
   IDX_BACKEND_IGNORE_METAL      = 0xff03,
@@ -811,13 +826,17 @@ typedef enum user_options_map
   IDX_CUSTOM_CHARSET_2          = '2',
   IDX_CUSTOM_CHARSET_3          = '3',
   IDX_CUSTOM_CHARSET_4          = '4',
+  IDX_CUSTOM_CHARSET_5          = '5',
+  IDX_CUSTOM_CHARSET_6          = '6',
+  IDX_CUSTOM_CHARSET_7          = '7',
+  IDX_CUSTOM_CHARSET_8          = '8',
   IDX_DEBUG_FILE                = 0xff12,
   IDX_DEBUG_MODE                = 0xff13,
   IDX_DEPRECATED_CHECK_DISABLE  = 0xff14,
   IDX_DYNAMIC_X                 = 0xff55,
   IDX_ENCODING_FROM             = 0xff15,
   IDX_ENCODING_TO               = 0xff16,
-  IDX_HASH_INFO                 = 0xff17,
+  IDX_HASH_INFO                 = 'H', // 0xff17
   IDX_FORCE                     = 0xff18,
   IDX_HWMON_DISABLE             = 0xff19,
   IDX_HWMON_TEMP_ABORT          = 0xff1a,
@@ -893,6 +912,7 @@ typedef enum user_options_map
   IDX_STATUS_TIMER              = 0xff4c,
   IDX_STDOUT_FLAG               = 0xff4d,
   IDX_STDIN_TIMEOUT_ABORT       = 0xff4e,
+  IDX_TOTAL_CANDIDATES          = 0xff58,
   IDX_TRUECRYPT_KEYFILES        = 0xff4f,
   IDX_USERNAME                  = 0xff50,
   IDX_VERACRYPT_KEYFILES        = 0xff51,
@@ -1235,6 +1255,9 @@ typedef struct hc_device_param
 
   int     sm_major;
   int     sm_minor;
+  char   *gcnArchName;
+  int     regsPerBlock;
+  int     regsPerMultiprocessor;
   u32     kernel_exec_timeout;
 
   u32     kernel_preferred_wgs_multiple;
@@ -1368,6 +1391,8 @@ typedef struct hc_device_param
   u32     kernel_threads_min;
   u32     kernel_threads_max;
 
+  bool    overtune_unfriendly;  // whatever sets this decide we operate in a mode that is not allowing to overtune threads_max or accel_max in autotuner
+
   u64     kernel_power;
   u64     hardware_power;
 
@@ -1500,6 +1525,7 @@ typedef struct hc_device_param
   bool    has_lop3;
   bool    has_mov64;
   bool    has_prmt;
+  bool    has_shfw;
 
   double  spin_damp;
 
@@ -1956,6 +1982,7 @@ typedef struct backend_ctx
   int                 backend_devices_cnt;
   int                 backend_devices_virtmulti;
   int                 backend_devices_virthost;
+  int                 backend_devices_keepfree;
   int                 backend_devices_active;
 
   int                 cuda_devices_cnt;
@@ -2066,6 +2093,7 @@ typedef struct hm_attrs
   bool threshold_slowdown_get_supported;
   bool throttle_get_supported;
   bool utilization_get_supported;
+  bool memoryused_get_supported;
 
 } hm_attrs_t;
 
@@ -2187,6 +2215,8 @@ typedef struct outfile_ctx
   bool    is_fifo;
 
   char   *filename;
+
+  hc_thread_mutex_t mux_outfile;
 
 } outfile_ctx_t;
 
@@ -2323,6 +2353,7 @@ typedef struct tuning_db_entry
   int         vector_width;
   int         kernel_accel;
   int         kernel_loops;
+  int         source; // 1 = dbfile, 2 = module
 
 } tuning_db_entry_t;
 
@@ -2398,6 +2429,7 @@ typedef struct user_options
   bool         separator_chgd;
   bool         rule_buf_l_chgd;
   bool         rule_buf_r_chgd;
+  bool         session_chgd;
 
   bool         advice;
   bool         benchmark;
@@ -2411,13 +2443,13 @@ typedef struct user_options
   bool         deprecated_check;
   bool         dynamic_x;
   bool         hwmon;
-  bool         hash_info;
   bool         hex_charset;
   bool         hex_salt;
   bool         hex_wordlist;
   bool         increment;
   bool         keep_guessing;
   bool         keyspace;
+  bool         total_candidates;
   bool         left;
   bool         logfile;
   bool         loopback;
@@ -2462,7 +2494,6 @@ typedef struct user_options
   char        *bridge_parameter3;
   char        *bridge_parameter4;
   char        *cpu_affinity;
-  char        *custom_charset_4;
   char        *debug_file;
   char        *induction_dir;
   char        *keyboard_layout_mapping;
@@ -2481,6 +2512,11 @@ typedef struct user_options
   const char  *custom_charset_1;
   const char  *custom_charset_2;
   const char  *custom_charset_3;
+  const char  *custom_charset_4;
+  const char  *custom_charset_5;
+  const char  *custom_charset_6;
+  const char  *custom_charset_7;
+  const char  *custom_charset_8;
   const char  *encoding_from;
   const char  *encoding_to;
   const char  *rule_buf_l;
@@ -2489,6 +2525,7 @@ typedef struct user_options
   u32          attack_mode;
   u32          backend_devices_virtmulti;
   u32          backend_devices_virthost;
+  u32          backend_devices_keepfree;
   u32          backend_info;
   u32          benchmark_max;
   u32          benchmark_min;
@@ -2503,6 +2540,7 @@ typedef struct user_options
   #endif
   u32          debug_mode;
   u32          hwmon_temp_abort;
+  u32          hash_info;
   int          hash_mode;
   u32          hccapx_message_pair;
   u32          hook_threads;
@@ -3011,7 +3049,7 @@ typedef struct module_ctx
   u32         (*module_dgst_size)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   bool        (*module_dictstat_disable)        (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u64         (*module_esalt_size)              (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
-  const char *(*module_extra_tuningdb_block)    (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
+  const char *(*module_extra_tuningdb_block)    (const hashconfig_t *, const user_options_t *, const user_options_extra_t *, const backend_ctx_t *, const hashes_t *, const u32, const u32);
   u32         (*module_forced_outfile_format)   (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u32         (*module_hash_category)           (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   const char *(*module_hash_name)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);

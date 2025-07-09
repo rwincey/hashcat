@@ -824,6 +824,10 @@ typedef enum user_options_map
   IDX_CUSTOM_CHARSET_2          = '2',
   IDX_CUSTOM_CHARSET_3          = '3',
   IDX_CUSTOM_CHARSET_4          = '4',
+  IDX_CUSTOM_CHARSET_5          = '5',
+  IDX_CUSTOM_CHARSET_6          = '6',
+  IDX_CUSTOM_CHARSET_7          = '7',
+  IDX_CUSTOM_CHARSET_8          = '8',
   IDX_DEBUG_FILE                = 0xff12,
   IDX_DEBUG_MODE                = 0xff13,
   IDX_DEPRECATED_CHECK_DISABLE  = 0xff14,
@@ -2487,7 +2491,6 @@ typedef struct user_options
   char        *bridge_parameter3;
   char        *bridge_parameter4;
   char        *cpu_affinity;
-  char        *custom_charset_4;
   char        *debug_file;
   char        *induction_dir;
   char        *keyboard_layout_mapping;
@@ -2506,6 +2509,11 @@ typedef struct user_options
   const char  *custom_charset_1;
   const char  *custom_charset_2;
   const char  *custom_charset_3;
+  const char  *custom_charset_4;
+  const char  *custom_charset_5;
+  const char  *custom_charset_6;
+  const char  *custom_charset_7;
+  const char  *custom_charset_8;
   const char  *encoding_from;
   const char  *encoding_to;
   const char  *rule_buf_l;

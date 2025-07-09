@@ -579,7 +579,18 @@ int hc_fseek (HCFILE *fp, off_t offset, int whence)
   }
   else if (fp->xfp)
   {
-    /* TODO */
+    /* XZ files are compressed streams, seeking is limited */
+    if (offset == 0 && whence == SEEK_SET)
+    {
+      /* Rewind to beginning */
+      hc_rewind(fp);
+      r = 0;
+    }
+    else
+    {
+      /* Arbitrary seeking not supported for compressed XZ files */
+      r = -1;
+    }
   }
 
   return r;

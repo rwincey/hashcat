@@ -169,6 +169,7 @@
 - Metal Backend: improved compute workloads calculation
 - Modules: Check UnpackSize to raise false positive with hc_decompress_rar
 - User Options: added --metal-compiler-runtime option
+- User Options: limit --bitmap-max value to 31
 - User Options: assigned -H to --hash-info
 - Hash-Info: show more details using -HH
 - Hardware Monitor: avoid sprintf in src/ext_iokit.c

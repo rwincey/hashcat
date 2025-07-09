@@ -83,17 +83,19 @@ DECLSPEC u64 hc__shfl (MAYBE_UNUSED LOCAL_AS u64 *shuffle_buf, const u64 var, co
 #endif
 
 #elif defined IS_METAL
-#define hc__shfl_sync(shfbuf,mask,var,srcLane,argon2_thread,argon2_lsz) hc__shfl ((shfbuf),(var),(srcLane),(argon2_thread),(argon2_lsz))
+#define hc__shfl_sync(shfbuf,mask,var,srcLane,argon2_thread,argon2_lsz) simd_shuffle_64 ((var),(srcLane),(argon2_lsz))
 
-DECLSPEC u64 hc__shfl (LOCAL_AS u64 *shuffle_buf, const u64 var, const int src_lane, const u32 argon2_thread, const u32 argon2_lsz)
+DECLSPEC u64 simd_shuffle_64 (const u64 var, const int src_lane, const u32 argon2_lsz)
 {
-  shuffle_buf[argon2_thread] = var;
+  const u32 idx = src_lane & (argon2_lsz - 1);
 
-  SYNC_THREADS();
+  const u32 l32 = l32_from_64_S (var);
+  const u32 h32 = h32_from_64_S (var);
 
-  const u64 out = shuffle_buf[src_lane & (argon2_lsz - 1)];
+  u32 l32r = simd_shuffle (l32, idx);
+  u32 h32r = simd_shuffle (h32, idx);
 
-  SYNC_THREADS();
+  const u64 out = hl32_to_64_S (h32r, l32r);
 
   return out;
 }

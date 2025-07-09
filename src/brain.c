@@ -3108,6 +3108,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   {
     brain_logging (stderr, 0, "setsockopt: %s\n", strerror (errno));
 
+    close(server_fd);
+
     if (brain_password == NULL) hcfree (auth_password);
 
     return -1;
@@ -3116,6 +3118,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   if (setsockopt (server_fd, SOL_TCP, TCP_NODELAY, &one, sizeof (one)) == -1)
   {
     brain_logging (stderr, 0, "setsockopt: %s\n", strerror (errno));
+
+    close(server_fd);
 
     if (brain_password == NULL) hcfree (auth_password);
 
@@ -3160,6 +3164,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
     {
       brain_logging (stderr, 0, "%s: %s\n", listen_host, gai_strerror (rc_getaddrinfo));
 
+      close(server_fd);
+
       if (brain_password == NULL) hcfree (auth_password);
 
       return -1;
@@ -3170,6 +3176,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   {
     brain_logging (stderr, 0, "bind: %s\n", strerror (errno));
 
+    close(server_fd);
+
     if (brain_password == NULL) hcfree (auth_password);
 
     return -1;
@@ -3178,6 +3186,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   if (listen (server_fd, 5) == -1)
   {
     brain_logging (stderr, 0, "listen: %s\n", strerror (errno));
+
+    close(server_fd);
 
     if (brain_password == NULL) hcfree (auth_password);
 

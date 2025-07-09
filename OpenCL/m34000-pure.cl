@@ -66,6 +66,8 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
 
   LOCAL_AS u64 *shuffle_buf = shuffle_bufs[lid];
 
+  SYNC_THREADS();
+
   const u32 bd4 = bid / 4;
   const u32 bm4 = bid % 4;
 

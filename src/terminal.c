@@ -17,6 +17,13 @@
 #include "timer.h"
 #include "terminal.h"
 
+#if defined (_POSIX)
+#include <sys/utsname.h>
+#if !defined (__APPLE__)
+#include <sys/sysinfo.h>
+#endif
+#endif
+
 static const size_t MAXIMUM_EXAMPLE_HASH_LENGTH = 200;
 
 static const size_t TERMINAL_LINE_LENGTH = 79;
@@ -1253,7 +1260,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       printf ("\"SystemInfo\": { ");
     }
 
-    #if defined (_WIN) || defined (__CYGWIN__) || defined (__MSYS__)
+    #if defined (_WIN)
     // Get Windows system information
     SYSTEM_INFO sysinfo;
     OSVERSIONINFO osvi;
@@ -1311,6 +1318,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       printf ("\"Model\": \"%s\" } ", "N/A");
       printf ("}, ");
     }
+
     #else
 
     struct utsname utsbuf;
@@ -1320,7 +1328,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
     char *hw_model_buf = NULL;
 
-    #if !defined (__linux__)
+    #if !defined (__linux__) && !defined (__CYGWIN__) && !defined (__MSYS__)
 
     size_t hw_model_len = 0;
 

@@ -1155,64 +1155,205 @@ KERNEL_FQ KERNEL_FA void m33800_init2 (KERN_ATTR_TMPS (bcrypt_tmp_t))
 
 KERNEL_FQ KERNEL_FA void m33800_loop2 (KERN_ATTR_TMPS (bcrypt_tmp_t))
 {
-  // the second loop is the same as the first one, only different "password" in init2
-#if defined IS_CUDA || defined IS_HIP
-  m33800_loop(
-    pws,
-    g_rules_buf,
-    combs_buf,
-    g_bfs_buf,
-    tmps,
-    hooks,
-    bitmaps_buf_s1_a,
-    bitmaps_buf_s1_b,
-    bitmaps_buf_s1_c,
-    bitmaps_buf_s1_d,
-    bitmaps_buf_s2_a,
-    bitmaps_buf_s2_b,
-    bitmaps_buf_s2_c,
-    bitmaps_buf_s2_d,
-    plains_buf,
-    digests_buf,
-    hashes_shown,
-    salt_bufs,
-    esalt_bufs,
-    d_return_buf,
-    d_extra0_buf,
-    d_extra1_buf,
-    d_extra2_buf,
-    d_extra3_buf,
-    kernel_param
-  );
-#else
-  m33800_loop(
-    pws,
-    rules_buf,
-    combs_buf,
-    bfs_buf,
-    tmps,
-    hooks,
-    bitmaps_buf_s1_a,
-    bitmaps_buf_s1_b,
-    bitmaps_buf_s1_c,
-    bitmaps_buf_s1_d,
-    bitmaps_buf_s2_a,
-    bitmaps_buf_s2_b,
-    bitmaps_buf_s2_c,
-    bitmaps_buf_s2_d,
-    plains_buf,
-    digests_buf,
-    hashes_shown,
-    salt_bufs,
-    esalt_bufs,
-    d_return_buf,
-    d_extra0_buf,
-    d_extra1_buf,
-    d_extra2_buf,
-    d_extra3_buf,
-    kernel_param
-  );
-#endif
+  /**
+   * base
+   */
+
+  const u64 gid = get_global_id (0);
+  const u64 lid = get_local_id (0);
+
+  if (gid >= GID_CNT) return;
+
+  // load
+
+  u32 E[18];
+
+  for (u32 i = 0; i < 18; i++)
+  {
+    E[i] = tmps[gid].E[i];
+  }
+
+  u32 P[18];
+
+  for (u32 i = 0; i < 18; i++)
+  {
+    P[i] = tmps[gid].P[i];
+  }
+
+  #ifdef DYNAMIC_LOCAL
+  // from host
+  #else
+  LOCAL_VK u32 S0_all[FIXED_LOCAL_SIZE][256];
+  LOCAL_VK u32 S1_all[FIXED_LOCAL_SIZE][256];
+  LOCAL_VK u32 S2_all[FIXED_LOCAL_SIZE][256];
+  LOCAL_VK u32 S3_all[FIXED_LOCAL_SIZE][256];
+  #endif
+
+  #ifdef BCRYPT_AVOID_BANK_CONFLICTS
+  LOCAL_AS u32 *S0 = S + (FIXED_LOCAL_SIZE * 256 * 0);
+  LOCAL_AS u32 *S1 = S + (FIXED_LOCAL_SIZE * 256 * 1);
+  LOCAL_AS u32 *S2 = S + (FIXED_LOCAL_SIZE * 256 * 2);
+  LOCAL_AS u32 *S3 = S + (FIXED_LOCAL_SIZE * 256 * 3);
+  #else
+  LOCAL_AS u32 *S0 = S0_all[lid];
+  LOCAL_AS u32 *S1 = S1_all[lid];
+  LOCAL_AS u32 *S2 = S2_all[lid];
+  LOCAL_AS u32 *S3 = S3_all[lid];
+  #endif
+
+  for (u32 i = 0; i < 256; i++)
+  {
+    SET_KEY32 (S0, i, tmps[gid].S0[i]);
+    SET_KEY32 (S1, i, tmps[gid].S1[i]);
+    SET_KEY32 (S2, i, tmps[gid].S2[i]);
+    SET_KEY32 (S3, i, tmps[gid].S3[i]);
+  }
+
+  /**
+   * salt
+   */
+
+  u32 salt_buf[4];
+
+  salt_buf[0] = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  salt_buf[1] = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  salt_buf[2] = salt_bufs[SALT_POS_HOST].salt_buf[2];
+  salt_buf[3] = salt_bufs[SALT_POS_HOST].salt_buf[3];
+
+  /**
+   * main loop
+   */
+
+  u32 L0;
+  u32 R0;
+
+  for (u32 i = 0; i < LOOP_CNT; i++)
+  {
+    for (u32 i = 0; i < 18; i++)
+    {
+      P[i] ^= E[i];
+    }
+
+    L0 = 0;
+    R0 = 0;
+
+    for (u32 i = 0; i < 9; i++)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      P[i * 2 + 0] = L0;
+      P[i * 2 + 1] = R0;
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S0, i + 0, L0);
+      SET_KEY32 (S0, i + 1, R0);
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S1, i + 0, L0);
+      SET_KEY32 (S1, i + 1, R0);
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S2, i + 0, L0);
+      SET_KEY32 (S2, i + 1, R0);
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S3, i + 0, L0);
+      SET_KEY32 (S3, i + 1, R0);
+    }
+
+    P[ 0] ^= salt_buf[0];
+    P[ 1] ^= salt_buf[1];
+    P[ 2] ^= salt_buf[2];
+    P[ 3] ^= salt_buf[3];
+    P[ 4] ^= salt_buf[0];
+    P[ 5] ^= salt_buf[1];
+    P[ 6] ^= salt_buf[2];
+    P[ 7] ^= salt_buf[3];
+    P[ 8] ^= salt_buf[0];
+    P[ 9] ^= salt_buf[1];
+    P[10] ^= salt_buf[2];
+    P[11] ^= salt_buf[3];
+    P[12] ^= salt_buf[0];
+    P[13] ^= salt_buf[1];
+    P[14] ^= salt_buf[2];
+    P[15] ^= salt_buf[3];
+    P[16] ^= salt_buf[0];
+    P[17] ^= salt_buf[1];
+
+    L0 = 0;
+    R0 = 0;
+
+    for (u32 i = 0; i < 9; i++)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      P[i * 2 + 0] = L0;
+      P[i * 2 + 1] = R0;
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S0, i + 0, L0);
+      SET_KEY32 (S0, i + 1, R0);
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S1, i + 0, L0);
+      SET_KEY32 (S1, i + 1, R0);
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S2, i + 0, L0);
+      SET_KEY32 (S2, i + 1, R0);
+    }
+
+    for (u32 i = 0; i < 256; i += 2)
+    {
+      BF_ENCRYPT (L0, R0);
+
+      SET_KEY32 (S3, i + 0, L0);
+      SET_KEY32 (S3, i + 1, R0);
+    }
+  }
+
+  // store
+
+  for (u32 i = 0; i < 18; i++)
+  {
+    tmps[gid].P[i] = P[i];
+  }
+
+  for (u32 i = 0; i < 256; i++)
+  {
+    tmps[gid].S0[i] = GET_KEY32 (S0, i);
+    tmps[gid].S1[i] = GET_KEY32 (S1, i);
+    tmps[gid].S2[i] = GET_KEY32 (S2, i);
+    tmps[gid].S3[i] = GET_KEY32 (S3, i);
+  }
 }
 
 KERNEL_FQ KERNEL_FA void m33800_comp (KERN_ATTR_TMPS (bcrypt_tmp_t))

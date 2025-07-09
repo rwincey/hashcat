@@ -816,7 +816,7 @@ typedef enum user_options_map
   IDX_BRAIN_SESSION             = 0xff0f,
   IDX_BRAIN_SESSION_WHITELIST   = 0xff10,
   #endif
-  IDX_COLOR                     = 0xff58,
+  IDX_COLOR                     = 0xff59,
   IDX_BRIDGE_PARAMETER1         = 0xff80,
   IDX_BRIDGE_PARAMETER2         = 0xff81,
   IDX_BRIDGE_PARAMETER3         = 0xff82,

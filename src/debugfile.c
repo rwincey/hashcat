@@ -173,8 +173,6 @@ void debugfile_destroy (hashcat_ctx_t *hashcat_ctx)
 
   if (debugfile_ctx->filename)
   {
-    hc_unlockfile (&debugfile_ctx->fp);
-
     hc_fclose (&debugfile_ctx->fp);
   }
 

@@ -132,6 +132,7 @@ static int inner2_loop (hashcat_ctx_t *hashcat_ctx)
   status_ctx->words_base = status_ctx->words_cnt / amplifier_cnt;
 
   EVENT (EVENT_CALCULATED_WORDS_BASE);
+  EVENT (EVENT_CALCULATED_WORDS_CNT);
 
   if (user_options->keyspace == true)
   {
@@ -1480,6 +1481,8 @@ bool autodetect_hashmode_test (hashcat_ctx_t *hashcat_ctx)
   if (hashlist_mode == HL_MODE_ARG)
   {
     char *input_buf = user_options_extra->hc_hash;
+
+    if (!input_buf) return false;
 
     size_t input_len = strlen (input_buf);
 

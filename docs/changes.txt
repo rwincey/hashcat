@@ -75,6 +75,7 @@
 - Added option --total-candidates to provide the total candidate count for an attack instead of the internal "--keyspace" value
 - Added option --backend-devices-keepfree to configure X percentage of device memory available to keep free
 - Added display of password length mininum and maximum in the Kernel.Feature status line
+- Added the 'edge' test type to test.pl and the corresponding tool test_edge.sh
 
 ##
 ## Performance

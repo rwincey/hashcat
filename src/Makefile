@@ -88,6 +88,9 @@ DARWIN_VERSION          := $(shell uname -r | cut -d. -f1)
 IS_APPLE_SILICON        := $(shell [ "$$(sysctl -in hw.optional.arm64 2>/dev/null)" = "1" ] && echo 1 || echo 0)
 endif
 
+IS_AARCH64              := $(shell [ "$$(arch 2>/dev/null)" = "aarch64" ] && echo 1 || echo 0)
+IS_ARM                  := $(or $(filter 1,$(IS_APPLE_SILICON)),$(filter 1,$(IS_AARCH64)))
+
 ifneq (,$(filter $(UNAME),FreeBSD NetBSD))
 CC                      := cc
 CXX                     := c++
@@ -380,8 +383,6 @@ LFLAGS_NATIVE           += -lpthread
 LFLAGS_NATIVE           += -liconv
 
 ifeq ($(IS_APPLE_SILICON),1)
-CFLAGS_NATIVE           += -DSSE2NEON_SUPPRESS_WARNINGS
-CFLAGS_NATIVE           += -I$(DEPS_SSE2NEON)
 CFLAGS_NATIVE           += -arch arm64
 CFLAGS_NATIVE           += -arch x86_64
 ifeq ($(SHARED),1)
@@ -391,6 +392,11 @@ endif
 endif
 
 endif # Darwin
+
+ifeq ($(IS_ARM),1)
+CFLAGS_NATIVE           += -DSSE2NEON_SUPPRESS_WARNINGS
+CFLAGS_NATIVE           += -I$(DEPS_SSE2NEON)
+endif
 
 ifeq ($(UNAME),CYGWIN)
 CFLAGS_NATIVE           := $(CFLAGS)
@@ -838,11 +844,11 @@ CFLAGS_LZMA_WIN         += -Wno-misleading-indentation
 
 CFLAGS_UNRAR_WIN        += -Wno-misleading-indentation
 CFLAGS_UNRAR_WIN        += -Wno-class-memaccess
+endif
 
-ifeq ($(IS_APPLE_SILICON),1)
+ifeq ($(IS_ARM),1)
 CFLAGS_CROSS_LINUX      += -DSSE2NEON_SUPPRESS_WARNINGS
 CFLAGS_CROSS_LINUX      += -I$(DEPS_SSE2NEON)
-endif
 endif
 
 ##

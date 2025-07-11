@@ -143,7 +143,12 @@ char *argon2_module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconf
 
   char *jit_build_options = NULL;
 
-  //hc_asprintf (&jit_build_options, "-D ARGON2_PARALLELISM=%u -D ARGON2_TMP_ELEM=%u", options[0].parallelism, options[0].memory_block_count);
+  //hc_asprintf (&jit_build_options, "-D ARGON2_PARALLELISM=%u", options[0].parallelism);
+
+  if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
+  {
+    hc_asprintf (&jit_build_options, "-D THREADS_PER_LANE=1");
+  }
 
   return jit_build_options;
 }

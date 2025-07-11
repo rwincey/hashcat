@@ -336,7 +336,7 @@ static int resolve_pyenv_libpath (char *out_buf, const size_t out_sz)
   return -1;
 }
 
-static bool init_python (hc_python_lib_t *python)
+static bool init_python (hc_python_lib_t *python, user_options_t *user_options)
 {
   char pythondll_path[PATH_MAX];
 
@@ -526,7 +526,13 @@ static bool init_python (hc_python_lib_t *python)
   }
   else
   {
-    printf ("Loaded python library from: %s\n\n", pythondll_path);
+    if (user_options->quiet == false)
+    {
+      if (user_options->machine_readable == false)
+      {
+        printf ("Loaded python library from: %s\n\n", pythondll_path);
+      }
+    }
   }
 
   #define HC_LOAD_FUNC_PYTHON(ptr,name,pythonname,type,libname,noerr) \
@@ -694,7 +700,7 @@ void *platform_init (user_options_t *user_options)
 
   python_interpreter->python = python;
 
-  if (init_python (python) == false) return NULL;
+  if (init_python (python, user_options) == false) return NULL;
 
   python->Py_Initialize ();
 
@@ -714,9 +720,15 @@ void *platform_init (user_options_t *user_options)
   unit_t *unit_buf = &python_interpreter->units_buf[0];
 
   #if defined (_WIN) || defined (__CYGWIN__) || defined (__APPLE__)
-  fprintf (stderr, "Attention!!! Falling back to single-threaded mode.\n");
-  fprintf (stderr, " Windows and MacOS ds not support multiprocessing module cleanly!\n");
-  fprintf (stderr, " For multithreading on Windows and MacOS, please use -m 72000 instead.\n\n");
+  if (user_options->quiet == false)
+  {
+    if (user_options->machine_readable == false)
+    {
+      fprintf (stderr, "Attention!!! Falling back to single-threaded mode.\n");
+      fprintf (stderr, " Windows and MacOS ds not support multiprocessing module cleanly!\n");
+      fprintf (stderr, " For multithreading on Windows and MacOS, please use -m 72000 instead.\n\n");
+    }
+  }
   #endif
 
   python_interpreter->source_filename = (user_options->bridge_parameter1 == NULL) ? DEFAULT_SOURCE_FILENAME : user_options->bridge_parameter1;

@@ -16329,10 +16329,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       // let's add some extra space just to be sure.
       // now depends on the kernel-accel value (where scrypt and similar benefits), but also hard minimum 64mb and maximum 1024mb limit
       // let's see if we still need this now that we have low-level API to report free memory
+      // we don't want these get too big. if a plugin requires really a lot of memory, the extra buffer should be used instead.
 
-      if (size_pws   > device_param->device_maxmem_alloc) memory_limit_hit = 1;
-      if (size_tmps  > device_param->device_maxmem_alloc) memory_limit_hit = 1;
-      if (size_hooks > device_param->device_maxmem_alloc) memory_limit_hit = 1;
+      if (size_pws   > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
+      if (size_tmps  > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
+      if (size_hooks > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
 
       // work around, for some reason apple opencl can't have buffers larger 2^31
       // typically runs into trap 6

@@ -5,8 +5,12 @@
 ## License.....: MIT
 ##
 
+VERSION="1.1"
+
 function usage()
 {
+  echo "> Edge Testing Suite, version ${VERSION}"
+  echo ""
   echo "> Usage: $0 [<OPTIONS>]"
   echo ""
   echo "<OPTIONS>:"
@@ -15,24 +19,32 @@ function usage()
   echo "     --hash-type-min <arg>          : set min hash-type (default: 0)"
   echo "     --hash-type-max <arg>          : set max hash-type (default: 99999)"
   echo ""
-  echo "-a / --attack-type <arg>            : set Attack Type (default: all. supported: 0 (Straight), 1 (Combination), 3 (Brute-force), 6 (Hybrid Wordlist + Mask), 7 (Hybrid Mask + Wordlist))"
-  echo "-K / --kernel-type <arg>            : set Kernel-Type (default: all. supported: 0 (Pure), 1 (Optimized))"
+  echo "-a / --attack-type <arg>            : set Attack Type or a list of comma-separated Attack Types"
+  echo "                                      (default: all. supported: 0 (Straight), 1 (Combination), 3 (Brute-force), 6 (Hybrid Wordlist + Mask), 7 (Hybrid Mask + Wordlist))"
+  echo "-K / --kernel-type <arg>            : set Kernel Type (default: all. supported: 0 (Pure), 1 (Optimized))"
+  echo ""
   echo "-t / --target-type <arg>            : set Target Type (default: all. supported: single, multi)"
   echo ""
   echo "-V / --vector-width <arg>           : set Vector Width (default: all. supported: 1, 2, 4, 8, 16)"
   echo "     --vector-width-min <arg>       : set min vector-width (default: 1)"
   echo "     --vector-width-max <arg>       : set max vector-width (default: 16)"
   echo ""
-  echo "-d <arg>                            : set Device ID"
-  echo "-D <arg>                            : set Device-Type ID"
+  echo "-d <arg>                            : set Device ID or a list of comma-separated Device IDs (default: not set)"
+  echo ""
+  echo "-D <arg>                            : set Device-Type ID or a list of comma-separated Device-Type IDs (default: not set)"
   echo ""
   echo "-r <arg>                            : set max runtime, in seconds, for each kernel execution (default: 270)"
+  echo ""
   echo "     --metal-compiler-runtime <arg> : set max runtime, in seconds, for each kernel build using Apple Metal (default: 120)"
   echo ""
   echo "     --metal-backend                : exclude all hash types that do not work with Metal, exclude vector-width > 4, set --metal-compiler-runtime argument"
   echo ""
+  echo "     --backend-devices-keepfree     : Keep specified percentage of device memory free (default: disabled. supported: from 1 to 100)"
+  echo ""
   echo "-f / --force                        : run hashcat using --force"
-  echo "-v / --verbose                      : show debug messages"
+  echo ""
+  echo "-v / --verbose                      : show debug messages (supported: -v or -vv)"
+  echo ""
   echo "-h / --help                         : show this help, then exit"
   echo ""
 
@@ -64,12 +76,14 @@ VECTOR_WIDTH=all
 VECTOR_WIDTHS="1 2 4 8 16"
 VECTOR_WIDTH_MIN=1
 VECTOR_WIDTH_MAX=16
+DEVICE_TYPE=""
 
 FORCE=0
 VERBOSE=0
 RUNTIME_MAX=270 # 4.5 min
 METAL_BACKEND=0
 METAL_COMPILER_RUNTIME=120
+BACKEND_DEVICES_KEEPFREE=0
 
 OPTS="--quiet --potfile-disable --hwmon-disable --self-test-disable --machine-readable --logfile-disable"
 
@@ -81,120 +95,353 @@ SKIP_OUT_MATCH_HASH_TYPES="14000 14100 18100 22000"
 SKIP_SAME_SALT_HASH_TYPES="6600 7100 7200 8200 13200 13400 15300 15310 15900 15910 16900 18300 18900 20200 20300 20400 27000 27100 29700 29930 29940"
 #SKIP_SAME_SALT_HASH_TYPES="400 3200 5800 6400 6500 6600 6700 7100 7200 7401 7900 8200 9100 9200 9400 10500 10901 12001 12200 12300 12400 12500 12700 12800 12900 13000 13200 13400 13600 14700 14800 15100 15200 15300 15310 15400 15600 15900 15910 16200 16300 16700 16900 18300 18400 18800 18900 19000 19100 19600 19700 19800 19900 20011 20012 20013 20200 20300 20400 21501 22100 22400 22600 23100 23300 23500 23600 23700 23900 24100 24200 24410 24420 24500 25300 25400 25500 25600 25800 26100 26500 26600 27000 27100 27400 27500 27600 28100 28400 28600 28800 28900 29600 29700 29910 29920 29930 29940 30600 31200 31900"
 
-while [ $# -gt 0 ]; do
-  case $1 in
-    --metal-backend) METAL_BACKEND=1 ;;
-    --metal-compiler-runtime) METAL_COMPILER_RUNTIME=${2}; shift ;;
-    -r) RUNTIME_MAX=${2}; shift ;;
-    -h|--help) usage; break ;;
-    -v|--verbose) VERBOSE=1 ;;
-    -f|--force) FORCE=1 ;;
-    -V|--vector-width)
-      if [ "${2}" != "all" ]; then
-        if [[ ${2} =~ ^-?[0-9]+$ ]]; then
-          if [ "${2}" == "1" ]; then
-            VECTOR_WIDTH=1
-          elif [ "${2}" == "2" ]; then
-            VECTOR_WIDTH=2
-          elif [ "${2}" == "4" ]; then
-            VECTOR_WIDTH=4
-          elif [ "${2}" == "8" ]; then
-            VECTOR_WIDTH=8
-          elif [ "${2}" == "16" ]; then
-            VECTOR_WIDTH=16
-          else
-            usage
-          fi
-        else
-          usage
-        fi
+# Parse long options manually
+#while [[ "$1" == --* ]]; do
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --backend-devices-keepfree)
+      BACKEND_DEVICES_KEEPFREE=$2
+      shift 2
+
+      # Validate: must be numeric and > 0
+      if ! [[ "$BACKEND_DEVICES_KEEPFREE" =~ ^[0-9]+$ ]]; then
+        echo "Error: --backend-devices-keepfree must be a positive integer."
+        usage
+      elif (( BACKEND_DEVICES_KEEPFREE < 1 || BACKEND_DEVICES_KEEPFREE > 100 )); then
+        echo "Error: --backend-devices-keepfree must be between 1 and 100."
+        usage
       fi
+      ;;
+    --metal-backend)
+      METAL_BACKEND=1
       shift
       ;;
-    --vector-width-min) VECTOR_WIDTH_MIN=${2}; shift ;;
-    --vector-width-max) VECTOR_WIDTH_MAX=${2}; shift ;;
-    -t|--target-type)
-      if [ "${2}" != "all" ]; then
-        if [ "${2}" == "single" ]; then
-          TARGET_TYPE=0
-        elif [ "${2}" == "multi" ]; then
-          TARGET_TYPE=1
-        else
-          usage
-        fi
-      fi
-      shift
-      ;;
-    -m|--hash-type)
-      if [ "${2}" != "all" ]; then
-        if [[ ${2} =~ ^-?[0-9]+$ ]]; then
-          HASH_TYPE=${2}
-        else
-          usage
-        fi
-      fi
-      shift
-      ;;
-    --hash-type-min) HASH_TYPE_MIN=${2}; shift ;;
-    --hash-type-max) HASH_TYPE_MAX=${2}; shift ;;
-    -a|--attack-type)
-      if [ "${2}" != "all" ]; then
-        if [[ ${2} =~ ^-?[0-9]+$ ]]; then
-          if [ "${2}" == "0" ]; then
-            ATTACK_TYPE=0
-          elif [ "${2}" == "1" ]; then
-            ATTACK_TYPE=1
-          elif [ "${2}" == "3" ]; then
-            ATTACK_TYPE=3
-          elif [ "${2}" == "6" ]; then
-            ATTACK_TYPE=6
-          elif [ "${OPTARG}" == "7" ]; then
-            ATTACK_TYPE=7
-          else
-            usage
-          fi
-        else
-          usage
-        fi
-      fi
-      shift
-      ;;
-    -K|--kernel-type)
-      if [ "${2}" != "all" ]; then
-        if [[ ${2} =~ ^-?[0-9]+$ ]]; then
-          if [ "${2}" == "0" ]; then
-            KERNEL_TYPE=0 #pure
-          elif [ "${2}" == "1" ]; then
-            KERNEL_TYPE=1 #optimized
-          else
-            usage
-          fi
-        else
-          usage
-        fi
-      fi
-      shift
-      ;;
-    -d) OPTS="${OPTS} -d ${2}"; shift ;;
-    -D)
-      if [ "${2}" == "1" ]; then
-        OPTS="${OPTS} -D 1"
-        DEVICE_TYPE="Cpu"
-      elif [ "${2}" == "2" ]; then
-        OPTS="${OPTS} -D 2"
-        DEVICE_TYPE="Gpu"
+    --metal-compiler-runtime)
+      if [[ "$2" =~ ^-?[0-9]+$ ]]; then
+        METAL_COMPILER_RUNTIME=$2
       else
-        OPTS="${OPTS} -D ${2}"
-        DEVICE_TYPE="Cpu + Gpu"
+        echo "Error: --metal-compiler-runtime requires a valid argument (integer)"
+        usage
       fi
+      shift 2
+      ;;
+    --vector-width-min)
+      if [[ "$2" =~ ^(1|2|4|8|16)$ ]]; then
+        VECTOR_WIDTH_MIN=$2
+      else
+        echo "Error: --vector-width-min requires a valid argument"
+        usage
+      fi
+      shift 2
+      ;;
+    --vector-width-max)
+      if [[ "$2" =~ ^(1|2|4|8|16)$ ]]; then
+        VECTOR_WIDTH_MAX=$2
+      else
+        echo "Error: --vector-width-max requires a valid argument"
+        usage
+      fi
+      shift 2
+      ;;
+    --hash-type-min)
+      if [[ "$2" =~ ^[0-9]+$ ]] && (( $2 >= 0 && $2 <= 99999 )); then
+        HASH_TYPE_MIN=$2
+      else
+        echo "Error: --hash-type-min requires a valid argument (integer between 0 and 99999)"
+        usage
+      fi
+      shift 2
+      ;;
+    --hash-type-max)
+      if [[ "$2" =~ ^[0-9]+$ ]] && (( $2 >= 0 && $2 <= 99999 )); then
+        HASH_TYPE_MAX=$2
+      else
+        echo "Error: --hash-type-max requires a valid argument (integer between 0 and 99999)"
+        usage
+      fi
+      shift 2
+      ;;
+    --help)
+      usage
+      ;;
+    -?*)
+      optstring="${1:1}" # strip leading '-'
+      # Parse each char in the cluster
+      for (( i=0; i<${#optstring}; i++ )); do
+        opt="${optstring:i:1}"
+        case "$opt" in
+          r)
+            if [[ "$2" =~ ^-?[0-9]+$ ]]; then
+              RUNTIME_MAX="$2"
+            else
+              echo "Error: -r requires a valid argument (integer)"
+              usage
+            fi
+            ;;
+          v)
+            (( VERBOSE++ ))
+            if [ ${VERBOSE} -gt 2 ]; then
+              echo "Error: too many -v specified (max: 2)"
+              usage
+            fi
+            ;;
+          f)
+            FORCE=1
+            ;;
+          h)
+            usage
+            ;;
+          d)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -d requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -d requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ ! "$optarg" =~ ^[0-9,]+$ ]]; then
+              echo "Error: -d argument must be comma-separated numbers"
+              usage
+            fi
+
+            OPTS="${OPTS} -d ${optarg}"
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          D)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -D requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -D requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ ! "$optarg" =~ ^[0-9,]+$ ]]; then
+              echo "Error: -D argument must be comma-separated numbers"
+              usage
+            fi
+
+            case "$optarg" in
+              1) OPTS="${OPTS} -D 1"; DEVICE_TYPE="Cpu" ;;
+              2) OPTS="${OPTS} -D 2"; DEVICE_TYPE="Gpu" ;;
+              *) OPTS="${OPTS} -D $optarg"; DEVICE_TYPE="Cpu + Gpu" ;;
+            esac
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          V)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -V requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -V requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ "$optarg" == "all" ]]; then
+              :
+            elif [[ "$optarg" =~ ^(1|2|4|8|16)$ ]]; then
+              VECTOR_WIDTH="$optarg"
+            else
+              echo "Invalid vector width: $optarg"
+              usage
+            fi
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          t)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -t requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -t requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ "$optarg" == "single" ]]; then
+              TARGET_TYPE=0
+            elif [[ "$optarg" == "multi" ]]; then
+              TARGET_TYPE=1
+            elif [[ "$optarg" == "all" ]]; then
+              :
+            else
+              echo "Invalid target type: $optarg"
+              usage
+            fi
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          m)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -m requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -m requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ "$optarg" == "all" ]]; then
+              :
+            elif [[ "$optarg" =~ ^[0-9]+$ ]]; then
+              HASH_TYPE="$optarg"
+            else
+              echo "Invalid hash type: $optarg"
+              usage
+            fi
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          a)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -a requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -a requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ "$optarg" == "all" ]]; then
+              :
+            else
+              ATTACK_TYPES=""
+
+              IFS=',' read -ra INPUT_ATTACK_TYPES <<< "$optarg"
+              for atk in "${INPUT_ATTACK_TYPES[@]}"; do
+                if [[ "$atk" =~ ^(0|1|3|6|7)$ ]]; then
+                  ATTACK_TYPES+=" $atk"
+                else
+                  echo "Invalid attack type: $atk"
+                  usage
+                fi
+              done
+
+              ATTACK_TYPES="$(echo "$ATTACK_TYPES" | xargs)"  # Trim leading/trailing spaces
+            fi
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          K)
+            if (( i + 1 < ${#optstring} )); then
+              optarg="${optstring:$((i+1))}"
+              shift_inline=1
+            elif [[ -n "$2" && "$2" != -* ]]; then
+              optarg="$2"
+              shift_inline=0
+            else
+              echo "Error: -K requires an argument"
+              usage
+            fi
+
+            if [[ "$optarg" == -* ]]; then
+              echo "Error: -K requires a valid argument, not another option (-$optarg)"
+              usage
+            fi
+
+            if [[ "$optarg" == "all" ]]; then
+              :
+            elif [[ "$optarg" =~ ^(0|1)$ ]]; then
+              KERNEL_TYPE="$optarg"
+            else
+              echo "Invalid kernel type: $optarg"
+              usage
+            fi
+
+            [[ "$shift_inline" -eq 0 ]] && shift
+
+            break
+            ;;
+          *)
+            echo "Unknown option: -$opt"
+            usage
+            ;;
+        esac
+      done
       shift
       ;;
-    *) echo "Unknown parameter passed: $1"; usage; break ;;
+    --*)
+      echo "Unknown long option: $1"
+      usage
+      ;;
+    *)
+      echo "empty $1"
+      shift
+      ;;
   esac
-  shift
 done
 
 OPTS="${OPTS} --runtime ${RUNTIME_MAX}"
+
+if [[ "$HASH_TYPE" != "all" && ( "$HASH_TYPE_MIN" -ne 0 || "$HASH_TYPE_MAX" -ne 99999 ) ]]; then
+  echo "Error: cannot set --hash-type and --hash-type-min/--hash-type-max"
+  usage
+fi
+
+if [[ "$VECTOR_WIDTH" != "all" && ( "$VECTOR_WIDTH_MIN" -ne 1 || "$VECTOR_WIDTH_MAX" -ne 16 ) ]]; then
+  echo "Error: cannot set --vector-width and --vector-width-min/--vector-width-max"
+  usage
+fi
 
 if [ ${FORCE} -eq 1 ]; then
   OPTS="${OPTS} --force"
@@ -210,6 +457,14 @@ if [ $METAL_BACKEND -eq 1 ]; then
   if [ $METAL_COMPILER_RUNTIME -ne 120 ]; then
     OPTS="${OPTS} --metal-compiler-runtime ${METAL_COMPILER_RUNTIME}"
   fi
+fi
+
+if [ $BACKEND_DEVICES_KEEPFREE -gt 0 ]; then
+  OPTS="${OPTS} --backend-devices-keepfree ${BACKEND_DEVICES_KEEPFREE}"
+fi
+
+if [ ${VERBOSE} -ge 1 ]; then
+  echo "Global hashcat options selected: ${OPTS}"
 fi
 
 mkdir -p ${OUTD} &> /dev/null
@@ -292,7 +547,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
       ./tools/test.pl edge ${hash_type} ${attack_type} ${optimized} 2>/dev/null > ${edge_out}
 
-      if [ ${VERBOSE} -eq 1 ]; then
+      if [ ${VERBOSE} -ge 2 ]; then
         cat ${edge_out}
       fi
 
@@ -351,7 +606,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
               word=$(eval $x)
 
-              if [ ${VERBOSE} -eq 1 ]; then
+              if [ ${VERBOSE} -ge 1 ]; then
                 echo "[ ${OUTD} ] > Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Salt '${salt}', Hash ${hash}" | tee -a ${OUTD}/test_edge.details.log
               else
                 echo "[ ${OUTD} ] > Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Salt '${salt}', Hash ${hash}" >> ${OUTD}/test_edge.details.log
@@ -506,7 +761,6 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
           # multi hash
           if [ $TARGET_TYPE == all ] || [ $TARGET_TYPE == 1 ]; then
-
             cnt_max=-1
             tmp_cnt_max=$(./hashcat -m ${hash_type} -HH | grep Hashes\\.Count\\.Max | awk '{print $2}')
             if [[ $tmp_cnt_max =~ ^-?[0-9]+$ ]]; then

@@ -315,6 +315,10 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
           CUR_OPTS_V="${CUR_OPTS} --backend-vector-width ${vector_width}"
 
+          if [ $pt_hex -eq 1 ]; then
+            CUR_OPTS_V="${CUR_OPTS_V} --hex-charset"
+          fi
+
           # single hash
           if [ $TARGET_TYPE == all ] || [ $TARGET_TYPE == 0 ]; then
 

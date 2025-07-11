@@ -1298,6 +1298,11 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     }
   }
 
+  if (user_options->benchmark_all == true)
+  {
+    user_options->benchmark = true;
+  }
+
   if (user_options->benchmark == true)
   {
     // sanity checks based on automatically overwritten configuration variables by

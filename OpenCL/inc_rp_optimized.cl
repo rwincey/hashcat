@@ -781,7 +781,6 @@ DECLSPEC void append_block8_optimized (const u32 offset, PRIVATE_AS u32 *buf0, P
 
   const int offset_switch = offset / 4;
 
-  #if ((defined IS_AMD || defined IS_HIP) && HAS_VPERM == 0) || defined IS_GENERIC
   const u32 src_r00 = src_r0[0];
   const u32 src_r01 = src_r0[1];
   const u32 src_r02 = src_r0[2];
@@ -882,123 +881,6 @@ DECLSPEC void append_block8_optimized (const u32 offset, PRIVATE_AS u32 *buf0, P
       s0 = 0;
       break;
   }
-  #endif
-
-  #if ((defined IS_AMD || defined IS_HIP) && HAS_VPERM == 1) || defined IS_NV
-
-  const int offset_mod_4 = offset & 3;
-
-  const int offset_minus_4 = 4 - offset_mod_4;
-
-  #if defined IS_NV
-  const int selector = (0x76543210 >> (offset_minus_4 * 4)) & 0xffff;
-  #endif
-
-  #if (defined IS_AMD || defined IS_HIP)
-  const int selector = l32_from_64_S (0x0706050403020100UL >> (offset_minus_4 * 8));
-  #endif
-
-  const u32 src_r00 = src_r0[0];
-  const u32 src_r01 = src_r0[1];
-  const u32 src_r02 = src_r0[2];
-  const u32 src_r03 = src_r0[3];
-  const u32 src_r10 = src_r1[0];
-  const u32 src_r11 = src_r1[1];
-  const u32 src_r12 = src_r1[2];
-  const u32 src_r13 = src_r1[3];
-
-  switch (offset_switch)
-  {
-    case 0:
-      s7 = hc_byte_perm_S (src_r12, src_r13, selector);
-      s6 = hc_byte_perm_S (src_r11, src_r12, selector);
-      s5 = hc_byte_perm_S (src_r10, src_r11, selector);
-      s4 = hc_byte_perm_S (src_r03, src_r10, selector);
-      s3 = hc_byte_perm_S (src_r02, src_r03, selector);
-      s2 = hc_byte_perm_S (src_r01, src_r02, selector);
-      s1 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s0 = hc_byte_perm_S (      0, src_r00, selector);
-      break;
-
-    case 1:
-      s7 = hc_byte_perm_S (src_r11, src_r12, selector);
-      s6 = hc_byte_perm_S (src_r10, src_r11, selector);
-      s5 = hc_byte_perm_S (src_r03, src_r10, selector);
-      s4 = hc_byte_perm_S (src_r02, src_r03, selector);
-      s3 = hc_byte_perm_S (src_r01, src_r02, selector);
-      s2 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s1 = hc_byte_perm_S (      0, src_r00, selector);
-      s0 = 0;
-      break;
-
-    case 2:
-      s7 = hc_byte_perm_S (src_r10, src_r11, selector);
-      s6 = hc_byte_perm_S (src_r03, src_r10, selector);
-      s5 = hc_byte_perm_S (src_r02, src_r03, selector);
-      s4 = hc_byte_perm_S (src_r01, src_r02, selector);
-      s3 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s2 = hc_byte_perm_S (      0, src_r00, selector);
-      s1 = 0;
-      s0 = 0;
-      break;
-
-    case 3:
-      s7 = hc_byte_perm_S (src_r03, src_r10, selector);
-      s6 = hc_byte_perm_S (src_r02, src_r03, selector);
-      s5 = hc_byte_perm_S (src_r01, src_r02, selector);
-      s4 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s3 = hc_byte_perm_S (      0, src_r00, selector);
-      s2 = 0;
-      s1 = 0;
-      s0 = 0;
-
-      break;
-
-    case 4:
-      s7 = hc_byte_perm_S (src_r02, src_r03, selector);
-      s6 = hc_byte_perm_S (src_r01, src_r02, selector);
-      s5 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s4 = hc_byte_perm_S (      0, src_r00, selector);
-      s3 = 0;
-      s2 = 0;
-      s1 = 0;
-      s0 = 0;
-      break;
-
-    case 5:
-      s7 = hc_byte_perm_S (src_r01, src_r02, selector);
-      s6 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s5 = hc_byte_perm_S (      0, src_r00, selector);
-      s4 = 0;
-      s3 = 0;
-      s2 = 0;
-      s1 = 0;
-      s0 = 0;
-      break;
-
-    case 6:
-      s7 = hc_byte_perm_S (src_r00, src_r01, selector);
-      s6 = hc_byte_perm_S (      0, src_r00, selector);
-      s5 = 0;
-      s4 = 0;
-      s3 = 0;
-      s2 = 0;
-      s1 = 0;
-      s0 = 0;
-      break;
-
-    case 7:
-      s7 = hc_byte_perm_S (      0, src_r00, selector);
-      s6 = 0;
-      s5 = 0;
-      s4 = 0;
-      s3 = 0;
-      s2 = 0;
-      s1 = 0;
-      s0 = 0;
-      break;
-  }
-  #endif
 
   buf0[0] = src_l0[0] | s0;
   buf0[1] = src_l0[1] | s1;

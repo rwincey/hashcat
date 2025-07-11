@@ -106,6 +106,7 @@
 - Fixed build failed for 18400 with Apple Metal
 - Fixed build failed for 18600 with Apple Metal
 - Fixed build failed for 4410 with vector width > 1
+- Fixed build failed for aarch64 (es: rpi)
 - Fixed clang identification in src/Makefile
 - Fixed build failure for almost all hash modes that make use of hc_swap64 and/or hc_swap64_S with Apple Metal / Apple Silicon
 - Fixed debug mode 5 by adding the missing colon between original-word and finding-rule

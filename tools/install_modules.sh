@@ -164,13 +164,6 @@ else
 
 fi
 
-php --version &> /dev/null
-if [ $? -ne 0 ]; then
-  echo "! php must be installed for some unit tests"
-
-  ERRORS=$((ERRORS+1))
-fi
-
 echo
 
 if [ $ERRORS -gt 0 ]; then

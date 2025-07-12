@@ -188,15 +188,15 @@ using namespace metal;
 
 #ifdef IS_INTEL_SDK
 #ifdef IS_CPU
-//#define USE_BITSELECT
-//#define USE_ROTATE
+#define USE_BITSELECT
+#define USE_ROTATE
 #endif
 #endif
 
 #ifdef IS_OPENCL
-//#define USE_BITSELECT
-//#define USE_ROTATE
-//#define USE_SWIZZLE
+#define USE_BITSELECT
+#define USE_ROTATE
+#define USE_SWIZZLE
 #endif
 
 #ifdef IS_METAL

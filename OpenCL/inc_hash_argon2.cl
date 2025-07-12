@@ -169,11 +169,15 @@ DECLSPEC void argon2_init (GLOBAL_AS const pw_t *pw, GLOBAL_AS const salt_t *sal
   }
 }
 
-DECLSPEC u64 trunc_mul (u64 x, u64 y)
+DECLSPEC u64 trunc_mul (const u64 x, const u64 y)
 {
-  const u32 xlo = (u32) x;
-  const u32 ylo = (u32) y;
-  return hl32_to_64_S (hc_umulhi (xlo, ylo), (u32) (xlo * ylo));
+  const u32 xlo = l32_from_64_S (x);
+  const u32 ylo = l32_from_64_S (y);
+
+  const u32 xyhi = hc_umulhi (xlo, ylo);
+  const u32 xylo = hc_umullo (xlo, ylo);
+
+  return hl32_to_64_S (xyhi, xylo);
 }
 
 DECLSPEC inline u32 argon2_ref_address (PRIVATE_AS const argon2_options_t *options, PRIVATE_AS const argon2_pos_t *pos, u32 index, u64 pseudo_random)

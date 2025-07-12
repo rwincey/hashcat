@@ -657,10 +657,8 @@ KERNEL_FQ KERNEL_FA void m21800_comp (KERN_ATTR_TMPS_ESALT (electrum_tmp_t, elec
       {
         if (hc_atomic_inc (&hashes_shown[digest_cur]) == 0)
         {
-          mark_hash (plains_buf, d_return_buf, SALT_POS_HOST, DIGESTS_CNT, 0, digest_cur, gid, 0, 0, 0);
+          mark_hash (plains_buf, d_return_buf, SALT_POS_HOST, DIGESTS_CNT, digest_pos, digest_cur, gid, 0, 0, 0);
         }
-
-        //return;
       }
     }
   }
@@ -678,9 +676,7 @@ KERNEL_FQ KERNEL_FA void m21800_comp (KERN_ATTR_TMPS_ESALT (electrum_tmp_t, elec
   {
     if (hc_atomic_inc (&hashes_shown[digest_cur]) == 0)
     {
-      mark_hash (plains_buf, d_return_buf, SALT_POS_HOST, DIGESTS_CNT, 0, digest_cur, gid, 0, 0, 0);
+      mark_hash (plains_buf, d_return_buf, SALT_POS_HOST, DIGESTS_CNT, digest_pos, digest_cur, gid, 0, 0, 0);
     }
-
-    //return;
   }
 }

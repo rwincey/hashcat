@@ -103,6 +103,19 @@ DECLSPEC u64 simd_shuffle_64 (const u64 var, const int src_lane, const u32 argon
 }
 #endif
 
+#ifdef IS_CPU
+#define ARGON2_G(a,b,c,d)                \
+{                                        \
+  a = a + b + 2 * trunc_mul(a, b);       \
+  d = hc_rotr64_S (d ^ a, 32);           \
+  c = c + d + 2 * trunc_mul(c, d);       \
+  b = hc_rotr64_S (b ^ c, 24);           \
+  a = a + b + 2 * trunc_mul(a, b);       \
+  d = hc_rotr64_S (d ^ a, 16);           \
+  c = c + d + 2 * trunc_mul(c, d);       \
+  b = hc_rotr64_S (b ^ c, 63);           \
+}
+#else
 #define ARGON2_G(a,b,c,d)                \
 {                                        \
   a = a + b + 2 * trunc_mul(a, b);       \
@@ -114,6 +127,7 @@ DECLSPEC u64 simd_shuffle_64 (const u64 var, const int src_lane, const u32 argon
   c = c + d + 2 * trunc_mul(c, d);       \
   b = hc_rotr64_S (b ^ c, 63);           \
 }
+#endif
 
 #define ARGON2_P()                       \
 {                                        \

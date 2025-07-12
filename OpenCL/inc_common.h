@@ -287,6 +287,7 @@ DECLSPEC u32  hc_lop_0x96_S     (const u32  a, const u32  b, const u32  c);
 // arithmetic operations
 
 DECLSPEC u32  hc_umulhi (const u32 x, const u32 y);
+DECLSPEC u32  hc_umullo (const u32 x, const u32 y);
 
 // legacy common code
 

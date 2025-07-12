@@ -1456,7 +1456,7 @@ DECLSPEC u32x hc_bfe (const u32x a, const u32x b, const u32x c)
   r.sc = __builtin_amdgcn_ubfe (a.sc, b.sc, c.sc);
   r.sd = __builtin_amdgcn_ubfe (a.sd, b.sd, c.sd);
   r.se = __builtin_amdgcn_ubfe (a.se, b.se, c.se);
-  r.sf = __builtin_amdgcn_ubfe (a.sf, b.sf, c.sf);  
+  r.sf = __builtin_amdgcn_ubfe (a.sf, b.sf, c.sf);
   #endif
 
   return r;
@@ -2074,6 +2074,11 @@ DECLSPEC u32 hc_umulhi (const u32 x, const u32 y)
   #else
   return h32_from_64_S ((u64) x * (u64) y);
   #endif
+}
+
+DECLSPEC u32 hc_umullo (const u32 x, const u32 y)
+{
+  return l32_from_64_S ((u64) x * (u64) y);
 }
 
 /**
@@ -3212,7 +3217,7 @@ DECLSPEC int count_bits_32 (const u32 v0, const u32 v1)
 DECLSPEC void make_utf16be (PRIVATE_AS const u32x *in, PRIVATE_AS u32x *out1, PRIVATE_AS u32x *out2)
 {
   #if defined IS_NV
-  
+
   out2[3] = hc_byte_perm (in[3], 0, 0x3727);
   out2[2] = hc_byte_perm (in[3], 0, 0x1707);
   out2[1] = hc_byte_perm (in[2], 0, 0x3727);

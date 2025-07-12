@@ -1973,8 +1973,9 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
   {
     // some algorithm, such as SCRYPT, depend on accurate free memory values
     // the only way to get them is through low-level APIs such as nvml via hwmon
+    // we have --backend-keep-free message now
 
-    user_options->hwmon = true;
+    //user_options->hwmon = true;
   }
 
   if (user_options->stdout_flag)

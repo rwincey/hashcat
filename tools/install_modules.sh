@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 ##
 ## Author......: See docs/credits.txt
@@ -157,7 +157,7 @@ fi
 
 php --version &> /dev/null
 if [ $? -ne 0 ]; then
-  echo "! php must be installed for some unit tests'
+  echo "! php must be installed for some unit tests"
 
   ERRORS=$((ERRORS+1))
 fi
@@ -165,9 +165,9 @@ fi
 echo
 
 if [ $ERRORS -gt 0 ]; then
-  echo '[ FAIL ] Some commands were not successful'
+  echo "[ FAIL ] Some commands were not successful"
   exit 1
 fi
 
-echo '[  OK  ] All commands were successful'
+echo "[  OK  ] All commands were successful"
 exit 0

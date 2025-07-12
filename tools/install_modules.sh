@@ -77,7 +77,7 @@ cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
 
 ERRORS=$((ERRORS+$?))
 
-pip3 install pygost
+pip3 install git+https://github.com/matrix/pygost --break-system-packages
 
 ERRORS=$((ERRORS+$?))
 

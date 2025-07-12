@@ -26,6 +26,15 @@ ERRORS=0
 
 echo "> Installing perl deps ..."
 
+if [ ${IS_APPLE} -eq 1 ]; then
+  # workaround for test failed with Net::SSLeay on Apple
+  cpanm --notest Net::SSLeay
+else
+  cpanm Net::SSLeay
+fi
+
+ERRORS=$((ERRORS+$?))
+
 cpanm Authen::Passphrase::LANManager   \
       Authen::Passphrase::MySQL323     \
       Authen::Passphrase::NTHash       \

@@ -107,7 +107,7 @@ DECLSPEC u32 base64_encode_three_bytes_better (u32 in)
   return out;
 }
 
-DECLSPEC void base64_encode_sha256 (u32 *out, const u32 *in)
+DECLSPEC void base64_encode_sha256 (PRIVATE_AS u32 *out, PRIVATE_AS const u32 *in)
 {
   out[0] = base64_encode_three_bytes_better(                (in[0] >>  8));
   out[1] = base64_encode_three_bytes_better((in[0] << 16) | (in[1] >> 16));

@@ -330,7 +330,7 @@ static int resolve_pyenv_libpath (char *out_buf, const size_t out_sz)
   return -1;
 }
 
-static bool init_python (hc_python_lib_t *python)
+static bool init_python (hc_python_lib_t *python, user_options_t *user_options)
 {
   char pythondll_path[PATH_MAX];
 
@@ -525,18 +525,30 @@ static bool init_python (hc_python_lib_t *python)
   }
   else
   {
-    printf ("Loaded python library from: %s\n\n", pythondll_path);
+    if (user_options->quiet == false)
+    {
+      if (user_options->machine_readable == false)
+      {
+        printf ("Loaded python library from: %s\n\n", pythondll_path);
+      }
+    }
   }
 
   #if defined (_WIN) || defined (__CYGWIN__) || defined (__APPLE__)
 
   #else
-  fprintf (stderr, "Attention!!! The 'free-threaded' python library has some major downsides.\n");
-  fprintf (stderr, "  The main purpose of this module is to give Windows and macOS users a multithreading option.\n");
-  fprintf (stderr, "  It seems to be a lot slower, and relevant modules such as `cffi` are incompatibile.\n");
-  fprintf (stderr, "  Since your are on Linux we highly recommend to stick to multiprocessing module.\n");
-  fprintf (stderr, "  Maybe 'free-threaded' mode will become more mature in the future.\n");
-  fprintf (stderr, "  For now, we high recommend to stick to -m 73000 instead.\n\n");
+  if (user_options->quiet == false)
+  {
+    if (user_options->machine_readable == false)
+    {
+      fprintf (stderr, "Attention!!! The 'free-threaded' python library has some major downsides.\n");
+      fprintf (stderr, "  The main purpose of this module is to give Windows and macOS users a multithreading option.\n");
+      fprintf (stderr, "  It seems to be a lot slower, and relevant modules such as `cffi` are incompatibile.\n");
+      fprintf (stderr, "  Since your are on Linux we highly recommend to stick to multiprocessing module.\n");
+      fprintf (stderr, "  Maybe 'free-threaded' mode will become more mature in the future.\n");
+      fprintf (stderr, "  For now, we high recommend to stick to -m 73000 instead.\n\n");
+    }
+  }
   #endif
 
   #define HC_LOAD_FUNC_PYTHON(ptr,name,pythonname,type,libname,noerr) \
@@ -696,7 +708,7 @@ void *platform_init (user_options_t *user_options)
 
   python_interpreter->python = python;
 
-  if (init_python (python) == false) return NULL;
+  if (init_python (python, user_options) == false) return NULL;
 
   python->Py_Initialize ();
 

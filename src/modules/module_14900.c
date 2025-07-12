@@ -23,6 +23,7 @@ static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_REGISTER_LIMIT;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
+                                  | OPTS_TYPE_NATIVE_THREADS
                                   | OPTS_TYPE_SUGGEST_KG;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
 static const char *BENCHMARK_MASK = "?b?b?b?b?bxxxxx";

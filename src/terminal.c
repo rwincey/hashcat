@@ -1253,7 +1253,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       printf ("\"SystemInfo\": { ");
     }
 
-    #if defined (_WIN) || defined (__CYGWIN__) || defined (__MSYS__)
+    #if defined (_WIN)
     // Get Windows system information
     SYSTEM_INFO sysinfo;
     OSVERSIONINFO osvi;
@@ -1311,6 +1311,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       printf ("\"Model\": \"%s\" } ", "N/A");
       printf ("}, ");
     }
+
     #else
 
     struct utsname utsbuf;
@@ -1320,7 +1321,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
     char *hw_model_buf = NULL;
 
-    #if !defined (__linux__)
+    #if !defined (__linux__) && !defined (__CYGWIN__) && !defined (__MSYS__)
 
     size_t hw_model_len = 0;
 
@@ -2830,7 +2831,7 @@ void status_display_status_json (hashcat_ctx_t *hashcat_ctx)
       printf (",");
     }
 
-    printf (" { \"device_id\": %02u,", device_id + 1);
+    printf (" { \"device_id\": %u,", device_id + 1);
 
     char *device_name_json_encoded = (char *) hcmalloc (strlen (device_info->device_name) * 2);
 

@@ -206,7 +206,15 @@ KERNEL_FQ KERNEL_FA void m16600_mxx (KERN_ATTR_RULES_ESALT (electrum_wallet_t))
 
     if (salt_type == 2)
     {
-      if ((u8) (out[0] >> 0) != 'x') continue;
+      u8 version = (u8) (out[0] >> 0);
+
+      // https://github.com/spesmilo/electrum-docs/blob/master/xpub_version_bytes.rst
+      // Does not include testnet addresses
+      if (version != 'x' &&
+          version != 'y' &&
+          version != 'Y' &&
+          version != 'z' &&
+          version != 'Z' ) continue;
       if ((u8) (out[0] >> 8) != 'p') continue;
       if ((u8) (out[0] >> 16) != 'r') continue;
       if ((u8) (out[0] >> 24) != 'v') continue;
@@ -424,7 +432,15 @@ KERNEL_FQ KERNEL_FA void m16600_sxx (KERN_ATTR_RULES_ESALT (electrum_wallet_t))
 
     if (salt_type == 2)
     {
-      if ((u8) (out[0] >> 0) != 'x') continue;
+      u8 version = (u8) (out[0] >> 0);
+
+      // https://github.com/spesmilo/electrum-docs/blob/master/xpub_version_bytes.rst
+      // Does not include testnet addresses
+      if (version != 'x' &&
+          version != 'y' &&
+          version != 'Y' &&
+          version != 'z' &&
+          version != 'Z' ) continue;
       if ((u8) (out[0] >> 8) != 'p') continue;
       if ((u8) (out[0] >> 16) != 'r') continue;
       if ((u8) (out[0] >> 24) != 'v') continue;

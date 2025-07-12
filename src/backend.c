@@ -10217,11 +10217,17 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
             const u64 device_available_mem_new = device_available_mem_sav - (device_available_mem_sav * 0.34);
 
-            event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
-            event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
-            event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
-            event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
-            event_log_warning (hashcat_ctx, NULL);
+            if (user_options->quiet == false)
+            {
+              if (user_options->machine_readable == false)
+              {
+                event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
+                event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
+                event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
+                event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
+                event_log_warning (hashcat_ctx, NULL);
+              }
+            }
 
             device_param->device_available_mem = device_available_mem_new;
           }
@@ -16323,10 +16329,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       // let's add some extra space just to be sure.
       // now depends on the kernel-accel value (where scrypt and similar benefits), but also hard minimum 64mb and maximum 1024mb limit
       // let's see if we still need this now that we have low-level API to report free memory
+      // we don't want these get too big. if a plugin requires really a lot of memory, the extra buffer should be used instead.
 
-      if (size_pws   > device_param->device_maxmem_alloc) memory_limit_hit = 1;
-      if (size_tmps  > device_param->device_maxmem_alloc) memory_limit_hit = 1;
-      if (size_hooks > device_param->device_maxmem_alloc) memory_limit_hit = 1;
+      if (size_pws   > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
+      if (size_tmps  > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
+      if (size_hooks > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
 
       // work around, for some reason apple opencl can't have buffers larger 2^31
       // typically runs into trap 6

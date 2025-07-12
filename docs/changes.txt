@@ -58,6 +58,7 @@
 - Added hash-mode: md5(md5($salt).md5(md5($pass)))
 - Added hash-mode: Domain Cached Credentials 2 (DCC2), MS Cache 2, (NT)
 - Added hash-mode: Domain Cached Credentials (DCC), MS Cache (NT)
+- Added hash-mode: md5(md5(md5($pass.$salt1)).$salt2)
 - Added hash-mode: md5(md5(md5($pass).$salt1).$salt2)
 - Added hash-mode: md5(md5(md5($pass)).$salt)
 - Added hash-mode: md5(sha1($pass.$salt))
@@ -72,9 +73,10 @@
 
 - Added new feature (-Y) that creates N virtual instances for each device in your system at the cost of N times the device memory consumption
 - Added options --benchmark-min and --benchmark-max to set a hash-mode range to be used during the benchmark
-- Added option --total-candidates to provide the total candidate count for an attack insteda of the internal "--keyspace" value
+- Added option --total-candidates to provide the total candidate count for an attack instead of the internal "--keyspace" value
 - Added option --backend-devices-keepfree to configure X percentage of device memory available to keep free
 - Added display of password length mininum and maximum in the Kernel.Feature status line
+- Added the 'edge' test type to test.pl and the corresponding tool test_edge.sh
 
 ##
 ## Performance
@@ -89,6 +91,8 @@
 - Added verification of token buffer length when using TOKEN_ATTR_FIXED_LENGTH
 - Fixed a bug in all SCRYPT-based hash modes with Apple Metal
 - Fixed buffer overflow on module_26600.c / module_hash_encode()
+- Fixed bug in module_constraints and kernel for hash-mode 7801
+- Fixed bug in module_constraints and kernel for hash-mode 7800
 - Fixed bug in 18400 module_hash_encode
 - Fixed bug in 23800/unrar with Apple Silicon
 - Fixed bug in 26900 module_hash_encode
@@ -104,6 +108,7 @@
 - Fixed build failed for 18400 with Apple Metal
 - Fixed build failed for 18600 with Apple Metal
 - Fixed build failed for 4410 with vector width > 1
+- Fixed build failed for aarch64 (es: rpi)
 - Fixed clang identification in src/Makefile
 - Fixed build failure for almost all hash modes that make use of hc_swap64 and/or hc_swap64_S with Apple Metal / Apple Silicon
 - Fixed debug mode 5 by adding the missing colon between original-word and finding-rule
@@ -178,6 +183,7 @@
 - Makefile: prevent make failure with Apple Silicon in case of partial rebuild
 - Makefile: updated MACOSX_DEPLOYMENT_TARGET to 15.0
 - Rules: Rename best64.rule to best66.rule and remove the unknown section from it
+- Kernel: Renamed multiple defines in CAST cipher to fit expected naming convention of the C++ language standard
 
 * changes v6.2.5 -> v6.2.6
 

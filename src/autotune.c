@@ -334,6 +334,14 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
     // v7 autotuner is a lot more straight forward
     // we start with some purely theoretical values as a base, then move on to some meassured tests
 
+    /* This causes more problems than it solves.
+     * In theory, it's fine to boost accel early to improve accuracy, and it does,
+     * but on the other hand, it prevents increasing the thread count due to high runtime.
+     * For longer runtimes, we want to prioritize more threads over higher accel.
+     * This change also has some downsides for algorithms that actually benefit
+     * from higher accel and fewer threads (e.g., 7800, 14900). But those are easy to manage
+     * by limiting thread count, or better, by setting them to OPTS_TYPE_NATIVE_THREADS.
+
     if (hashconfig->attack_exec == ATTACK_EXEC_INSIDE_KERNEL)
     {
       if (kernel_accel_min < kernel_accel_max)
@@ -348,6 +356,7 @@ static int autotune (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param
         }
       }
     }
+    */
 
     if (kernel_threads_min < kernel_threads_max)
     {

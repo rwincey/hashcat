@@ -1,4 +1,3 @@
-
 /**
  * Author......: Netherlands Forensic Institute
  * License.....: MIT
@@ -12,7 +11,10 @@
 #define ARGON2_VERSION_10 0x10
 #define ARGON2_VERSION_13 0x13
 
+#ifndef THREADS_PER_LANE
 #define THREADS_PER_LANE 32
+#endif
+
 #define FULL_MASK 0xffffffff
 
 #define BLAKE2B_OUTBYTES 64

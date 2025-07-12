@@ -36,6 +36,7 @@ cpanm Authen::Passphrase::LANManager   \
       Convert::EBCDIC                  \
       Crypt::Argon2                    \
       Crypt::AuthEnc::GCM              \
+      Crypt::Blowfish                  \
       Crypt::Camellia                  \
       Crypt::CBC                       \
       Crypt::Cipher::Serpent           \
@@ -46,7 +47,6 @@ cpanm Authen::Passphrase::LANManager   \
       Crypt::Digest::Whirlpool         \
       Crypt::ECB                       \
       Crypt::Eksblowfish::Bcrypt       \
-      Crypt::GCrypt                    \
       Crypt::Mode::CBC                 \
       Crypt::Mode::ECB                 \
       Crypt::MySQL                     \
@@ -61,6 +61,7 @@ cpanm Authen::Passphrase::LANManager   \
       Crypt::Skip32                    \
       Crypt::Twofish                   \
       Crypt::UnixCrypt_XS              \
+      CryptX                           \
       Data::Types                      \
       Digest::CMAC                     \
       Digest::CRC                      \

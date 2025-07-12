@@ -87,11 +87,11 @@ BACKEND_DEVICES_KEEPFREE=0
 
 OPTS="--quiet --potfile-disable --hwmon-disable --self-test-disable --machine-readable --logfile-disable"
 
-SKIP_HASH_TYPES="2000 2500 2501 16800 16801 99999 32000"
-SKIP_HASH_TYPES_METAL="1800 10700 11700 11750 11760 11800 11850 11860 19200 21600"
-SKIP_METAL_SCRYPT="8900 15700 9300 22700 27700 28200 29800"
+SKIP_HASH_TYPES="" #2000 2500 2501 16800 16801 99999 32000"
+SKIP_HASH_TYPES_METAL="" #1800 10700 11700 11750 11760 11800 11850 11860 19200 21600"
+SKIP_METAL_SCRYPT="" #8900 15700 9300 22700 27700 28200 29800"
 
-SKIP_OUT_MATCH_HASH_TYPES="14000 14100 18100 22000"
+SKIP_OUT_MATCH_HASH_TYPES="" #14000 14100 18100 22000"
 SKIP_SAME_SALT_HASH_TYPES="6600 7100 7200 8200 13200 13400 15300 15310 15900 15910 16900 18300 18900 20200 20300 20400 27000 27100 29700 29930 29940"
 #SKIP_SAME_SALT_HASH_TYPES="400 3200 5800 6400 6500 6600 6700 7100 7200 7401 7900 8200 9100 9200 9400 10500 10901 12001 12200 12300 12400 12500 12700 12800 12900 13000 13200 13400 13600 14700 14800 15100 15200 15300 15310 15400 15600 15900 15910 16200 16300 16700 16900 18300 18400 18800 18900 19000 19100 19600 19700 19800 19900 20011 20012 20013 20200 20300 20400 21501 22100 22400 22600 23100 23300 23500 23600 23700 23900 24100 24200 24410 24420 24500 25300 25400 25500 25600 25800 26100 26500 26600 27000 27100 27400 27500 27600 28100 28400 28600 28800 28900 29600 29700 29910 29920 29930 29940 30600 31200 31900"
 
@@ -495,6 +495,12 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
     fi
   fi
 
+  deprecated=$(./hashcat -m ${hash_type} -HH | grep "Deprecated\\.\\." | awk '{print $2}')
+  if [ "${deprecated}" == "Yes" ]; then
+    echo "[ ${OUTD} ] > Skip processing Hash-Type ${hash_type} (is deprecated)" | tee -a ${OUTD}/test_edge.details.log
+    continue
+  fi
+
   build_failed_err=0
   test_vectors_err=0
 
@@ -705,9 +711,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               cat ${cmd_out} >> ${OUTD}/test_edge.details.log
 
               if [ "${retVal}" -ne 0 ]; then
+                echo '```' | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> error ($retVal) detected with CMD: ${CMD}" | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Hash ${hash}" | tee -a ${OUTD}/test_edge.details.log
-                echo '```' | tee -a ${OUTD}/test_edge.details.log
                 cat ${cmd_out} | tee -a ${OUTD}/test_edge.details.log
                 echo '```' | tee -a ${OUTD}/test_edge.details.log
 
@@ -744,14 +750,15 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 md5_2=$(echo ${hc_out} | md5sum | cut -d' ' -f1)
 
                 if [ $md5_1 != $md5_2 ]; then
+                  echo '```' | tee -a ${OUTD}/test_edge.details.log
                   echo "[ ${OUTD} ] !> error detected with CMD: ${CMD}" | tee -a ${OUTD}/test_edge.details.log
                   echo "[ ${OUTD} ] !> Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Salt '${salt}', Hash ${hash}" | tee -a ${OUTD}/test_edge.details.log
                   echo "[ ${OUTD} ] !> output don't match" | tee -a ${OUTD}/test_edge.details.log
-                  echo '```' | tee -a ${OUTD}/test_edge.details.log
+                  echo | tee -a ${OUTD}/test_edge.details.log
                   echo ${out} | tee -a ${OUTD}/test_edge.details.log
-                  echo '```' | tee -a ${OUTD}/test_edge.details.log
+                  echo | tee -a ${OUTD}/test_edge.details.log
                   echo "! expected output" | tee -a ${OUTD}/test_edge.details.log
-                  echo '```' | tee -a ${OUTD}/test_edge.details.log
+                  echo | tee -a ${OUTD}/test_edge.details.log
                   echo ${hc_out} | tee -a ${OUTD}/test_edge.details.log
                   echo '```' | tee -a ${OUTD}/test_edge.details.log
                 fi
@@ -967,9 +974,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               paste -d ":" ${hash_in} ${word_in} > ${hc_out}
 
               if [ "${retVal}" -ne 0 ]; then
+                echo '```' | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> error ($retVal) detected with CMD: ${CMD}" | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Words ${word_in}, Hashes ${hash_in}" | tee -a ${OUTD}/test_edge.details.log
-                echo '```' | tee -a ${OUTD}/test_edge.details.log
                 cat ${cmd_out} | tee -a ${OUTD}/test_edge.details.log
                 echo '```' | tee -a ${OUTD}/test_edge.details.log
 
@@ -995,14 +1002,15 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 md5_2=$(cat ${hc_out} | sort -s | md5sum | cut -d' ' -f1)
 
                 if [ $md5_1 != $md5_2 ]; then
+                  echo '```' | tee -a ${OUTD}/test_edge.details.log
                   echo "[ ${OUTD} ] !> error detected (output don't match) with CMD: ${CMD}" | tee -a ${OUTD}/test_edge.details.log
                   echo "[ ${OUTD} ] !> Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Words ${word_in}, Hashes ${hash_in}" | tee -a ${OUTD}/test_edge.details.log
                   echo "! output" | tee -a ${OUTD}/test_edge.details.log
-                  echo '```' | tee -a ${OUTD}/test_edge.details.log
+                  echo | tee -a ${OUTD}/test_edge.details.log
                   echo "${out}" | sort -s | tee -a ${OUTD}/test_edge.details.log
-                  echo '```' | tee -a ${OUTD}/test_edge.details.log
+                  echo | tee -a ${OUTD}/test_edge.details.log
                   echo "! expected output" | tee -a ${OUTD}/test_edge.details.log
-                  echo '```' | tee -a ${OUTD}/test_edge.details.log
+                  echo | tee -a ${OUTD}/test_edge.details.log
                   cat ${hc_out} | sort -s | tee -a ${OUTD}/test_edge.details.log
                   echo '```' | tee -a ${OUTD}/test_edge.details.log
                 fi

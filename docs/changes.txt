@@ -165,6 +165,7 @@
 - Unit tests: Updated install_modules.sh with Crypt::Argon2
 - Unit tests: Updated install_modules.sh with Crypt::Passwd::XS, to test suite works also on Apple (ex: 1800)
 - Unit tests: Updated install_modules.sh to use an external module for Digest::BLAKE2, due to maintenance being discontinued
+- Unit tests: Updated install_modules.sh to use cpanm instead of cpan
 - User Options: Added error message when mixing --username and --show to warn users of exponential delay
 - MetaMask: update extraction tool to support MetaMask Mobile wallets
 - SecureCRT MasterPassphrase v2: update module, pure kernels and test unit. Add optimized kernels.

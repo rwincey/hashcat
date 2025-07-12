@@ -37,6 +37,7 @@ cpan install Authen::Passphrase::LANManager \
              Crypt::OpenSSH::ChachaPoly     \
              Crypt::OpenSSL::EC             \
              Crypt::OpenSSL::Bignum::CTX    \
+             Crypt::Passwd::XS              \
              Crypt::PBKDF2                  \
              Crypt::RC4                     \
              Crypt::Rijndael                \

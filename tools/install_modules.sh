@@ -24,6 +24,8 @@ fi
 # Sum of all exit codes
 ERRORS=0
 
+echo "> Installing perl deps ..."
+
 cpanm Authen::Passphrase::LANManager   \
       Authen::Passphrase::MySQL323     \
       Authen::Passphrase::NTHash       \
@@ -88,11 +90,8 @@ cpanm Authen::Passphrase::LANManager   \
 
 ERRORS=$((ERRORS+$?))
 
-perl -MDigest::BLAKE2 -e1 &>/dev/null
-if [ $? -ne 0 ]; then
-  cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
-  ERRORS=$((ERRORS+$?))
-fi
+cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
+ERRORS=$((ERRORS+$?))
 
 # checks for pyenv
 

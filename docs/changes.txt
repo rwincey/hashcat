@@ -92,6 +92,7 @@
 - Fixed a bug in all SCRYPT-based hash modes with Apple Metal
 - Fixed buffer overflow on module_26600.c / module_hash_encode()
 - Fixed bug in module_constraints and kernel for hash-mode 7801
+- Fixed bug in module_constraints and kernel for hash-mode 7800
 - Fixed bug in 18400 module_hash_encode
 - Fixed bug in 23800/unrar with Apple Silicon
 - Fixed bug in 26900 module_hash_encode

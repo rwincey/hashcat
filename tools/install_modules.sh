@@ -77,24 +77,56 @@ cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
 
 ERRORS=$((ERRORS+$?))
 
-pip3 install git+https://github.com/matrix/pygost --break-system-packages
+pyenv_enabled=0
 
-ERRORS=$((ERRORS+$?))
+# check for pyenv
+which pyenv &>/dev/null
+if [ $? -eq 0 ]; then
 
-# pip3 uninstall -y pycryptoplus pycrypto pycryptodome
+  if [[ $(pyenv version-name) != "system" ]]; then
+    # active session detected
+    pyenv_enabled=1
+  else
+    # enum last version available
+    latest=$(pyenv install --list | grep -E "^\s*3\.[0-9]+\.[0-9]$" | tail -n 1)
 
-pip3 install pycryptoplus
+    # install the latest version or skip it if it is already present
+    pyenv install -s ${latest}
 
-ERRORS=$((ERRORS+$?))
+    # enable
+    pyenv local $latest
+    if [ $? -eq 0 ]; then
+      pyenv_enabled=1
+    fi
+  fi
+fi
 
-# pip3 uninstall -y pycryptodome # latest versions do not require this work around anymore
-pip3 install pycrypto
+if [ ${pyenv_enabled} -eq 0 ]; then
+  echo "! something is wrong with pyenv. Please setup latest version manually and re-run this script.
 
-ERRORS=$((ERRORS+$?))
+  ((ERRORS++))
+else
+  echo "> Installing python3 deps ..."
 
-pip3 install cryptography
+  pip3 install git+https://github.com/matrix/pygost
 
-ERRORS=$((ERRORS+$?))
+  ERRORS=$((ERRORS+$?))
+
+  # pip3 uninstall -y pycryptoplus pycrypto pycryptodome
+
+  pip3 install pycryptoplus
+
+  ERRORS=$((ERRORS+$?))
+
+  # pip3 uninstall -y pycryptodome # latest versions do not require this work around anymore
+  pip3 install pycrypto
+
+  ERRORS=$((ERRORS+$?))
+
+  pip3 install cryptography
+
+  ERRORS=$((ERRORS+$?))
+fi
 
 php --version > /dev/null 2> /dev/null
 

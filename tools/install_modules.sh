@@ -46,7 +46,6 @@ cpan install Authen::Passphrase::LANManager \
              Crypt::Twofish                 \
              Crypt::UnixCrypt_XS            \
              Data::Types                    \
-             Digest::BLAKE2                 \
              Digest::CMAC                   \
              Digest::CRC                    \
              Digest::GOST                   \
@@ -70,6 +69,10 @@ cpan install Authen::Passphrase::LANManager \
              POSIX                          \
              Text::Iconv                    \
              ;
+
+ERRORS=$((ERRORS+$?))
+
+cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
 
 ERRORS=$((ERRORS+$?))
 

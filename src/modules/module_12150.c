@@ -47,8 +47,8 @@ const char *module_st_pass   (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE
 
 typedef struct shiro1_sha512_tmp
 {
-  u64 dgst[8];
-  u64 out[8];  // Final output hash
+  u32 dgst[16];
+
 } shiro1_sha512_tmp_t;
 
 static const char *SIGNATURE_SHIRO1_SHA512 = "$shiro1$SHA-512$";
@@ -161,7 +161,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
   module_ctx->module_bridge_name              = MODULE_DEFAULT;
-  module_ctx->module_bridge_type              = MODULE_DEFAULT;  
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

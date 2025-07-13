@@ -11,6 +11,7 @@
 #include "ext_metal.h"
 
 #include <sys/sysctl.h>
+#include <objc/message.h>
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <Foundation/Foundation.h>
@@ -307,6 +308,13 @@ int hc_mtlDeviceGet (void *hashcat_ctx, mtl_device_id *metal_device, int ordinal
     event_log_error (hashcat_ctx, "metalDeviceGet(): invalid index");
 
     return -1;
+  }
+
+  // parallelize pipeline state object (PSO) compilation internally
+
+  if ([device respondsToSelector:@selector(setShouldMaximizeConcurrentCompilation:)])
+  {
+    ((void (*)(id, SEL, BOOL))objc_msgSend)(device, @selector(setShouldMaximizeConcurrentCompilation:), YES);
   }
 
   *metal_device = device;
@@ -1440,6 +1448,7 @@ int hc_mtlCreateLibraryWithSource (void *hashcat_ctx, mtl_device_id metal_device
       }
 
       compileOptions.preprocessorMacros = build_options_dict;
+
       /*
       compileOptions.optimizationLevel = MTLLibraryOptimizationLevelSize;
       compileOptions.mathMode = MTLMathModeSafe;

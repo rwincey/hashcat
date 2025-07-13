@@ -20,8 +20,6 @@ static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
 static const char *HASH_NAME      = "Apache Shiro 1 SHA-512";
 static const u64   KERN_TYPE      = 12150;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
-                                  | OPTI_TYPE_PRECOMPUTE_INIT
-                                  | OPTI_TYPE_PREPENDED_SALT
                                   | OPTI_TYPE_USES_BITS_64
                                   | OPTI_TYPE_SLOW_HASH_SIMD_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
@@ -84,25 +82,25 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   token.len[0]     = 16;
   token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
-                    | TOKEN_ATTR_VERIFY_SIGNATURE;
+                   | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.sep[1]     = '$';
   token.len_min[1] = 1;
   token.len_max[1] = 999999;
   token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
-                    | TOKEN_ATTR_VERIFY_DIGIT;
+                   | TOKEN_ATTR_VERIFY_DIGIT;
 
   token.sep[2]     = '$';
   token.len_min[2] = ((SALT_MIN * 8) / 6) + 0;
   token.len_max[2] = ((SALT_MAX * 8) / 6) + 3;
   token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
-                    | TOKEN_ATTR_VERIFY_BASE64A;
+                   | TOKEN_ATTR_VERIFY_BASE64A;
 
   token.sep[3]     = '$';
-  token.len_min[3] = 16;
-  token.len_max[3] = 256;
+  token.len_min[3] = 88; // 64*8/6+pad
+  token.len_max[3] = 88;
   token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
-                    | TOKEN_ATTR_VERIFY_BASE64A;
+                   | TOKEN_ATTR_VERIFY_BASE64A;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
 
@@ -162,6 +160,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;  
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

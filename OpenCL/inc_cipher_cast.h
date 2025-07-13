@@ -2,23 +2,23 @@
 #define INC_CIPHER_CAST_H
 
 // #include "opencl_misc.h"
-#define GET_UINT32BE(n, b, i)	  \
-	{ \
-		(n) = ((uint) (b)[(i)] << 24) \
-			| ((uint) (b)[(i) + 1] << 16) \
-			| ((uint) (b)[(i) + 2] <<  8) \
-			| ((uint) (b)[(i) + 3]      ); \
-	}
-#define PUT_UINT32BE(n, b, i)	  \
-	{ \
-		(b)[(i)    ] = (u8) ((n) >> 24); \
-		(b)[(i) + 1] = (u8) ((n) >> 16); \
-		(b)[(i) + 2] = (u8) ((n) >>  8); \
-		(b)[(i) + 3] = (u8) ((n)      ); \
-	}
+#define GET_UINT32BE(n, b, i)          \
+  {                                    \
+    (n) = ((uint) (b)[(i)]     << 24)  \
+        | ((uint) (b)[(i) + 1] << 16)  \
+        | ((uint) (b)[(i) + 2] <<  8)  \
+        | ((uint) (b)[(i) + 3]      ); \
+  }
+#define PUT_UINT32BE(n, b, i)        \
+  {                                  \
+    (b)[(i)    ] = (u8) ((n) >> 24); \
+    (b)[(i) + 1] = (u8) ((n) >> 16); \
+    (b)[(i) + 2] = (u8) ((n) >>  8); \
+    (b)[(i) + 3] = (u8) ((n)      ); \
+  }
 
 typedef struct {
-	u32 K[32];
+  u32 K[32];
 } CAST_KEY;
 
 #define GETBYTE(x, y) (uint)(u8)((x)>>(8*(y)))

@@ -1781,6 +1781,7 @@ DECLSPEC u32 hc_bfe_S (const u32 a, const u32 b, const u32 c)
   return r;
 }
 
+#ifdef USE_FUNNELSHIFT
 DECLSPEC u32x hc_bytealign_be (const u32x a, const u32x b, const int c)
 {
   const int c_mod_4 = c & 3;
@@ -1788,35 +1789,35 @@ DECLSPEC u32x hc_bytealign_be (const u32x a, const u32x b, const int c)
   u32x r;
 
   #if VECT_SIZE == 1
-  r = __funnelshift_r (b, a, c_mod_4 * 8);
+  r = hc_funnelshift_r (b, a, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 2
-  r.s0 = __funnelshift_r (b.s0, a.s0, c_mod_4 * 8);
-  r.s1 = __funnelshift_r (b.s1, a.s1, c_mod_4 * 8);
+  r.s0 = hc_funnelshift_r (b.s0, a.s0, c_mod_4 * 8);
+  r.s1 = hc_funnelshift_r (b.s1, a.s1, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 4
-  r.s2 = __funnelshift_r (b.s2, a.s2, c_mod_4 * 8);
-  r.s3 = __funnelshift_r (b.s3, a.s3, c_mod_4 * 8);
+  r.s2 = hc_funnelshift_r (b.s2, a.s2, c_mod_4 * 8);
+  r.s3 = hc_funnelshift_r (b.s3, a.s3, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 8
-  r.s4 = __funnelshift_r (b.s4, a.s4, c_mod_4 * 8);
-  r.s5 = __funnelshift_r (b.s5, a.s5, c_mod_4 * 8);
-  r.s6 = __funnelshift_r (b.s6, a.s6, c_mod_4 * 8);
-  r.s7 = __funnelshift_r (b.s7, a.s7, c_mod_4 * 8);
+  r.s4 = hc_funnelshift_r (b.s4, a.s4, c_mod_4 * 8);
+  r.s5 = hc_funnelshift_r (b.s5, a.s5, c_mod_4 * 8);
+  r.s6 = hc_funnelshift_r (b.s6, a.s6, c_mod_4 * 8);
+  r.s7 = hc_funnelshift_r (b.s7, a.s7, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 16
-  r.s8 = __funnelshift_r (b.s8, a.s8, c_mod_4 * 8);
-  r.s9 = __funnelshift_r (b.s9, a.s9, c_mod_4 * 8);
-  r.sa = __funnelshift_r (b.sa, a.sa, c_mod_4 * 8);
-  r.sb = __funnelshift_r (b.sb, a.sb, c_mod_4 * 8);
-  r.sc = __funnelshift_r (b.sc, a.sc, c_mod_4 * 8);
-  r.sd = __funnelshift_r (b.sd, a.sd, c_mod_4 * 8);
-  r.se = __funnelshift_r (b.se, a.se, c_mod_4 * 8);
-  r.sf = __funnelshift_r (b.sf, a.sf, c_mod_4 * 8);
+  r.s8 = hc_funnelshift_r (b.s8, a.s8, c_mod_4 * 8);
+  r.s9 = hc_funnelshift_r (b.s9, a.s9, c_mod_4 * 8);
+  r.sa = hc_funnelshift_r (b.sa, a.sa, c_mod_4 * 8);
+  r.sb = hc_funnelshift_r (b.sb, a.sb, c_mod_4 * 8);
+  r.sc = hc_funnelshift_r (b.sc, a.sc, c_mod_4 * 8);
+  r.sd = hc_funnelshift_r (b.sd, a.sd, c_mod_4 * 8);
+  r.se = hc_funnelshift_r (b.se, a.se, c_mod_4 * 8);
+  r.sf = hc_funnelshift_r (b.sf, a.sf, c_mod_4 * 8);
   #endif
 
   return r;
@@ -1826,7 +1827,7 @@ DECLSPEC u32 hc_bytealign_be_S (const u32 a, const u32 b, const int c)
 {
   const int c_mod_4 = c & 3;
 
-  const u32 r = __funnelshift_r (b, a, c_mod_4 * 8);
+  const u32 r = hc_funnelshift_r (b, a, c_mod_4 * 8);
 
   return r;
 }
@@ -1838,35 +1839,35 @@ DECLSPEC u32x hc_bytealign (const u32x a, const u32x b, const int c)
   u32x r;
 
   #if VECT_SIZE == 1
-  r = __funnelshift_l (a, b, c_mod_4 * 8);
+  r = hc_funnelshift_l (a, b, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 2
-  r.s0 = __funnelshift_l (a.s0, b.s0, c_mod_4 * 8);
-  r.s1 = __funnelshift_l (a.s1, b.s1, c_mod_4 * 8);
+  r.s0 = hc_funnelshift_l (a.s0, b.s0, c_mod_4 * 8);
+  r.s1 = hc_funnelshift_l (a.s1, b.s1, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 4
-  r.s2 = __funnelshift_l (a.s2, b.s2, c_mod_4 * 8);
-  r.s3 = __funnelshift_l (a.s3, b.s3, c_mod_4 * 8);
+  r.s2 = hc_funnelshift_l (a.s2, b.s2, c_mod_4 * 8);
+  r.s3 = hc_funnelshift_l (a.s3, b.s3, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 8
-  r.s4 = __funnelshift_l (a.s4, b.s4, c_mod_4 * 8);
-  r.s5 = __funnelshift_l (a.s5, b.s5, c_mod_4 * 8);
-  r.s6 = __funnelshift_l (a.s6, b.s6, c_mod_4 * 8);
-  r.s7 = __funnelshift_l (a.s7, b.s7, c_mod_4 * 8);
+  r.s4 = hc_funnelshift_l (a.s4, b.s4, c_mod_4 * 8);
+  r.s5 = hc_funnelshift_l (a.s5, b.s5, c_mod_4 * 8);
+  r.s6 = hc_funnelshift_l (a.s6, b.s6, c_mod_4 * 8);
+  r.s7 = hc_funnelshift_l (a.s7, b.s7, c_mod_4 * 8);
   #endif
 
   #if VECT_SIZE >= 16
-  r.s8 = __funnelshift_l (a.s8, b.s8, c_mod_4 * 8);
-  r.s9 = __funnelshift_l (a.s9, b.s9, c_mod_4 * 8);
-  r.sa = __funnelshift_l (a.sa, b.sa, c_mod_4 * 8);
-  r.sb = __funnelshift_l (a.sb, b.sb, c_mod_4 * 8);
-  r.sc = __funnelshift_l (a.sc, b.sc, c_mod_4 * 8);
-  r.sd = __funnelshift_l (a.sd, b.sd, c_mod_4 * 8);
-  r.se = __funnelshift_l (a.se, b.se, c_mod_4 * 8);
-  r.sf = __funnelshift_l (a.sf, b.sf, c_mod_4 * 8);
+  r.s8 = hc_funnelshift_l (a.s8, b.s8, c_mod_4 * 8);
+  r.s9 = hc_funnelshift_l (a.s9, b.s9, c_mod_4 * 8);
+  r.sa = hc_funnelshift_l (a.sa, b.sa, c_mod_4 * 8);
+  r.sb = hc_funnelshift_l (a.sb, b.sb, c_mod_4 * 8);
+  r.sc = hc_funnelshift_l (a.sc, b.sc, c_mod_4 * 8);
+  r.sd = hc_funnelshift_l (a.sd, b.sd, c_mod_4 * 8);
+  r.se = hc_funnelshift_l (a.se, b.se, c_mod_4 * 8);
+  r.sf = hc_funnelshift_l (a.sf, b.sf, c_mod_4 * 8);
   #endif
 
   return r;
@@ -1876,10 +1877,51 @@ DECLSPEC u32 hc_bytealign_S (const u32 a, const u32 b, const int c)
 {
   const int c_mod_4 = c & 3;
 
-  const u32 r = __funnelshift_l (a, b, c_mod_4 * 8);
+  const u32 r = hc_funnelshift_l (a, b, c_mod_4 * 8);
 
   return r;
 }
+#else
+DECLSPEC u32 hc_bytealign_be (const u32 a, const u32 b, const int c)
+{
+  const int c_mod_4 = c & 3;
+
+  const u32 r = hc_byte_perm (b, a, (0x76543210 >> (c_mod_4 * 4)) & 0xffff);
+
+  return r;
+}
+
+DECLSPEC u32 hc_bytealign_be_S (const u32 a, const u32 b, const int c)
+{
+  const int c_mod_4 = c & 3;
+
+  const u32 r = hc_byte_perm_S (b, a, (0x76543210 >> (c_mod_4 * 4)) & 0xffff);
+
+  return r;
+}
+
+DECLSPEC u32x hc_bytealign (const u32x a, const u32x b, const int c)
+{
+  const int c_mod_4 = c & 3;
+
+  const int c_minus_4 = 4 - c_mod_4;
+
+  const u32x r = hc_byte_perm (a, b, (0x76543210 >> (c_minus_4 * 4)) & 0xffff);
+
+  return r;
+}
+
+DECLSPEC u32 hc_bytealign_S (const u32 a, const u32 b, const int c)
+{
+  const int c_mod_4 = c & 3;
+
+  const int c_minus_4 = 4 - c_mod_4;
+
+  const u32 r = hc_byte_perm_S (a, b, (0x76543210 >> (c_minus_4 * 4)) & 0xffff);
+
+  return r;
+}
+#endif
 
 DECLSPEC u32x hc_add3 (const u32x a, const u32x b, const u32x c)
 {

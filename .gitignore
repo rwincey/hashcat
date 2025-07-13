@@ -29,6 +29,7 @@ obj/*.a
 include/CL
 tools/luks_tests
 .vscode
+test_edge*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

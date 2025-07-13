@@ -21,6 +21,11 @@ DECLSPEC u64  rotl64_S (const u64  a, const int n);
 DECLSPEC u64  rotr64_S (const u64  a, const int n);
 #endif // IS_AMD
 
+#ifdef IS_NV
+DECLSPEC u32 hc_funnelshift_l (const u32 lo, const u32 hi, const int shift);
+DECLSPEC u32 hc_funnelshift_r (const u32 lo, const u32 hi, const int shift);
+#endif // IS_NV
+
 #ifdef IS_CUDA
 DECLSPEC u32 hc_atomic_dec (volatile GLOBAL_AS u32 *p);
 DECLSPEC u32 hc_atomic_inc (volatile GLOBAL_AS u32 *p);

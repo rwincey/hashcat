@@ -6,6 +6,7 @@
 #include "inc_vendor.h"
 #include "inc_types.h"
 #include "inc_platform.h"
+#include "inc_common.h"
 
 #ifdef IS_NATIVE
 #define FIXED_THREAD_COUNT(n)
@@ -59,6 +60,33 @@ DECLSPEC u64 rotr64_S (const u64 a, const int n)
 }
 
 #endif // IS_AMD
+
+// this applies to cuda and opencl
+#if defined IS_NV
+
+#ifdef USE_FUNNELSHIFT
+
+DECLSPEC u32 hc_funnelshift_l (const u32 lo, const u32 hi, const int shift)
+{
+  u32 result;
+
+  asm volatile ("shf.l.wrap.b32 %0, %1, %2, %3;" : "=r"(result) : "r"(lo), "r"(hi), "r"(shift));
+
+  return result;
+}
+
+DECLSPEC u32 hc_funnelshift_r (const u32 lo, const u32 hi, const int shift)
+{
+  u32 result;
+
+  asm volatile ("shf.r.wrap.b32 %0, %1, %2, %3;" : "=r"(result) : "r"(lo), "r"(hi), "r"(shift));
+
+  return result;
+}
+
+#endif
+
+#endif // IS_NV
 
 #if defined IS_CUDA
 
@@ -243,7 +271,7 @@ DECLSPEC u32x rotr32 (const u32x a, const int n)
 DECLSPEC u32 rotl32_S (const u32 a, const int n)
 {
   #ifdef USE_FUNNELSHIFT
-  return __funnelshift_l (a, a, n);
+  return hc_funnelshift_l (a, a, n);
   #else
   return ((a << n) | ((a >> (32 - n))));
   #endif
@@ -252,7 +280,7 @@ DECLSPEC u32 rotl32_S (const u32 a, const int n)
 DECLSPEC u32 rotr32_S (const u32 a, const int n)
 {
   #ifdef USE_FUNNELSHIFT
-  return __funnelshift_r (a, a, n);
+  return hc_funnelshift_r (a, a, n);
   #else
   return ((a >> n) | ((a << (32 - n))));
   #endif
@@ -472,29 +500,17 @@ DECLSPEC u32x rotr32 (const u32x a, const int n)
 
 DECLSPEC u32 rotl32_S (const u32 a, const int n)
 {
-  #ifdef USE_FUNNELSHIFT
-  return __funnelshift_l (a, a, n);
-  #else
-  return ((a << n) | ((a >> (32 - n))));
-  #endif
+  return rotr32_S (a, 32 - n);
 }
 
 DECLSPEC u32 rotr32_S (const u32 a, const int n)
 {
-  #ifdef USE_FUNNELSHIFT
-  return __funnelshift_r (a, a, n);
-  #else
-  return ((a >> n) | ((a << (32 - n))));
-  #endif
+  return __builtin_amdgcn_alignbit (a, a, n);
 }
 
 DECLSPEC u64x rotl64 (const u64x a, const int n)
 {
-  #if VECT_SIZE == 1
-  return rotl64_S (a, n);
-  #else
-  return ((a << n) | ((a >> (64 - n))));
-  #endif
+  return rotr64 (a, 64 - n);
 }
 
 DECLSPEC u64x rotr64 (const u64x a, const int n)
@@ -513,7 +529,6 @@ DECLSPEC u64 rotl64_S (const u64 a, const int n)
 
 DECLSPEC u64 rotr64_S (const u64 a, const int n)
 {
-  #ifdef USE_FUNNELSHIFT
   vconv64_t in;
 
   in.v64 = a;
@@ -523,21 +538,20 @@ DECLSPEC u64 rotr64_S (const u64 a, const int n)
 
   vconv64_t out;
 
+  const int n31 = n & 31;
+
   if (n < 32)
   {
-    out.v32.a = __funnelshift_r (a0, a1, n);
-    out.v32.b = __funnelshift_r (a1, a0, n);
+    out.v32.a = __builtin_amdgcn_alignbit (a1, a0, n31);
+    out.v32.b = __builtin_amdgcn_alignbit (a0, a1, n31);
   }
   else
   {
-    out.v32.a = __funnelshift_r (a1, a0, n - 32);
-    out.v32.b = __funnelshift_r (a0, a1, n - 32);
+    out.v32.a = __builtin_amdgcn_alignbit (a0, a1, n31);
+    out.v32.b = __builtin_amdgcn_alignbit (a1, a0, n31);
   }
 
   return out.v64;
-  #else
-  return ((a >> n) | ((a << (64 - n))));
-  #endif
 }
 
 #define FIXED_THREAD_COUNT(n) __launch_bounds__((n), 0)

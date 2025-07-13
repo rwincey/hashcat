@@ -244,7 +244,7 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   u32_to_hex (tmp[6], out_buf + out_len); out_len += 8;
   u32_to_hex (tmp[7], out_buf + out_len); out_len += 8;
 
-  out_buf[65]=0;
+  out_buf[64]=0;
 
 
   const int line_len = snprintf (line_buf, line_size, "%s--%s", (char *) mojolicious->salt_buf, (char *) ptr_plain);

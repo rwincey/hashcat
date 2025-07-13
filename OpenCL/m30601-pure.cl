@@ -498,23 +498,8 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_init (KERN_ATTR_TMPS_
   const u64 lid = get_local_id (0);
   const u64 lsz = get_local_size (0);
 
-  #ifdef REAL_SHM
-
-  LOCAL_VK u32 s_bin2base64[0x40];
-
-  for (u32 i = lid; i < 0x40; i += lsz)
-  {
-    s_bin2base64[i] = bin2base64[i];
-  }
-
-  SYNC_THREADS ();
-
-  #else
-
   CONSTANT_AS u32a *s_bin2base64 = bin2base64;
-
-  #endif
-
+  
   if (gid >= GID_CNT) return;
 
   u32 pw[64] = { 0 };

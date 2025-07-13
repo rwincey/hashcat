@@ -201,6 +201,10 @@ using namespace metal;
 
 #ifdef IS_METAL
 #define USE_ROTATE
+#ifndef IS_APPLE_SILICON
+#define USE_BITSELECT
+#define USE_SWIZZLE
+#endif
 
 // Metal support max VECT_SIZE = 4
 #define s0 x

@@ -1115,7 +1115,12 @@ DECLSPEC u32 hc_swap32_S (const u32 v)
   asm volatile ("prmt.b32 %0, %1, 0, 0x0123;" : "=r"(r) : "r"(v));
   #else
   #ifdef USE_SWIZZLE
+  #ifdef IS_METAL
+  uchar4 u = uchar4 ((v >> 0) & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF, (v >> 24) & 0xFF);
+  r = as_type<u32>(u.wzyx);
+  #else
   r = as_uint (as_uchar4 (v).s3210);
+  #endif
   #else
   r = ((v & 0xff000000) >> 24)
     | ((v & 0x00ff0000) >>  8)

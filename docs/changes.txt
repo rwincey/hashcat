@@ -177,6 +177,7 @@
 - Metal Backend: allow use of devices with Metal if runtime version is >= 200
 - Metal Backend: disable Metal devices only if at least one OpenCL device is active
 - Metal Backend: improved compute workloads calculation
+- Metal Backend: define USE_BITSELECT and USE_SWIZZLE for Apple Intel
 - Modules: Check UnpackSize to raise false positive with hc_decompress_rar
 - User Options: added --metal-compiler-runtime option
 - User Options: limit --bitmap-max value to 31

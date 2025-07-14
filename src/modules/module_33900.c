@@ -46,7 +46,7 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 
 typedef struct pbkdf2_sha256
 {
-  u32 salt_buf[16];
+  u32 salt_buf[64];
 
 } pbkdf2_sha256_t;
 
@@ -138,7 +138,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.len[1]     = 64;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_HEX 
+  token.attr[1]    = TOKEN_ATTR_VERIFY_HEX
                    | TOKEN_ATTR_FIXED_LENGTH;
 
   token.len[2]     = 64;
@@ -161,7 +161,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   const u8 *salt_pos = token.buf[1];
   const int salt_len = token.len[1];
 
-  memset (tmp_buf, 0, sizeof (tmp_buf));  
+  memset (tmp_buf, 0, sizeof (tmp_buf));
 
   tmp_len = hex_decode (salt_pos, salt_len, tmp_buf);
 
@@ -170,7 +170,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   memcpy (pbkdf2_sha256->salt_buf, tmp_buf, salt_len);
 
   salt->salt_len = tmp_len;
-  
+
   salt->salt_buf[0] = pbkdf2_sha256->salt_buf[0];
   salt->salt_buf[1] = pbkdf2_sha256->salt_buf[1];
   salt->salt_buf[2] = pbkdf2_sha256->salt_buf[2];
@@ -181,7 +181,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const u8 *hash_pos = token.buf[2];
   const int hash_len = token.len[2];
-  
+
   memset (tmp_buf, 0, sizeof (tmp_buf));
 
   tmp_len = hex_decode (hash_pos, hash_len, tmp_buf);
@@ -213,6 +213,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

@@ -1045,58 +1045,6 @@ DECLSPEC HC_INLINE_RP u32 rule_op_mangle_toggle_at (MAYBE_UNUSED const u32 p0, M
   return (in_len);
 }
 
-DECLSPEC HC_INLINE_RP u32 find_bit_occurrence (u32 rn, u32 p0)
-{
-  u32 occurence = 0;
-  u32 ro = 0;
-  u32 done = 0;
-
-  #ifdef _unroll
-  #pragma unroll
-  #endif
-  for (int i = 0; i < 32; i++)
-  {
-    const u32 bit = (rn >> i) & 1;
-
-    // solo se non abbiamo ancora trovato
-    const u32 match = (bit & (occurence == p0) & (done == 0));
-
-    ro |= (1 << i) * match;
-
-    occurence += (bit & (done == 0));
-    done |= match;
-  }
-
-  return ro;
-}
-
-/*
-DECLSPEC HC_INLINE_RP u32 find_bit_occurrence (u32 rn, u32 p0)
-{
-  u32 occurence = 0;
-  u32 ro = 0;
-
-  #ifdef _unroll
-  #pragma unroll
-  #endif
-  for (int i = 0; i < 32; i++)
-  {
-    if ((rn >> i) & 1)
-    {
-      if (occurence == p0)
-      {
-        ro = 1 << i;
-
-        break; // bug with Metal - Apple Intel
-      }
-      occurence++;
-    }
-  }
-
-  return ro;
-}
-*/
-
 DECLSPEC HC_INLINE_RP u32 rule_op_mangle_toggle_at_sep (MAYBE_UNUSED const u32 p0, MAYBE_UNUSED const u32 p1, MAYBE_UNUSED PRIVATE_AS u32 *buf0, MAYBE_UNUSED PRIVATE_AS u32 *buf1, const u32 in_len)
 {
   if (in_len == 0) return in_len;
@@ -1121,7 +1069,36 @@ DECLSPEC HC_INLINE_RP u32 rule_op_mangle_toggle_at_sep (MAYBE_UNUSED const u32 p
 
   if (rn == 0) return in_len;
 
-  u32 ro = find_bit_occurrence (rn, p0);
+  u32 occurence = 0;
+
+  u32 ro = 0;
+
+  #ifdef _unroll
+  #pragma unroll
+  #endif
+  for (int i = 0; i < 32; i++)
+  {
+    if ((rn >> i) & 1)
+    {
+      if (occurence == p0)
+      {
+        ro = 1 << i;
+
+        #if defined(IS_METAL) && !defined(IS_APPLE_SILICON)
+
+        i = 32;
+
+        continue;
+
+        #else
+
+        break; // bug on Apple Intel with Metal
+
+        #endif
+      }
+      occurence++;
+    }
+  }
 
   r0 = (ro >>  0) & 15;
   r1 = (ro >>  4) & 15;
@@ -2351,14 +2328,6 @@ DECLSPEC u32x apply_rules_vect_optimized (PRIVATE_AS const u32 *pw_buf0, PRIVATE
   buf1[2] = pw_buf1[2];
   buf1[3] = pw_buf1[3];
 
-  /*
-  u32 tmp_cmds[32];
-
-  for (int j = 0; j < 32; j++) tmp_cmds[j] = kernel_rules[il_pos].cmds[j];
-
-  return apply_rules_optimized (tmp_cmds, buf0, buf1, pw_len);
-  */
-
   return apply_rules_optimized (kernel_rules[il_pos].cmds, buf0, buf1, pw_len);
 
   #else
@@ -2381,14 +2350,6 @@ DECLSPEC u32x apply_rules_vect_optimized (PRIVATE_AS const u32 *pw_buf0, PRIVATE
     tmp1[1] = pw_buf1[1];
     tmp1[2] = pw_buf1[2];
     tmp1[3] = pw_buf1[3];
-
-    /*
-    u32 tmp_cmds[32];
-
-    for (int j = 0; j < 32; j++) tmp_cmds[j] = kernel_rules[il_pos + i].cmds[j];
-
-    const u32 tmp_len = apply_rules_optimized (tmp_cmds, tmp0, tmp1, pw_len);
-    */
 
     const u32 tmp_len = apply_rules_optimized (kernel_rules[il_pos + i].cmds, tmp0, tmp1, pw_len);
 

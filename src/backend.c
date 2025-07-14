@@ -9337,8 +9337,10 @@ static int get_opencl_kernel_wgs (hashcat_ctx_t *hashcat_ctx, hc_device_param_t 
     if (kernel_threads < cwgs_total)
     {
       // Very likely some bug, because the runtime was unable to follow our requirement to run N threads guaranteed on this kernel
-
-      event_log_warning (hashcat_ctx, "* Device #%u: Runtime returned CL_KERNEL_WORK_GROUP_SIZE=%d, but CL_KERNEL_COMPILE_WORK_GROUP_SIZE=%d. Use -T%d if you run into problems.", device_param->device_id + 1, (int) kernel_threads, (int) cwgs_total, (int) kernel_threads);
+      if (user_options->machine_readable == false)
+      {
+        event_log_warning (hashcat_ctx, "* Device #%u: Runtime returned CL_KERNEL_WORK_GROUP_SIZE=%d, but CL_KERNEL_COMPILE_WORK_GROUP_SIZE=%d. Use -T%d if you run into problems.", device_param->device_id + 1, (int) kernel_threads, (int) cwgs_total, (int) kernel_threads);
+      }
     }
 
     kernel_threads = cwgs_total;

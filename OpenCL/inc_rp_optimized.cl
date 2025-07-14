@@ -1084,9 +1084,18 @@ DECLSPEC HC_INLINE_RP u32 rule_op_mangle_toggle_at_sep (MAYBE_UNUSED const u32 p
       {
         ro = 1 << i;
 
-        break;
-      }
+        #if defined(IS_METAL) && !defined(IS_APPLE_SILICON)
 
+        i = 32;
+
+        continue;
+
+        #else
+
+        break; // bug on Apple Intel with Metal
+
+        #endif
+      }
       occurence++;
     }
   }
@@ -2235,6 +2244,8 @@ DECLSPEC u32 apply_rule_optimized (const u32 name, const u32 p0, const u32 p1, P
 {
   u32 out_len = in_len;
 
+  if (name == RULE_OP_MANGLE_NOOP) return out_len;
+
   switch (name)
   {
     case RULE_OP_MANGLE_LREST:            out_len = rule_op_mangle_lrest            (p0, p1, buf0, buf1, out_len); break;
@@ -2284,6 +2295,7 @@ DECLSPEC u32 apply_rule_optimized (const u32 name, const u32 p0, const u32 p1, P
   return out_len;
 }
 
+//DECLSPEC u32 apply_rules_optimized (PRIVATE_AS const u32 *cmds, PRIVATE_AS u32 *buf0, PRIVATE_AS u32 *buf1, const u32 len)
 DECLSPEC u32 apply_rules_optimized (CONSTANT_AS const u32 *cmds, PRIVATE_AS u32 *buf0, PRIVATE_AS u32 *buf1, const u32 len)
 {
   u32 out_len = len;

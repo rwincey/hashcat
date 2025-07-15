@@ -98,6 +98,7 @@
 - Fixed bug in 23800/unrar with Apple Silicon
 - Fixed bug in 26900 module_hash_encode
 - Fixed bug in 29600 module OPTS_TYPE setting
+- Fixed bug in 32600 by adding missing module_jit_build_options
 - Fixed bug in grep out-of-memory workaround on Unit Test
 - Fixed bug in input_tokenizer when TOKEN_ATTR_FIXED_LENGTH is used and refactor modules
 - Fixed bug in --stdout that caused certain rules to malfunction
@@ -113,6 +114,7 @@
 - Fixed clang identification in src/Makefile
 - Fixed build failure for almost all hash modes that make use of hc_swap64 and/or hc_swap64_S with Apple Metal / Apple Silicon
 - Fixed debug mode 5 by adding the missing colon between original-word and finding-rule
+- Fixed perl deprecation warnings on test module for 30906
 - Fixed display problem of the "Optimizers applied" list for algorithms using OPTI_TYPE_SLOW_HASH_SIMD_INIT2 and/or OPTI_TYPE_SLOW_HASH_SIMD_LOOP2
 - Fixed incompatible pointer types (salt1 and salt2 buf) in 3730 a3 kernel
 - Fixed incorrect plaintext check for 25400 and 26610. Increased plaintext check to 32 bytes to prevent false positives.

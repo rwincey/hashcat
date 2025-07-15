@@ -95,8 +95,9 @@ ALL_ATTACKS=0
 OPTS="--quiet --potfile-disable --hwmon-disable --self-test-disable --machine-readable --logfile-disable"
 
 SKIP_HASH_TYPES="" #2000 2500 2501 16800 16801 99999 32000"
-SKIP_HASH_TYPES_METAL="" #1800 10700 11700 11750 11760 11800 11850 11860 19200 21600"
-SKIP_METAL_SCRYPT="" #8900 15700 9300 22700 27700 28200 29800"
+SKIP_HASH_TYPES_METAL="21800"
+
+METAL_FORCE_KEEPFREE="8900 22700 27700 28200 29800"
 
 SKIP_OUT_MATCH_HASH_TYPES="14000 14100 22000"
 SKIP_SAME_SALT_HASH_TYPES="6600 7100 7200 8200 13200 13400 15300 15310 15900 15910 16900 18300 18900 20200 20300 20400 27000 27100 29700 29930 29940"
@@ -547,11 +548,6 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
       echo "[ ${OUTD} ] > Skip processing Hash-Type ${hash_type} (due to metal kernel build failed)" | tee -a ${OUTD}/test_edge.details.log
       continue
     fi
-
-    if is_in_array "${hash_type}" ${SKIP_METAL_SCRYPT}; then
-      echo "[ ${OUTD} ] > Skip processing Hash-Type ${hash_type} (due to metal scrypt is broken)" | tee -a ${OUTD}/test_edge.details.log
-      continue
-    fi
   fi
 
   deprecated=$(./hashcat -m ${hash_type} -HH | grep "Deprecated\\.\\." | awk '{print $2}')
@@ -655,6 +651,12 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
           if [ $pt_hex -eq 1 ]; then
             CUR_OPTS_V="${CUR_OPTS_V} --hex-charset"
+          fi
+
+          if [ $METAL_BACKEND -eq 1 ]; then
+            if is_in_array "${hash_type}" ${METAL_FORCE_KEEPFREE}; then
+              CUR_OPTS_V="${CUR_OPTS_V} --backend-devices-keepfree 1"
+            fi
           fi
 
           # single hash

@@ -850,7 +850,7 @@ typedef enum user_options_map
   IDX_HOOK_THREADS              = 0xff1f,
   IDX_IDENTIFY                  = 0xff20,
   IDX_INCREMENT                 = 'i',
-  IDX_INCREMENT_INVERSE         = 0xff56,
+  IDX_INCREMENT_INVERSE         = 0xff61,
   IDX_INCREMENT_MAX             = 0xff21,
   IDX_INCREMENT_MIN             = 0xff22,
   IDX_INDUCTION_DIR             = 0xff23,
@@ -964,9 +964,9 @@ typedef void * hc_dynfunc_t;
 #endif
 
 typedef enum increment {
-  INCREMENT_NONE,
-  INCREMENT_NORMAL,
-  INCREMENT_INVERSED,
+  INCREMENT_NONE      = 0,
+  INCREMENT_NORMAL    = 1,
+  INCREMENT_INVERSED  = 2,
 } increment_t;
 
 /**

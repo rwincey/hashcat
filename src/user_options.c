@@ -571,7 +571,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_BITMAP_MIN:                user_options->bitmap_min                = hc_strtoul (optarg, NULL, 10);   break;
       case IDX_BITMAP_MAX:                user_options->bitmap_max                = hc_strtoul (optarg, NULL, 10);   break;
       case IDX_HOOK_THREADS:              user_options->hook_threads              = hc_strtoul (optarg, NULL, 10);   break;
-      case IDX_INCREMENT:                 increment_parse(hashcat_ctx);                                              break;
+      case IDX_INCREMENT:                 user_options->increment++;                                                 break;
       case IDX_INCREMENT_INVERSE:         user_options->increment                 = INCREMENT_INVERSED;              break;
       case IDX_INCREMENT_MIN:             user_options->increment_min             = hc_strtoul (optarg, NULL, 10);
                                           user_options->increment_min_chgd        = true;                            break;
@@ -987,6 +987,14 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     event_log_error (hashcat_ctx, "Increment-max is only supported combined with -i/--increment.");
 
     return -1;
+  }
+
+  // In case the user uses -iii, escaping enum bounds
+  if (user_options->increment > INCREMENT_INVERSED)
+  {
+    event_log_error (hashcat_ctx, "Invalid -i/--increment value.");
+
+    return -1;    
   }
 
   if ((user_options->rp_files_cnt > 0) && (user_options->rp_gen > 0))
@@ -3385,21 +3393,6 @@ int user_options_check_files (hashcat_ctx_t *hashcat_ctx)
   */
 
   return 0;
-}
-
-void increment_parse (hashcat_ctx_t *hashcat_ctx)
-{
-  user_options_t *user_options = hashcat_ctx->user_options;
-  
-  // Set increment inverse when -ii
-  if (user_options->increment == INCREMENT_NORMAL)
-  {
-    user_options->increment = INCREMENT_INVERSED;
-  }
-  else
-  {
-    user_options->increment = INCREMENT_NORMAL;
-  }
 }
 
 void user_options_logger (hashcat_ctx_t *hashcat_ctx)

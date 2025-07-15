@@ -10,6 +10,8 @@
 #include M2S(INCLUDE_PATH/inc_types.h)
 #include M2S(INCLUDE_PATH/inc_platform.cl)
 #include M2S(INCLUDE_PATH/inc_common.cl)
+#include M2S(INCLUDE_PATH/inc_rp.h)
+#include M2S(INCLUDE_PATH/inc_rp.cl)
 #include M2S(INCLUDE_PATH/inc_scalar.cl)
 #include M2S(INCLUDE_PATH/inc_hash_md5.cl)
 #endif
@@ -36,7 +38,7 @@ typedef struct md5_double_salt
 
 } md5_double_salt_t;
 
-KERNEL_FQ KERNEL_FA void m32800_mxx (KERN_ATTR_ESALT (md5_double_salt_t))
+KERNEL_FQ KERNEL_FA void m21900_mxx (KERN_ATTR_RULES_ESALT (md5_double_salt_t))
 {
   /**
    * modifier
@@ -47,7 +49,7 @@ KERNEL_FQ KERNEL_FA void m32800_mxx (KERN_ATTR_ESALT (md5_double_salt_t))
   const u64 lsz = get_local_size (0);
 
   /**
-   * bin2asc uppercase array
+   * bin2asc uppercase table
    */
 
   LOCAL_VK u32 l_bin2asc[256];
@@ -64,6 +66,12 @@ KERNEL_FQ KERNEL_FA void m32800_mxx (KERN_ATTR_ESALT (md5_double_salt_t))
   SYNC_THREADS ();
 
   if (gid >= GID_CNT) return;
+
+  /**
+   * base
+   */
+
+  COPY_PW (pws[gid]);
 
   const u32 salt1_len = esalt_bufs[DIGESTS_OFFSET_HOST].salt1_len;
 
@@ -84,33 +92,29 @@ KERNEL_FQ KERNEL_FA void m32800_mxx (KERN_ATTR_ESALT (md5_double_salt_t))
   }
 
   /**
-   * base
-   */
-
-  md5_ctx_t ctx0;
-
-  md5_init (&ctx0);
-
-  md5_update_global (&ctx0, pws[gid].i, pws[gid].pw_len);
-
-  /**
    * loop
    */
 
   for (u32 il_pos = 0; il_pos < IL_CNT; il_pos++)
   {
-    md5_ctx_t ctx1 = ctx0;
+    pw_t tmp = PASTE_PW;
 
-    md5_update_global (&ctx1, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
+    tmp.pw_len = apply_rules (rules_buf[il_pos].cmds, tmp.i, tmp.pw_len);
 
-    md5_update (&ctx1, salt1_buf, salt1_len);
+    md5_ctx_t ctx0;
 
-    md5_final (&ctx1);
+    md5_init (&ctx0);
 
-    u32 a = ctx1.h[0];
-    u32 b = ctx1.h[1];
-    u32 c = ctx1.h[2];
-    u32 d = ctx1.h[3];
+    md5_update (&ctx0, tmp.i, tmp.pw_len);
+
+    md5_update (&ctx0, salt1_buf, salt1_len);
+
+    md5_final (&ctx0);
+
+    u32 a = ctx0.h[0];
+    u32 b = ctx0.h[1];
+    u32 c = ctx0.h[2];
+    u32 d = ctx0.h[3];
 
     md5_ctx_t ctx;
 
@@ -176,7 +180,7 @@ KERNEL_FQ KERNEL_FA void m32800_mxx (KERN_ATTR_ESALT (md5_double_salt_t))
   }
 }
 
-KERNEL_FQ KERNEL_FA void m32800_sxx (KERN_ATTR_ESALT (md5_double_salt_t))
+KERNEL_FQ KERNEL_FA void m21900_sxx (KERN_ATTR_RULES_ESALT (md5_double_salt_t))
 {
   /**
    * modifier
@@ -187,7 +191,7 @@ KERNEL_FQ KERNEL_FA void m32800_sxx (KERN_ATTR_ESALT (md5_double_salt_t))
   const u64 lsz = get_local_size (0);
 
   /**
-   * bin2asc uppercase array
+   * bin2asc uppercase table
    */
 
   LOCAL_VK u32 l_bin2asc[256];
@@ -217,6 +221,12 @@ KERNEL_FQ KERNEL_FA void m32800_sxx (KERN_ATTR_ESALT (md5_double_salt_t))
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R3]
   };
 
+  /**
+   * base
+   */
+
+  COPY_PW (pws[gid]);
+
   const u32 salt1_len = esalt_bufs[DIGESTS_OFFSET_HOST].salt1_len;
 
   u32 salt1_buf[64] = { 0 };
@@ -236,33 +246,29 @@ KERNEL_FQ KERNEL_FA void m32800_sxx (KERN_ATTR_ESALT (md5_double_salt_t))
   }
 
   /**
-   * base
-   */
-
-  md5_ctx_t ctx0;
-
-  md5_init (&ctx0);
-
-  md5_update_global (&ctx0, pws[gid].i, pws[gid].pw_len);
-
-  /**
    * loop
    */
 
   for (u32 il_pos = 0; il_pos < IL_CNT; il_pos++)
   {
-    md5_ctx_t ctx1 = ctx0;
+    pw_t tmp = PASTE_PW;
 
-    md5_update_global (&ctx1, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
+    tmp.pw_len = apply_rules (rules_buf[il_pos].cmds, tmp.i, tmp.pw_len);
 
-    md5_update (&ctx1, salt1_buf, salt1_len);
+    md5_ctx_t ctx0;
 
-    md5_final (&ctx1);
+    md5_init (&ctx0);
 
-    u32 a = ctx1.h[0];
-    u32 b = ctx1.h[1];
-    u32 c = ctx1.h[2];
-    u32 d = ctx1.h[3];
+    md5_update (&ctx0, tmp.i, tmp.pw_len);
+
+    md5_update (&ctx0, salt1_buf, salt1_len);
+
+    md5_final (&ctx0);
+
+    u32 a = ctx0.h[0];
+    u32 b = ctx0.h[1];
+    u32 c = ctx0.h[2];
+    u32 d = ctx0.h[3];
 
     md5_ctx_t ctx;
 

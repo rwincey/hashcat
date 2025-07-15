@@ -1,3 +1,5 @@
+.DS_Store
+*/.DS_Store
 *.exe
 *.bin
 *.app
@@ -17,6 +19,8 @@ hashcat.dll
 *.dSYM
 kernels/**
 lib/*.a
+bridges/*.dll
+bridges/*.so
 modules/*.dll
 modules/*.so
 obj/*/*/*.o
@@ -24,3 +28,10 @@ obj/*.o
 obj/*.a
 include/CL
 tools/luks_tests
+.vscode
+test_edge*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

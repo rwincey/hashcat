@@ -292,7 +292,7 @@ DECLSPEC void transform_racf_key (const u32 w0, const u32 w1, PRIVATE_AS u32 *ke
          | c_ascii_to_ebcdic_pc[((w1 >>  24) & 0xff)] << 24;
 }
 
-KERNEL_FQ void m33400_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m33400_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   /**
    * base
@@ -360,7 +360,7 @@ KERNEL_FQ void m33400_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
 
   u32 des_output[2];
   _des_crypt_encrypt (des_output, data, Kc, Kd, s_SPtrans);
-  
+
   // set tmps->key
   tmps[gid].key[0] = hc_swap32_S(des_output[0]);
   tmps[gid].key[1] = hc_swap32_S(des_output[1]);
@@ -396,7 +396,7 @@ KERNEL_FQ void m33400_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
 
 DECLSPEC void hmac_sha256_run_V (PRIVATE_AS u32x *w0, PRIVATE_AS u32x *w1, PRIVATE_AS u32x *w2, PRIVATE_AS u32x *w3, PRIVATE_AS u32x *ipad, PRIVATE_AS u32x *opad, PRIVATE_AS u32x *digest)
 {
-  
+
   digest[0] = ipad[0];
   digest[1] = ipad[1];
   digest[2] = ipad[2];
@@ -442,7 +442,7 @@ DECLSPEC void racf_pbkdf_sha256_hmac_V (PRIVATE_AS u32x *key, u32 key_len, PRIVA
 {
 
   /**
-   * PBKDF2-SHA256-HMAC init  
+   * PBKDF2-SHA256-HMAC init
    */
 
   sha256_hmac_ctx_vector_t sha256_hmac_ctx;
@@ -514,7 +514,7 @@ DECLSPEC void racf_pbkdf_sha256_hmac_V (PRIVATE_AS u32x *key, u32 key_len, PRIVA
   tmpx->out[7] = tmpx->dgst[7];
 
   /**
-   * PBKDF2-SHA256-HMAC loop  
+   * PBKDF2-SHA256-HMAC loop
    */
 
   // convert tmpx to array sha256_tmps[VECT_SIZE]
@@ -639,7 +639,7 @@ DECLSPEC void racf_pbkdf_sha256_hmac_V (PRIVATE_AS u32x *key, u32 key_len, PRIVA
   convert_pbkdf2_sha256_to_V(sha256_tmps, tmpx);
 }
 
-KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -648,13 +648,13 @@ KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
   if ((gid * VECT_SIZE) >= GID_CNT) return;
 
   /*
-   * set key and salt 
+   * set key and salt
    */
-  
+
   u32x key[16] = {0};
   u32x salt[16] = {0};
   u32 salt_len = tmps[gid].salt_len;
-  
+
   key[0] = packv (tmps, key, gid, 0);
   key[1] = packv (tmps, key, gid, 1);
 
@@ -674,9 +674,9 @@ KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
   pbkdf2_sha256_tmpx_t pbkdf2_tmpx = {0};
 
   /*
-   * internal loop with PBKDF2-SHA256-HMAC 
+   * internal loop with PBKDF2-SHA256-HMAC
    */
-  
+
   for (u32 i = 0; i < LOOP_CNT; i += 1)
   {
     racf_pbkdf_sha256_hmac_V(key, 8, salt, salt_len, esalt_bufs[DIGESTS_OFFSET_HOST].rep_fac * 100, &pbkdf2_tmpx);
@@ -708,7 +708,7 @@ KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
   }
 
   /*
-   * set salt_buf for the next mem_fact iteration 
+   * set salt_buf for the next mem_fact iteration
    */
 
   unpackv (tmps, salt_buf, gid, 0, pbkdf2_tmpx.dgst[0]);
@@ -724,13 +724,13 @@ KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
   unpackv (tmps, salt_buf, gid, 9, pbkdf2_tmpx.out[5]);
   unpackv (tmps, salt_buf, gid, 10, pbkdf2_tmpx.out[6]);
   unpackv (tmps, salt_buf, gid, 11, pbkdf2_tmpx.out[7]);
-  
+
   u32x salt_len_x = 48;
   unpack (tmps, salt_len, gid, salt_len_x);
 }
 
 
-KERNEL_FQ void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -738,9 +738,9 @@ KERNEL_FQ void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfae
   if (gid >= GID_CNT) return;
 
   /**
-   * memory buffer preparation (transposition + PBKDF2-SHA256-HMAC with iter=1) 
+   * memory buffer preparation (transposition + PBKDF2-SHA256-HMAC with iter=1)
    */
- 
+
   // set key
   tmps[gid].key[0] = tmps[gid].salt_buf[4];
   tmps[gid].key[1] = tmps[gid].salt_buf[5];
@@ -772,7 +772,7 @@ KERNEL_FQ void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfae
     tmps[gid].salt_buf[6] = tmps[gid].out[n_key*8+6];
     tmps[gid].salt_buf[7] = tmps[gid].out[n_key*8+7];
 
-    // do PBKDF2-SHA256-HMAC 
+    // do PBKDF2-SHA256-HMAC
     sha256_hmac_ctx_t sha256_hmac_ctx;
 
     sha256_hmac_init_global (&sha256_hmac_ctx, tmps[gid].key, 32);
@@ -823,7 +823,7 @@ KERNEL_FQ void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfae
     tmps[gid].key[4] = sha256_hmac_ctx.opad.h[4];
     tmps[gid].key[5] = sha256_hmac_ctx.opad.h[5];
     tmps[gid].key[6] = sha256_hmac_ctx.opad.h[6];
-    tmps[gid].key[7] = sha256_hmac_ctx.opad.h[7];  
+    tmps[gid].key[7] = sha256_hmac_ctx.opad.h[7];
   }
 
   /**
@@ -913,11 +913,11 @@ KERNEL_FQ void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfae
     tmps[gid].pbkdf2_tmps.out[i + 6] = tmps[gid].pbkdf2_tmps.dgst[i + 6];
     tmps[gid].pbkdf2_tmps.out[i + 7] = tmps[gid].pbkdf2_tmps.dgst[i + 7];
   }
- 
+
 }
 
 
-KERNEL_FQ void m33400_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m33400_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -944,7 +944,7 @@ KERNEL_FQ void m33400_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfae
   opad[5] = packv (tmps, pbkdf2_tmps.opad, gid, 5);
   opad[6] = packv (tmps, pbkdf2_tmps.opad, gid, 6);
   opad[7] = packv (tmps, pbkdf2_tmps.opad, gid, 7);
-  
+
   for (u32 i = 0; i < 8; i += 8)
   {
     u32x dgst[8];
@@ -1022,10 +1022,10 @@ KERNEL_FQ void m33400_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfae
     unpackv (tmps, pbkdf2_tmps.out, gid, i + 6, out[6]);
     unpackv (tmps, pbkdf2_tmps.out, gid, i + 7, out[7]);
   }
-  
+
 }
 
-KERNEL_FQ void m33400_comp (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m33400_comp (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   /**
    * base
@@ -1110,7 +1110,7 @@ KERNEL_FQ void m33400_comp (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes
 
   u32 cipher_text[4] = {0};
 
-  // AES 
+  // AES
   u32 aes_ks[60];
 
   AES256_set_encrypt_key (aes_ks, aes_key, s_te0, s_te1, s_te2, s_te3);

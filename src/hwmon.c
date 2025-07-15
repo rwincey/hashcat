@@ -1647,9 +1647,7 @@ int hwmon_ctx_init (hashcat_ctx_t *hashcat_ctx)
   if (user_options->stdout_flag   == true)  return 0;
   if (user_options->version       == true)  return 0;
   if (user_options->identify      == true)  return 0;
-  //we need hwmon support to get free memory per device support
-  //its a joke, but there's no way around
-  //if (user_options->hwmon         == false) return 0;
+  if (user_options->hwmon         == false) return 0;
 
   hwmon_ctx->hm_device = (hm_attrs_t *) hccalloc (DEVICES_MAX, sizeof (hm_attrs_t));
 

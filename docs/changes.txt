@@ -58,6 +58,7 @@
 - Added hash-mode: md5(md5($salt).md5(md5($pass)))
 - Added hash-mode: Domain Cached Credentials 2 (DCC2), MS Cache 2, (NT)
 - Added hash-mode: Domain Cached Credentials (DCC), MS Cache (NT)
+- Added hash-mode: md5(md5(md5($pass.$salt1)).$salt2)
 - Added hash-mode: md5(md5(md5($pass).$salt1).$salt2)
 - Added hash-mode: md5(md5(md5($pass)).$salt)
 - Added hash-mode: md5(sha1($pass.$salt))
@@ -72,9 +73,10 @@
 
 - Added new feature (-Y) that creates N virtual instances for each device in your system at the cost of N times the device memory consumption
 - Added options --benchmark-min and --benchmark-max to set a hash-mode range to be used during the benchmark
-- Added option --total-candidates to provide the total candidate count for an attack insteda of the internal "--keyspace" value
+- Added option --total-candidates to provide the total candidate count for an attack instead of the internal "--keyspace" value
 - Added option --backend-devices-keepfree to configure X percentage of device memory available to keep free
 - Added display of password length mininum and maximum in the Kernel.Feature status line
+- Added the 'edge' test type to test.pl and the corresponding tool test_edge.sh
 
 ##
 ## Performance
@@ -89,6 +91,9 @@
 - Added verification of token buffer length when using TOKEN_ATTR_FIXED_LENGTH
 - Fixed a bug in all SCRYPT-based hash modes with Apple Metal
 - Fixed buffer overflow on module_26600.c / module_hash_encode()
+- Fixed bug in inc_rp_optimized.cl on Apple Intel with Metal
+- Fixed bug in module_constraints and kernel for hash-mode 7801
+- Fixed bug in module_constraints and kernel for hash-mode 7800
 - Fixed bug in 18400 module_hash_encode
 - Fixed bug in 23800/unrar with Apple Silicon
 - Fixed bug in 26900 module_hash_encode
@@ -104,6 +109,7 @@
 - Fixed build failed for 18400 with Apple Metal
 - Fixed build failed for 18600 with Apple Metal
 - Fixed build failed for 4410 with vector width > 1
+- Fixed build failed for aarch64 (es: rpi)
 - Fixed clang identification in src/Makefile
 - Fixed build failure for almost all hash modes that make use of hc_swap64 and/or hc_swap64_S with Apple Metal / Apple Silicon
 - Fixed debug mode 5 by adding the missing colon between original-word and finding-rule
@@ -158,6 +164,11 @@
 - Scrypt: Increase buffer sizes in module for hash mode 8900 to allow longer scrypt digests
 - Unicode: Update UTF-8 to UTF-16 conversion to match RFC 3629
 - Unit tests: Updated install_modules.sh with Crypt::Argon2
+- Unit tests: Updated install_modules.sh with Crypt::Passwd::XS, to test suite works also on Apple (ex: 1800)
+- Unit tests: Updated install_modules.sh to use an external module for Digest::BLAKE2, due to maintenance being discontinued
+- Unit tests: Updated install_modules.sh to use an external package for pygost, due to not available anymore
+- Unit tests: Updated install_modules.sh to use cpanm instead of cpan
+- Unit tests: Updated install_modules.sh to remove php and Crypt::GCrypt (updated relative test modules)
 - User Options: Added error message when mixing --username and --show to warn users of exponential delay
 - MetaMask: update extraction tool to support MetaMask Mobile wallets
 - SecureCRT MasterPassphrase v2: update module, pure kernels and test unit. Add optimized kernels.
@@ -165,8 +176,10 @@
 - Metal Backend: added workaround to set the true Processor value in Metal devices on Apple Intel
 - Metal Backend: added support to 2D/3D Compute
 - Metal Backend: allow use of devices with Metal if runtime version is >= 200
+- Metal Backend: define USE_BITSELECT and USE_SWIZZLE for Apple Intel
 - Metal Backend: disable Metal devices only if at least one OpenCL device is active
 - Metal Backend: improved compute workloads calculation
+- Metal Backend: parallelize pipeline state object (PSO) compilation internally
 - Modules: Check UnpackSize to raise false positive with hc_decompress_rar
 - User Options: added --metal-compiler-runtime option
 - User Options: limit --bitmap-max value to 31
@@ -179,6 +192,7 @@
 - Makefile: updated MACOSX_DEPLOYMENT_TARGET to 15.0
 - Rules: Add support to character class rules
 - Rules: Rename best64.rule to best66.rule and remove the unknown section from it
+- Kernel: Renamed multiple defines in CAST cipher to fit expected naming convention of the C++ language standard
 
 * changes v6.2.5 -> v6.2.6
 
@@ -827,6 +841,7 @@
 - Added hash-mode: BitShares v0.x
 - Added hash-mode: Blockchain, My Wallet, Second Password (SHA256)
 - Added hash-mode: Citrix NetScaler (SHA512)
+- Added hash-mode: Citrix NetScaler (PBKDF2-HMAC-SHA256)
 - Added hash-mode: DiskCryptor
 - Added hash-mode: Electrum Wallet (Salt-Type 3-5)
 - Added hash-mode: Huawei Router sha1(md5($pass).$salt)

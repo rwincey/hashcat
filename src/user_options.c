@@ -167,6 +167,7 @@ static const struct option long_options[] =
   {"brain-session",             required_argument, NULL, IDX_BRAIN_SESSION},
   {"brain-session-whitelist",   required_argument, NULL, IDX_BRAIN_SESSION_WHITELIST},
   #endif
+  {"color-cracked",             no_argument,       NULL, IDX_COLOR_CRACKED},
   {NULL,                        0,                 NULL, 0 }
 };
 
@@ -215,6 +216,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->brain_session             = BRAIN_SESSION;
   user_options->brain_session_whitelist   = NULL;
   #endif
+  user_options->color_cracked             = COLOR_CRACKED;
   user_options->bridge_parameter1         = NULL;
   user_options->bridge_parameter2         = NULL;
   user_options->bridge_parameter3         = NULL;
@@ -597,6 +599,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_BRAIN_SESSION:             user_options->brain_session             = hc_strtoul (optarg, NULL, 16);   break;
       case IDX_BRAIN_SESSION_WHITELIST:   user_options->brain_session_whitelist   = optarg;                          break;
       #endif
+      case IDX_COLOR_CRACKED:             user_options->color_cracked             = true;                            break;
     }
   }
 
@@ -1298,6 +1301,11 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     }
   }
 
+  if (user_options->benchmark_all == true)
+  {
+    user_options->benchmark = true;
+  }
+
   if (user_options->benchmark == true)
   {
     // sanity checks based on automatically overwritten configuration variables by
@@ -1968,8 +1976,9 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
   {
     // some algorithm, such as SCRYPT, depend on accurate free memory values
     // the only way to get them is through low-level APIs such as nvml via hwmon
+    // we have --backend-keep-free message now
 
-    user_options->hwmon = true;
+    //user_options->hwmon = true;
   }
 
   if (user_options->stdout_flag)
@@ -2323,20 +2332,20 @@ void user_options_info (hashcat_ctx_t *hashcat_ctx)
     {
       event_log_info (hashcat_ctx, "* --kernel-accel=%u", user_options->kernel_accel);
     }
-    else if (user_options->kernel_loops_chgd == true)
+
+    if (user_options->kernel_loops_chgd == true)
     {
       event_log_info (hashcat_ctx, "* --kernel-loops=%u", user_options->kernel_loops);
     }
-    else if (user_options->kernel_threads_chgd == true)
+
+    if (user_options->kernel_threads_chgd == true)
     {
       event_log_info (hashcat_ctx, "* --kernel-threads=%u", user_options->kernel_threads);
     }
-    else
+
+    if (user_options->workload_profile_chgd == true)
     {
-      if (user_options->workload_profile_chgd == true)
-      {
-        event_log_info (hashcat_ctx, "* --workload-profile=%u", user_options->workload_profile);
-      }
+      event_log_info (hashcat_ctx, "* --workload-profile=%u", user_options->workload_profile);
     }
 
     event_log_info (hashcat_ctx, NULL);
@@ -2402,20 +2411,20 @@ void user_options_info (hashcat_ctx_t *hashcat_ctx)
     {
       event_log_info (hashcat_ctx, "# option: --kernel-accel=%u", user_options->kernel_accel);
     }
-    else if (user_options->kernel_loops_chgd == true)
+
+    if (user_options->kernel_loops_chgd == true)
     {
       event_log_info (hashcat_ctx, "# option: --kernel-loops=%u", user_options->kernel_loops);
     }
-    else if (user_options->kernel_threads_chgd == true)
+
+    if (user_options->kernel_threads_chgd == true)
     {
       event_log_info (hashcat_ctx, "# option: --kernel-threads=%u", user_options->kernel_threads);
     }
-    else
+    
+    if (user_options->workload_profile_chgd == true)
     {
-      if (user_options->workload_profile_chgd == true)
-      {
-        event_log_info (hashcat_ctx, "# option: --workload-profile=%u", user_options->workload_profile);
-      }
+      event_log_info (hashcat_ctx, "# option: --workload-profile=%u", user_options->workload_profile);
     }
   }
 }

@@ -17,13 +17,6 @@
 #include "timer.h"
 #include "terminal.h"
 
-#if defined (_POSIX)
-#include <sys/utsname.h>
-#if !defined (__APPLE__)
-#include <sys/sysinfo.h>
-#endif
-#endif
-
 static const size_t MAXIMUM_EXAMPLE_HASH_LENGTH = 200;
 
 static const size_t TERMINAL_LINE_LENGTH = 79;
@@ -2838,7 +2831,7 @@ void status_display_status_json (hashcat_ctx_t *hashcat_ctx)
       printf (",");
     }
 
-    printf (" { \"device_id\": %02u,", device_id + 1);
+    printf (" { \"device_id\": %u,", device_id + 1);
 
     char *device_name_json_encoded = (char *) hcmalloc (strlen (device_info->device_name) * 2);
 

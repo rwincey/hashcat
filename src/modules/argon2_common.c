@@ -61,20 +61,17 @@ const char *argon2_module_extra_tuningdb_block (MAYBE_UNUSED const hashconfig_t 
 
   const u64 available_mem = MIN (device_param->device_available_mem, (device_param->device_maxmem_alloc * 4)) - (fixed_mem + spill_mem);
 
+  const u32 kernel_accel_max = (device_param->device_host_unified_memory == true) ? (available_mem / 2) / size_per_accel : available_mem / size_per_accel;
+
   u32 kernel_accel_new = device_processors;
 
   if (kernel_accel_user)
   {
-    kernel_accel_new = kernel_accel_user;
+    kernel_accel_new = MIN (kernel_accel_max, kernel_accel_user);
   }
   else
   {
-    if ((device_param->opencl_device_type & CL_DEVICE_TYPE_GPU) && (device_param->device_host_unified_memory == false))
-    {
-      kernel_accel_new = available_mem / size_per_accel;
-
-      kernel_accel_new = MIN (kernel_accel_new, 1024); // 1024 = max supported
-    }
+    kernel_accel_new = kernel_accel_max;
   }
 
   char *new_device_name = hcstrdup (device_param->device_name);
@@ -143,7 +140,12 @@ char *argon2_module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconf
 
   char *jit_build_options = NULL;
 
-  //hc_asprintf (&jit_build_options, "-D ARGON2_PARALLELISM=%u -D ARGON2_TMP_ELEM=%u", options[0].parallelism, options[0].memory_block_count);
+  //hc_asprintf (&jit_build_options, "-D ARGON2_PARALLELISM=%u", options[0].parallelism);
+
+  if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
+  {
+    hc_asprintf (&jit_build_options, "-D THREADS_PER_LANE=1");
+  }
 
   return jit_build_options;
 }

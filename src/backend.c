@@ -8253,11 +8253,11 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
               #if defined (__APPLE__)
 
-              char *start130 = index (device_param->opencl_driver_version, '(');
-              char *stop130  = index (device_param->opencl_driver_version, ')');
+              char *start130 = strchr (device_param->opencl_driver_version, '(');
+              char *stop130  = strchr (device_param->opencl_driver_version, ')');
 
-              char *start131 = index (opencl_platform_version, '(');
-              char *stop131  = index (opencl_platform_version, ')');
+              char *start131 = strchr (opencl_platform_version, '(');
+              char *stop131  = strchr (opencl_platform_version, ')');
 
               // either none or one of these have a date string
 
@@ -10211,17 +10211,30 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
         }
         else
         {
+          if (user_options->hwmon == false)
+          {
+            if (user_options->machine_readable == false)
+            {
+              event_log_warning (hashcat_ctx, "* Device #%u: The hardware monitor was disabled, but it is the only reliable method to query actual free memory.", device_id + 1);
+              event_log_warning (hashcat_ctx, "             Falling back to --backend-devices-keepfree method.");
+              event_log_warning (hashcat_ctx, NULL);
+            }
+          }
+
           if (user_options->backend_devices_keepfree == 0)
           {
             const u64 device_available_mem_sav = device_param->device_available_mem;
 
             const u64 device_available_mem_new = device_available_mem_sav - (device_available_mem_sav * 0.34);
 
-            event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
-            event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
-            event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
-            event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
-            event_log_warning (hashcat_ctx, NULL);
+            if (user_options->machine_readable == false)
+            {
+              event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
+              event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
+              event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
+              event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
+              event_log_warning (hashcat_ctx, NULL);
+            }
 
             device_param->device_available_mem = device_available_mem_new;
           }
@@ -16323,10 +16336,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       // let's add some extra space just to be sure.
       // now depends on the kernel-accel value (where scrypt and similar benefits), but also hard minimum 64mb and maximum 1024mb limit
       // let's see if we still need this now that we have low-level API to report free memory
+      // we don't want these get too big. if a plugin requires really a lot of memory, the extra buffer should be used instead.
 
-      if (size_pws   > device_param->device_maxmem_alloc) memory_limit_hit = 1;
-      if (size_tmps  > device_param->device_maxmem_alloc) memory_limit_hit = 1;
-      if (size_hooks > device_param->device_maxmem_alloc) memory_limit_hit = 1;
+      if (size_pws   > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
+      if (size_tmps  > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
+      if (size_hooks > device_param->device_maxmem_alloc / 4) memory_limit_hit = 1;
 
       // work around, for some reason apple opencl can't have buffers larger 2^31
       // typically runs into trap 6

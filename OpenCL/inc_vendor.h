@@ -121,10 +121,6 @@ using namespace metal;
 #define IS_GENERIC
 #endif
 
-#if defined IS_AMD && HAS_VPERM == 1
-#define IS_ROCM
-#endif
-
 #define LOCAL_MEM_TYPE_LOCAL  1
 #define LOCAL_MEM_TYPE_GLOBAL 2
 
@@ -159,7 +155,7 @@ using namespace metal;
 #elif defined IS_CUDA
 #define DECLSPEC __device__
 #elif defined IS_HIP
-#define DECLSPEC __device__
+#define DECLSPEC __device__ HC_INLINE
 #else
 #define DECLSPEC
 #endif
@@ -190,26 +186,25 @@ using namespace metal;
 #define USE_ROTATE
 #endif
 
-#ifdef IS_ROCM
-#define USE_BITSELECT
-#define USE_ROTATE
-#endif
-
 #ifdef IS_INTEL_SDK
 #ifdef IS_CPU
-//#define USE_BITSELECT
-//#define USE_ROTATE
+#define USE_BITSELECT
+#define USE_ROTATE
 #endif
 #endif
 
 #ifdef IS_OPENCL
-//#define USE_BITSELECT
-//#define USE_ROTATE
-//#define USE_SWIZZLE
+#define USE_BITSELECT
+#define USE_ROTATE
+#define USE_SWIZZLE
 #endif
 
 #ifdef IS_METAL
 #define USE_ROTATE
+#ifndef IS_APPLE_SILICON
+#define USE_BITSELECT
+#define USE_SWIZZLE
+#endif
 
 // Metal support max VECT_SIZE = 4
 #define s0 x

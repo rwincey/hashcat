@@ -273,6 +273,12 @@ int hashconfig_init (hashcat_ctx_t *hashcat_ctx)
     CHECK_MANDATORY (module_ctx->module_hash_encode);
   }
 
+  // check deep comp kernel requirements
+  if (hashconfig->opts_type & OPTS_TYPE_DEEP_COMP_KERNEL)
+  {
+    CHECK_MANDATORY (module_ctx->module_deep_comp_kernel);
+  }
+
   #undef CHECK_MANDATORY
 
   if (user_options->keyboard_layout_mapping)

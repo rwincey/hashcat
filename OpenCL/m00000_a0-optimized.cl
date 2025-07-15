@@ -20,12 +20,6 @@
 KERNEL_FQ KERNEL_FA void m00000_m04 (KERN_ATTR_RULES ())
 {
   /**
-   * modifier
-   */
-
-  const u64 lid = get_local_id (0);
-
-  /**
    * base
    */
 
@@ -154,12 +148,6 @@ KERNEL_FQ KERNEL_FA void m00000_m16 (KERN_ATTR_RULES ())
 
 KERNEL_FQ KERNEL_FA void m00000_s04 (KERN_ATTR_RULES ())
 {
-  /**
-   * modifier
-   */
-
-  const u64 lid = get_local_id (0);
-
   /**
    * base
    */

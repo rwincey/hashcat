@@ -16,19 +16,19 @@
 #endif
 
 #if   VECT_SIZE == 1
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i)])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i)])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i)])
 #elif VECT_SIZE == 2
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1])
 #elif VECT_SIZE == 4
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1], l_bin2asc[(i).s2], l_bin2asc[(i).s3])
 #elif VECT_SIZE == 8
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1], l_bin2asc[(i).s2], l_bin2asc[(i).s3], l_bin2asc[(i).s4], l_bin2asc[(i).s5], l_bin2asc[(i).s6], l_bin2asc[(i).s7])
 #elif VECT_SIZE == 16
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7], b_bin2asc[(i).s8], b_bin2asc[(i).s9], b_bin2asc[(i).sa], b_bin2asc[(i).sb], b_bin2asc[(i).sc], b_bin2asc[(i).sd], b_bin2asc[(i).se], b_bin2asc[(i).sf])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7], b_bin2asc[(i).s8], b_bin2asc[(i).s9], b_bin2asc[(i).sa], b_bin2asc[(i).sb], b_bin2asc[(i).sc], b_bin2asc[(i).sd], b_bin2asc[(i).se], b_bin2asc[(i).sf])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1], l_bin2asc[(i).s2], l_bin2asc[(i).s3], l_bin2asc[(i).s4], l_bin2asc[(i).s5], l_bin2asc[(i).s6], l_bin2asc[(i).s7], l_bin2asc[(i).s8], l_bin2asc[(i).s9], l_bin2asc[(i).sa], l_bin2asc[(i).sb], l_bin2asc[(i).sc], l_bin2asc[(i).sd], l_bin2asc[(i).se], l_bin2asc[(i).sf])
 #endif
 
@@ -783,7 +783,7 @@ DECLSPEC void m32800s (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
   }
 }
 
-KERNEL_FQ void m32800_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * base
@@ -844,8 +844,8 @@ KERNEL_FQ void m32800_m04 (KERN_ATTR_BASIC ())
 
   w3[0] = 0;
   w3[1] = 0;
-  w3[2] = 0;
-  w3[3] = pws[gid].i[15];
+  w3[2] = pws[gid].i[14];
+  w3[3] = 0;
 
   const u32 pw_len = pws[gid].pw_len & 63;
 
@@ -856,7 +856,7 @@ KERNEL_FQ void m32800_m04 (KERN_ATTR_BASIC ())
   m32800m (w0, w1, w2, w3, pw_len, pws, rules_buf, combs_buf, bfs_buf, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz, l_bin2asc, b_bin2asc);
 }
 
-KERNEL_FQ void m32800_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_m08 (KERN_ATTR_BASIC ())
 {
   /**
    * base
@@ -929,7 +929,7 @@ KERNEL_FQ void m32800_m08 (KERN_ATTR_BASIC ())
   m32800m (w0, w1, w2, w3, pw_len, pws, rules_buf, combs_buf, bfs_buf, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz, l_bin2asc, b_bin2asc);
 }
 
-KERNEL_FQ void m32800_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_m16 (KERN_ATTR_BASIC ())
 {
   /**
    * base
@@ -1002,7 +1002,7 @@ KERNEL_FQ void m32800_m16 (KERN_ATTR_BASIC ())
   m32800m (w0, w1, w2, w3, pw_len, pws, rules_buf, combs_buf, bfs_buf, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz, l_bin2asc, b_bin2asc);
 }
 
-KERNEL_FQ void m32800_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * base
@@ -1075,7 +1075,7 @@ KERNEL_FQ void m32800_s04 (KERN_ATTR_BASIC ())
   m32800s (w0, w1, w2, w3, pw_len, pws, rules_buf, combs_buf, bfs_buf, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz, l_bin2asc, b_bin2asc);
 }
 
-KERNEL_FQ void m32800_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_s08 (KERN_ATTR_BASIC ())
 {
   /**
    * base
@@ -1148,7 +1148,7 @@ KERNEL_FQ void m32800_s08 (KERN_ATTR_BASIC ())
   m32800s (w0, w1, w2, w3, pw_len, pws, rules_buf, combs_buf, bfs_buf, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz, l_bin2asc, b_bin2asc);
 }
 
-KERNEL_FQ void m32800_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_s16 (KERN_ATTR_BASIC ())
 {
   /**
    * base

@@ -16,23 +16,23 @@
 #endif
 
 #if   VECT_SIZE == 1
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i)])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i)])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i)])
 #elif VECT_SIZE == 2
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1])
 #elif VECT_SIZE == 4
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1], l_bin2asc[(i).s2], l_bin2asc[(i).s3])
 #elif VECT_SIZE == 8
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1], l_bin2asc[(i).s2], l_bin2asc[(i).s3], l_bin2asc[(i).s4], l_bin2asc[(i).s5], l_bin2asc[(i).s6], l_bin2asc[(i).s7])
 #elif VECT_SIZE == 16
-#define uint_to_hex_lower8(i) make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7], b_bin2asc[(i).s8], b_bin2asc[(i).s9], b_bin2asc[(i).sa], b_bin2asc[(i).sb], b_bin2asc[(i).sc], b_bin2asc[(i).sd], b_bin2asc[(i).se], b_bin2asc[(i).sf])
+#define uint_to_hex_lower8(i)    make_u32x (b_bin2asc[(i).s0], b_bin2asc[(i).s1], b_bin2asc[(i).s2], b_bin2asc[(i).s3], b_bin2asc[(i).s4], b_bin2asc[(i).s5], b_bin2asc[(i).s6], b_bin2asc[(i).s7], b_bin2asc[(i).s8], b_bin2asc[(i).s9], b_bin2asc[(i).sa], b_bin2asc[(i).sb], b_bin2asc[(i).sc], b_bin2asc[(i).sd], b_bin2asc[(i).se], b_bin2asc[(i).sf])
 #define uint_to_hex_lower8_le(i) make_u32x (l_bin2asc[(i).s0], l_bin2asc[(i).s1], l_bin2asc[(i).s2], l_bin2asc[(i).s3], l_bin2asc[(i).s4], l_bin2asc[(i).s5], l_bin2asc[(i).s6], l_bin2asc[(i).s7], l_bin2asc[(i).s8], l_bin2asc[(i).s9], l_bin2asc[(i).sa], l_bin2asc[(i).sb], l_bin2asc[(i).sc], l_bin2asc[(i).sd], l_bin2asc[(i).se], l_bin2asc[(i).sf])
 #endif
 
-KERNEL_FQ void m32800_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -489,15 +489,15 @@ KERNEL_FQ void m32800_m04 (KERN_ATTR_BASIC ())
   }
 }
 
-KERNEL_FQ void m32800_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_m08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m32800_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_m16 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m32800_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -969,10 +969,10 @@ KERNEL_FQ void m32800_s04 (KERN_ATTR_BASIC ())
   }
 }
 
-KERNEL_FQ void m32800_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_s08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m32800_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m32800_s16 (KERN_ATTR_BASIC ())
 {
 }

@@ -184,7 +184,9 @@
 - Metal Backend: disable Metal devices only if at least one OpenCL device is active
 - Metal Backend: improved compute workloads calculation
 - Metal Backend: parallelize pipeline state object (PSO) compilation internally
+- Modules: Added OPTS_TYPE_PT_BASE58 in 28501 28502 28503 28504 28505 28506 30901 30902 30903 30904 30905 30906
 - Modules: Check UnpackSize to raise false positive with hc_decompress_rar
+- Types: Added OPTS_TYPE_PT_BASE58 and removed OPTS_TYPE_MAXIMUM_ACCEL in opts_type
 - User Options: added --metal-compiler-runtime option
 - User Options: limit --bitmap-max value to 31
 - User Options: assigned -H to --hash-info

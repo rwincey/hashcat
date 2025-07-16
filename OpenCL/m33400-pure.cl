@@ -93,7 +93,7 @@ DECLSPEC void hmac_sha512_run_V (PRIVATE_AS u32x *w0, PRIVATE_AS u32x *w1, PRIVA
   sha512_transform_vector (w0, w1, w2, w3, w4, w5, w6, w7, digest);
 }
 
-KERNEL_FQ void m33400_init (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
+KERNEL_FQ KERNEL_FA void m33400_init (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
 {
   /**
    * base
@@ -214,7 +214,7 @@ KERNEL_FQ void m33400_init (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
 //   );
 }
 
-KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
+KERNEL_FQ KERNEL_FA void m33400_loop (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
 {
   const u64 gid = get_global_id (0);
 
@@ -340,7 +340,7 @@ KERNEL_FQ void m33400_loop (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
   }
 }
 
-KERNEL_FQ void m33400_comp (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
+KERNEL_FQ KERNEL_FA void m33400_comp (KERN_ATTR_TMPS_ESALT (mega_tmp_t, mega_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);

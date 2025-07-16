@@ -819,15 +819,19 @@ int kernel_rules_load (hashcat_ctx_t *hashcat_ctx, kernel_rule_t **out_buf, u32 
 
       if (result == -1)
       {
-        event_log_warning (hashcat_ctx, "Skipping invalid or unsupported rule in file %s on line %u: %s", rp_file, rule_line, rule_buf);
-
+        if (user_options->quiet == false)
+        {
+          event_log_warning (hashcat_ctx, "Skipping invalid or unsupported rule in file %s on line %u: %s", rp_file, rule_line, rule_buf);
+        }
         continue;
       }
 
       if (cpu_rule_to_kernel_rule (rule_buf, rule_len, &kernel_rules_buf[kernel_rules_cnt]) == -1)
       {
-        event_log_warning (hashcat_ctx, "Cannot convert rule for use on OpenCL device in file %s on line %u: %s", rp_file, rule_line, rule_buf);
-
+        if (user_options->quiet == false)
+        {
+          event_log_warning (hashcat_ctx, "Cannot convert rule for use on OpenCL device in file %s on line %u: %s", rp_file, rule_line, rule_buf);
+        }
         memset (&kernel_rules_buf[kernel_rules_cnt], 0, sizeof (kernel_rule_t)); // needs to be cleared otherwise we could have some remaining data
 
         continue;
@@ -906,6 +910,7 @@ int kernel_rules_load (hashcat_ctx_t *hashcat_ctx, kernel_rule_t **out_buf, u32 
   }
 
   u32 invalid_cnt = 0;
+  u32 valid_cnt = 0;
 
   for (u32 i = 0; i < kernel_rules_cnt; i++)
   {
@@ -924,16 +929,25 @@ int kernel_rules_load (hashcat_ctx_t *hashcat_ctx, kernel_rule_t **out_buf, u32 
       {
         if (out_pos == RULES_MAX - 1)
         {
-          event_log_warning (hashcat_ctx, "Maximum functions per rule exceeded during chaining of rules, skipping...");
-
           invalid_cnt++;
 
           break;
+        }
+        else
+        {
+          valid_cnt++;
         }
 
         out->cmds[out_pos] = in->cmds[in_pos];
       }
     }
+  }
+
+  if (invalid_cnt > 0)
+  {
+    event_log_warning (hashcat_ctx, "Maximum functions per rule exceeded during chaining of rules.");
+    event_log_warning (hashcat_ctx, "Skipped %u rule chains, %u valid chains remain.", invalid_cnt, valid_cnt);
+    event_log_warning (hashcat_ctx, NULL);
   }
 
   hcfree (repeats);

@@ -292,7 +292,7 @@ DECLSPEC void transform_racf_key (const u32 w0, const u32 w1, PRIVATE_AS u32 *ke
          | c_ascii_to_ebcdic_pc[((w1 >>  24) & 0xff)] << 24;
 }
 
-KERNEL_FQ KERNEL_FA void m33400_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m14200_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   /**
    * base
@@ -639,7 +639,7 @@ DECLSPEC void racf_pbkdf_sha256_hmac_V (PRIVATE_AS u32x *key, u32 key_len, PRIVA
   convert_pbkdf2_sha256_to_V(sha256_tmps, tmpx);
 }
 
-KERNEL_FQ KERNEL_FA void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m14200_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -730,7 +730,7 @@ KERNEL_FQ KERNEL_FA void m33400_loop (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, r
 }
 
 
-KERNEL_FQ KERNEL_FA void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m14200_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -917,7 +917,7 @@ KERNEL_FQ KERNEL_FA void m33400_init2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, 
 }
 
 
-KERNEL_FQ KERNEL_FA void m33400_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m14200_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -1025,7 +1025,7 @@ KERNEL_FQ KERNEL_FA void m33400_loop2 (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, 
 
 }
 
-KERNEL_FQ KERNEL_FA void m33400_comp (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
+KERNEL_FQ KERNEL_FA void m14200_comp (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, racf_kdfaes_t))
 {
   /**
    * base

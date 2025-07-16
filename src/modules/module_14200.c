@@ -11,7 +11,6 @@
 #include "shared.h"
 #include "emu_inc_cipher_des.h"
 
-
 static const u32   ATTACK_EXEC    = ATTACK_EXEC_OUTSIDE_KERNEL;
 static const u32   DGST_POS0      = 0;
 static const u32   DGST_POS1      = 1;
@@ -20,7 +19,7 @@ static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_4_4;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_OS;
 static const char *HASH_NAME      = "RACF KDFAES";
-static const u64   KERN_TYPE      = 33400;
+static const u64   KERN_TYPE      = 14200;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_SIMD_LOOP2
                                   | OPTI_TYPE_SLOW_HASH_SIMD_LOOP;

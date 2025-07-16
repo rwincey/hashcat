@@ -164,6 +164,9 @@ else
   pip3 install cryptography
   ERRORS=$((ERRORS+$?))
 
+  pip3 install setuptools
+  ERRORS=$((ERRORS+$?))
+
 fi
 
 echo

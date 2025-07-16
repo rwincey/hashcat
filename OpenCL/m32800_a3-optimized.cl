@@ -917,8 +917,8 @@ KERNEL_FQ KERNEL_FA void m32800_m08 (KERN_ATTR_BASIC ())
 
   w3[0] = 0;
   w3[1] = 0;
-  w3[2] = 0;
-  w3[3] = pws[gid].i[15];
+  w3[2] = pws[gid].i[14];
+  w3[3] = 0;
 
   const u32 pw_len = pws[gid].pw_len & 63;
 

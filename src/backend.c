@@ -16425,7 +16425,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
       if (size_total > device_param->device_available_mem) memory_limit_hit = 1;
 
-      const u64 size_host_extra = (512 * 1024 * 1024);
+      const u64 size_host_extra = (512 * 1024 * 1024) / backend_ctx->backend_devices_active;
 
       const u64 size_total_host
         = size_pws_comp

@@ -675,6 +675,12 @@ typedef enum progress_mode
 
 } progress_mode_t;
 
+typedef enum increment {
+  INCREMENT_NONE      = 0,
+  INCREMENT_NORMAL    = 1,
+  INCREMENT_INVERSED  = 2,
+} increment_t;
+
 typedef enum user_options_defaults
 {
   ADVICE                   = true,
@@ -715,7 +721,7 @@ typedef enum user_options_defaults
   HEX_WORDLIST             = false,
   HOOK_THREADS             = 0,
   IDENTIFY                 = false,
-  INCREMENT                = false,
+  INCREMENT                = INCREMENT_NONE,
   INCREMENT_INVERSE        = false,
   INCREMENT_MAX            = PW_MAX,
   INCREMENT_MIN            = 1,
@@ -962,12 +968,6 @@ typedef FARPROC hc_dynfunc_t;
 typedef void * hc_dynlib_t;
 typedef void * hc_dynfunc_t;
 #endif
-
-typedef enum increment {
-  INCREMENT_NONE      = 0,
-  INCREMENT_NORMAL    = 1,
-  INCREMENT_INVERSED  = 2,
-} increment_t;
 
 /**
  * structs

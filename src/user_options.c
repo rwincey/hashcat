@@ -248,7 +248,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->hex_wordlist              = HEX_WORDLIST;
   user_options->hook_threads              = HOOK_THREADS;
   user_options->identify                  = IDENTIFY;
-  user_options->increment                 = INCREMENT;
+  user_options->increment                 = (increment_t) INCREMENT;
   user_options->increment_max             = INCREMENT_MAX;
   user_options->increment_min             = INCREMENT_MIN;
   user_options->induction_dir             = NULL;

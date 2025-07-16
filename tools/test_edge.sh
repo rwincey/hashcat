@@ -69,6 +69,8 @@ export LANG=C
 
 OUTD="test_edge_$(date +%s)"
 
+UNAME=$(uname -s)
+
 HASH_TYPE="all"
 HASH_TYPE_MIN=0
 HASH_TYPE_MAX=99999
@@ -102,6 +104,12 @@ METAL_FORCE_KEEPFREE="8900 22700 27700 28200 29800"
 SKIP_OUT_MATCH_HASH_TYPES="14000 14100 22000"
 SKIP_SAME_SALT_HASH_TYPES="6600 7100 7200 8200 13200 13400 15300 15310 15900 15910 16900 18300 18900 20200 20300 20400 27000 27100 29700 29930 29940"
 #SKIP_SAME_SALT_HASH_TYPES="400 3200 5800 6400 6500 6600 6700 7100 7200 7401 7900 8200 9100 9200 9400 10500 10901 12001 12200 12300 12400 12500 12700 12800 12900 13000 13200 13400 13600 14700 14800 15100 15200 15300 15310 15400 15600 15900 15910 16200 16300 16700 16900 18300 18400 18800 18900 19000 19100 19600 19700 19800 19900 20011 20012 20013 20200 20300 20400 21501 22100 22400 22600 23100 23300 23500 23600 23700 23900 24100 24200 24410 24420 24500 25300 25400 25500 25600 25800 26100 26500 26600 27000 27100 27400 27500 27600 28100 28400 28600 28800 28900 29600 29700 29910 29920 29930 29940 30600 31200 31900"
+
+pyenv_free_threaded=0
+pyenv local | grep 't-dev\|[0-9]t$'
+if [ $? -eq 0 ]; then
+  pyenv_free_threaded=1
+fi
 
 # Parse long options manually
 #while [[ "$1" == --* ]]; do
@@ -556,6 +564,18 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
     continue
   fi
 
+  if [ $pyenv_free_threaded -eq 0 ] && [ $hash_type -eq 72000 ]; then
+    echo "[ ${OUTD} ] > Skip processing Hash-Type ${hash_type} (missing python 'free-threaded' library support)" | tee -a ${OUTD}/test_edge.details.log
+    continue
+  fi
+
+  if [ $pyenv_free_threaded -eq 1 ] && [ $hash_type -eq 73000 ]; then
+    if [ "$UNAME" == "Darwin" ]; then
+      echo "[ ${OUTD} ] > Skip processing Hash-Type ${hash_type} (not supported on Apple and Windows with python 'free-threaded' library support)" | tee -a ${OUTD}/test_edge.details.log
+    fi
+    continue
+  fi
+
   build_failed_err=0
   test_vectors_err=0
 
@@ -614,9 +634,12 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
       fi
 
       pt_hex=0
+      pt_base58=0
       tmp_pw_type=$(./hashcat -m ${hash_type} -HH | grep Password\\.Type | awk '{print $2}')
       if [ "${tmp_pw_type}" == "HEX" ]; then
         pt_hex=1
+      elif [ "${tmp_pw_type}" == "BASE58" ]; then
+        pt_base58=1
       fi
 
       echo "[ ${OUTD} ] # Export tests for Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}" >> ${OUTD}/test_edge.details.log
@@ -728,6 +751,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 if [ $pt_hex -eq 1 ]; then
                   word_1="${word%??}"
                   mask_1="?b"
+                elif [ $pt_base58 -eq 1 ]; then
+                  word_1="${word%??}"
+                  mask_1="?a?a"
                 else
                   if [ "${word_len}" -eq 2 ]; then
                     word_1="${word%?}"
@@ -747,6 +773,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 if [ $pt_hex -eq 1 ]; then
                   word_1="${word%??}"
                   mask_1="?b"
+                elif [ $pt_base58 -eq 1 ]; then
+                  word_1="${word%??}"
+                  mask_1="?a?a"
                 else
                   if [ "${word_len}" -eq 2 ] || [ "${slow_hash}" -eq 1 ]; then
                     word_1="${word%?}"
@@ -765,6 +794,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 if [ $pt_hex -eq 1 ]; then
                   word_1="${word#??}"
                   mask_1="?b"
+                elif [ $pt_base58 -eq 1 ]; then
+                  word_1="${word#??}"
+                  mask_1="?a?a"
                 else
                   if [ "${word_len}" -eq 2 ] || [ "${slow_hash}" -eq 1 ]; then
                     word_1="${word#?}"
@@ -790,6 +822,11 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               cat ${cmd_out} >> ${OUTD}/test_edge.details.log
 
               if [ "${retVal}" -ne 0 ]; then
+                if [ "${retVal}" -eq 252 ]; then
+                  echo "[ ${OUTD} ] > Skipping current tests due to unmet memory requirements ..." | tee -a ${OUTD}/test_edge.details.log
+                  break
+                fi
+
                 echo '```' | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> error ($retVal) detected with CMD: ${CMD}" | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Hash ${hash}" | tee -a ${OUTD}/test_edge.details.log
@@ -974,6 +1011,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 if [ $pt_hex -eq 1 ]; then
                   word_1="${word%??}"
                   mask_1="?b"
+                elif [ $pt_base58 -eq 1 ]; then
+                  word_1="${word%??}"
+                  mask_1="?a?a"
                 else
                   if [ "${word_len}" -eq 2 ]; then
                     word_1="${word%?}"
@@ -997,6 +1037,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 if [ $pt_hex -eq 1 ]; then
                   word_1="${word%??}"
                   mask_1="?b"
+                elif [ $pt_base58 -eq 1 ]; then
+                  word_1="${word%??}"
+                  mask_1="?a?a"
                 else
                   if [ "${word_len}" -eq 2 ] || [ "${slow_hash}" -eq 1 ]; then
                     word_1="${word%?}"
@@ -1017,6 +1060,9 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
                 if [ $pt_hex -eq 1 ]; then
                   word_1="${word#??}"
                   mask_1="?b"
+                elif [ $pt_base58 -eq 1 ]; then
+                  word_1="${word#??}"
+                  mask_1="?a?a"
                 else
                   if [ "${word_len}" -eq 2 ] || [ "${slow_hash}" -eq 1 ]; then
                     word_1="${word#?}"
@@ -1034,8 +1080,8 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               fi
             done
 
-#            echo "hash_cnt: $hash_cnt"
-#            cat ${OUTD}/edge_${hash_type}_${kernel_type}_${attack_type}.hashes
+            #echo "hash_cnt: $hash_cnt"
+            #cat ${OUTD}/edge_${hash_type}_${kernel_type}_${attack_type}.hashes
 
             if [ $hash_cnt -gt 1 ]; then
               cmd_out="${OUTD}/cmd_${hash_type}_${kernel_type}_${attack_type}_${vector_width}.multi.log"
@@ -1055,6 +1101,11 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               paste -d ":" ${hash_in} ${word_in} > ${hc_out}
 
               if [ "${retVal}" -ne 0 ]; then
+                if [ "${retVal}" -eq 252 ]; then
+                  echo "[ ${OUTD} ] > Skipping current tests due to unmet memory requirements ..." | tee -a ${OUTD}/test_edge.details.log
+                  break
+                fi
+
                 echo '```' | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> error ($retVal) detected with CMD: ${CMD}" | tee -a ${OUTD}/test_edge.details.log
                 echo "[ ${OUTD} ] !> Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Words ${word_in}, Hashes ${hash_in}" | tee -a ${OUTD}/test_edge.details.log
@@ -1100,7 +1151,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               fi
             else
               echo "[ ${OUTD} ] > Skipping Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Target-Type multi, Hashes ${hash_in} (hashes < 2)" | tee -a ${OUTD}/test_edge.details.log
-              echo "hash_cnt: ${hash_cnt}"
+              #echo "hash_cnt: ${hash_cnt}"
             fi
           fi
         done

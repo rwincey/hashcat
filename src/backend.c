@@ -7489,10 +7489,23 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
         // kernel_preferred_wgs_multiple
 
-        // There is global query for this attribute on OpenCL that is not linked to a specific kernel, so we set it to a fixed value
-        // Later in the code, we add vendor specific extensions to query it
+        // There is no global query for this attribute on OpenCL that is not linked to a specific kernel, so we set it to a fixed value
+        // and later in the code we add vendor specific extensions to query it
 
-        device_param->kernel_preferred_wgs_multiple = 8;
+        if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)
+        {
+          device_param->kernel_preferred_wgs_multiple = 32;
+        }
+        else if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
+        {
+          device_param->kernel_preferred_wgs_multiple = 1;
+        }
+        else
+        {
+          // redundant for readability
+
+          device_param->kernel_preferred_wgs_multiple = 1;
+        }
 
         // device_local_mem_type
 
@@ -7842,15 +7855,17 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
           #endif
         }
 
-        if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
-        {
-          // they like this
-
-          device_param->kernel_preferred_wgs_multiple = 1;
-        }
-
         if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)
         {
+          if (device_param->opencl_platform_vendor_id == VENDOR_ID_INTEL_SDK)
+          {
+            // This is as invalid as it can be, most of them are either 8 and some are 64, but this is just an initial value
+            // The problem is that on opencl we can find out the preferred value only in combination with a kernel, so we have
+            // to wait for an early chance to re-query it when we start loading the kernels and update it.
+
+            device_param->kernel_preferred_wgs_multiple = 32;
+          }
+
           if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_vendor_id == VENDOR_ID_AMD))
           {
             // from https://www.khronos.org/registry/OpenCL/extensions/amd/cl_amd_device_attribute_query.txt

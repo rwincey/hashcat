@@ -1731,31 +1731,29 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
       const hc_device_param_t *device_param = backend_ctx->devices_param + backend_devices_idx;
 
-      int   device_id                 = device_param->device_id;
-      //int   device_mtl_maj            = device_param->mtl_major;
-      //int   device_mtl_min            = device_param->mtl_minor;
-      int   device_max_transfer_rate  = device_param->device_max_transfer_rate;
-      int   device_physical_location  = device_param->device_physical_location;
-      int   device_location_number    = device_param->device_location_number;
-      int   device_registryID         = device_param->device_registryID;
-      int   device_is_headless        = device_param->device_is_headless;
-      int   device_is_low_power       = device_param->device_is_low_power;
-      int   device_is_removable       = device_param->device_is_removable;
+      int   device_id                        = device_param->device_id;
+      int   device_max_transfer_rate         = device_param->device_max_transfer_rate;
+      int   device_physical_location         = device_param->device_physical_location;
+      int   device_location_number           = device_param->device_location_number;
+      int   device_registryID                = device_param->device_registryID;
+      int   device_is_headless               = device_param->device_is_headless;
+      int   device_is_low_power              = device_param->device_is_low_power;
+      int   device_is_removable              = device_param->device_is_removable;
 
-      char *device_name               = device_param->device_name;
+      char *device_name                      = device_param->device_name;
 
-      u32   device_processors         = device_param->device_processors;
+      u32   device_processors                = device_param->device_processors;
 
-      u64   device_global_mem         = device_param->device_global_mem;
-      u64   device_maxmem_alloc       = device_param->device_maxmem_alloc;
-      u64   device_available_mem      = device_param->device_available_mem;
-      u64   device_local_mem_size     = device_param->device_local_mem_size;
-      int   device_host_unified_memory    = device_param->device_host_unified_memory;
-      u32   kernel_preferred_wgs_multiple = device_param->kernel_preferred_wgs_multiple;
+      u64   device_global_mem                = device_param->device_global_mem;
+      u64   device_maxmem_alloc              = device_param->device_maxmem_alloc;
+      u64   device_available_mem             = device_param->device_available_mem;
+      u64   device_local_mem_size            = device_param->device_local_mem_size;
+      int   device_host_unified_memory       = device_param->device_host_unified_memory;
+      u32   kernel_preferred_wgs_multiple    = device_param->kernel_preferred_wgs_multiple;
 
-      cl_device_type opencl_device_type         = device_param->opencl_device_type;
-      cl_uint        opencl_device_vendor_id    = device_param->opencl_device_vendor_id;
-      char          *opencl_device_vendor       = device_param->opencl_device_vendor;
+      cl_device_type opencl_device_type      = device_param->opencl_device_type;
+      cl_uint        opencl_device_vendor_id = device_param->opencl_device_vendor_id;
+      char          *opencl_device_vendor    = device_param->opencl_device_vendor;
 
       if (device_param->device_id_alias_cnt)
       {
@@ -1792,6 +1790,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
         event_log_info (hashcat_ctx, "  Clock..........: N/A");
         event_log_info (hashcat_ctx, "  Memory.Total...: %" PRIu64 " MB (limited to %" PRIu64 " MB allocatable in one block)", device_global_mem / 1024 / 1024, device_maxmem_alloc / 1024 / 1024);
         event_log_info (hashcat_ctx, "  Memory.Free....: %" PRIu64 " MB", device_available_mem / 1024 / 1024);
+        event_log_info (hashcat_ctx, "  Memory.Unified.: %d", device_host_unified_memory);
         event_log_info (hashcat_ctx, "  Local.Memory...: %" PRIu64 " KB", device_local_mem_size / 1024);
       }
       else
@@ -1806,6 +1805,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
         printf ("\"MemoryTotal\": \"%" PRIu64 " MB\", ", device_global_mem / 1024 / 1024);
         printf ("\"MemoryAllocPerBlock\": \"%" PRIu64 " MB\", ", device_maxmem_alloc / 1024 / 1024);
         printf ("\"MemoryFree\": \"%" PRIu64 " MB\", ", device_available_mem / 1024 / 1024);
+        printf ("\"MemoryUnified\": \"%d\", ", device_host_unified_memory);
         printf ("\"LocalMemory\": \"%" PRIu64 " MB\", ", device_local_mem_size / 1024);
       }
 
@@ -1867,17 +1867,6 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
           break;
       }
-
-      /*
-      if (device_mtl_maj > 0 && device_mtl_min > 0)
-      {
-        event_log_info (hashcat_ctx, "  Feature.Set....: macOS GPU Family %u v%u", device_mtl_maj, device_mtl_min);
-      }
-      else
-      {
-        event_log_info (hashcat_ctx, "  Feature.Set....: N/A");
-      }
-      */
 
       if (user_options->machine_readable == false)
       {
@@ -2080,6 +2069,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
           printf ("\"VendorID\": \"%u\", ", opencl_device_vendor_id);
           printf ("\"Vendor\": \"%s\", ", opencl_device_vendor);
           printf ("\"Name\": \"%s\", ", device_name);
+          printf ("\"Version\": \"%s\", ", opencl_device_version);
           printf ("\"Processors\": \"%u\", ", device_processors);
           printf ("\"PreferredThreadSize\": \"%u\", ", kernel_preferred_wgs_multiple);
           printf ("\"Clock\": \"%u\", ", device_maxclock_frequency);
@@ -2089,7 +2079,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
           printf ("\"MemoryUnified\": \"%d\", ", device_host_unified_memory);
           printf ("\"LocalMemory\": \"%" PRIu64 " MB\", ", device_local_mem_size / 1024);
           printf ("\"OpenCLVersion\": \"%s\", ", opencl_device_c_version);
-          printf ("\"DriverVersion\": \"%s\" ", opencl_device_version);
+          printf ("\"DriverVersion\": \"%s\" ", opencl_driver_version);
         }
 
         if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)

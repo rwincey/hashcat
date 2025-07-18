@@ -1263,15 +1263,15 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
     OSVERSIONINFO osvi;
     char platform_buf[256] = "N/A";
     char release_buf[256] = "N/A";
-    
+
     GetSystemInfo (&sysinfo);
-    
+
     // Initialize version info structure
     ZeroMemory (&osvi, sizeof (OSVERSIONINFO));
     osvi.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
-    
+
     bool rc_version = (GetVersionEx (&osvi) != 0);
-    
+
     // Get processor architecture string
     switch (sysinfo.wProcessorArchitecture)
     {
@@ -1290,14 +1290,14 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       default:
         snprintf (platform_buf, sizeof (platform_buf), "Unknown");
     }
-    
+
     // Get Windows version string
     if (rc_version)
     {
       snprintf (release_buf, sizeof (release_buf), "%lu.%lu.%lu",
                osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber);
     }
-    
+
     if (user_options->machine_readable == false)
     {
       event_log_info (hashcat_ctx, "OS.Name......: Windows");
@@ -1446,17 +1446,19 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
       const hc_device_param_t *device_param = backend_ctx->devices_param + backend_devices_idx;
 
-      int   device_id                 = device_param->device_id;
-      char *device_name               = device_param->device_name;
-      u32   device_processors         = device_param->device_processors;
-      u32   device_maxclock_frequency = device_param->device_maxclock_frequency;
-      u64   device_local_mem_size     = device_param->device_local_mem_size;
-      u64   device_available_mem      = device_param->device_available_mem;
-      u64   device_global_mem         = device_param->device_global_mem;
-      u8    pcie_domain               = device_param->pcie_domain;
-      u8    pcie_bus                  = device_param->pcie_bus;
-      u8    pcie_device               = device_param->pcie_device;
-      u8    pcie_function             = device_param->pcie_function;
+      int   device_id                     = device_param->device_id;
+      char *device_name                   = device_param->device_name;
+      u32   device_processors             = device_param->device_processors;
+      u32   device_maxclock_frequency     = device_param->device_maxclock_frequency;
+      u64   device_local_mem_size         = device_param->device_local_mem_size;
+      u64   device_available_mem          = device_param->device_available_mem;
+      u64   device_global_mem             = device_param->device_global_mem;
+      int   device_host_unified_memory    = device_param->device_host_unified_memory;
+      u32   kernel_preferred_wgs_multiple = device_param->kernel_preferred_wgs_multiple;
+      u8    pcie_domain                   = device_param->pcie_domain;
+      u8    pcie_bus                      = device_param->pcie_bus;
+      u8    pcie_device                   = device_param->pcie_device;
+      u8    pcie_function                 = device_param->pcie_function;
 
       if (device_param->device_id_alias_cnt)
       {
@@ -1486,9 +1488,11 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       {
         event_log_info (hashcat_ctx, "  Name...........: %s", device_name);
         event_log_info (hashcat_ctx, "  Processor(s)...: %u", device_processors);
+        event_log_info (hashcat_ctx, "  Preferred.Thrd.: %u", kernel_preferred_wgs_multiple);
         event_log_info (hashcat_ctx, "  Clock..........: %u", device_maxclock_frequency);
         event_log_info (hashcat_ctx, "  Memory.Total...: %" PRIu64 " MB", device_global_mem / 1024 / 1024);
         event_log_info (hashcat_ctx, "  Memory.Free....: %" PRIu64 " MB", device_available_mem / 1024 / 1024);
+        event_log_info (hashcat_ctx, "  Memory.Unified.: %d", device_host_unified_memory);
         event_log_info (hashcat_ctx, "  Local.Memory...: %" PRIu64 " KB", device_local_mem_size / 1024);
         event_log_info (hashcat_ctx, "  PCI.Addr.BDFe..: %04x:%02x:%02x.%u", (u16) pcie_domain, pcie_bus, pcie_device, pcie_function);
         event_log_info (hashcat_ctx, NULL);
@@ -1496,12 +1500,14 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       else
       {
         printf ("\"Name\": \"%s\", ", device_name);
-        printf ("\"Processor(s)\": \"%u\", ", device_processors);
+        printf ("\"Processors\": \"%u\", ", device_processors);
+        printf ("\"PreferredThreadSize\": \"%u\", ", kernel_preferred_wgs_multiple);
         printf ("\"Clock\": \"%u\", ", device_maxclock_frequency);
         printf ("\"MemoryTotal\": \"%" PRIu64 " MB\", ", device_global_mem / 1024 / 1024);
         printf ("\"MemoryFree\": \"%" PRIu64 " MB\", ", device_available_mem / 1024 / 1024);
+        printf ("\"MemoryUnified\": \"%d\", ", device_host_unified_memory);
         printf ("\"LocalMemory\": \"%" PRIu64 " MB\", ", device_local_mem_size / 1024);
-        printf ("\"PCI.Addr.BDFe\": \"%04x:%02x:%02x.%u\" ", (u16) pcie_domain, pcie_bus, pcie_device, pcie_function);
+        printf ("\"PCIAddrBDFe\": \"%04x:%02x:%02x.%u\" ", (u16) pcie_domain, pcie_bus, pcie_device, pcie_function);
       }
 
       if (user_options->machine_readable == true)
@@ -1591,17 +1597,19 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
       const hc_device_param_t *device_param = backend_ctx->devices_param + backend_devices_idx;
 
-      int   device_id                 = device_param->device_id;
-      char *device_name               = device_param->device_name;
-      u32   device_processors         = device_param->device_processors;
-      u32   device_maxclock_frequency = device_param->device_maxclock_frequency;
-      u64   device_local_mem_size     = device_param->device_local_mem_size;
-      u64   device_available_mem      = device_param->device_available_mem;
-      u64   device_global_mem         = device_param->device_global_mem;
-      u8    pcie_domain               = device_param->pcie_domain;
-      u8    pcie_bus                  = device_param->pcie_bus;
-      u8    pcie_device               = device_param->pcie_device;
-      u8    pcie_function             = device_param->pcie_function;
+      int   device_id                     = device_param->device_id;
+      char *device_name                   = device_param->device_name;
+      u32   device_processors             = device_param->device_processors;
+      u32   device_maxclock_frequency     = device_param->device_maxclock_frequency;
+      u64   device_local_mem_size         = device_param->device_local_mem_size;
+      u64   device_available_mem          = device_param->device_available_mem;
+      u64   device_global_mem             = device_param->device_global_mem;
+      int   device_host_unified_memory    = device_param->device_host_unified_memory;
+      u32   kernel_preferred_wgs_multiple = device_param->kernel_preferred_wgs_multiple;
+      u8    pcie_domain                   = device_param->pcie_domain;
+      u8    pcie_bus                      = device_param->pcie_bus;
+      u8    pcie_device                   = device_param->pcie_device;
+      u8    pcie_function                 = device_param->pcie_function;
 
       if (device_param->device_id_alias_cnt)
       {
@@ -1631,9 +1639,11 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       {
         event_log_info (hashcat_ctx, "  Name...........: %s", device_name);
         event_log_info (hashcat_ctx, "  Processor(s)...: %u", device_processors);
+        event_log_info (hashcat_ctx, "  Preferred.Thrd.: %u", kernel_preferred_wgs_multiple);
         event_log_info (hashcat_ctx, "  Clock..........: %u", device_maxclock_frequency);
         event_log_info (hashcat_ctx, "  Memory.Total...: %" PRIu64 " MB", device_global_mem / 1024 / 1024);
         event_log_info (hashcat_ctx, "  Memory.Free....: %" PRIu64 " MB", device_available_mem / 1024 / 1024);
+        event_log_info (hashcat_ctx, "  Memory.Unified.: %d", device_host_unified_memory);
         event_log_info (hashcat_ctx, "  Local.Memory...: %" PRIu64 " KB", device_local_mem_size / 1024);
         event_log_info (hashcat_ctx, "  PCI.Addr.BDFe..: %04x:%02x:%02x.%u", (u16) pcie_domain, pcie_bus, pcie_device, pcie_function);
         event_log_info (hashcat_ctx, NULL);
@@ -1641,12 +1651,14 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       else
       {
         printf ("\"Name\": \"%s\", ", device_name);
-        printf ("\"Processor(s)\": \"%u\", ", device_processors);
+        printf ("\"Processors\": \"%u\", ", device_processors);
+        printf ("\"PreferredThreadSize\": \"%u\", ", kernel_preferred_wgs_multiple);
         printf ("\"Clock\": \"%u\", ", device_maxclock_frequency);
         printf ("\"MemoryTotal\": \"%" PRIu64 " MB\", ", device_global_mem / 1024 / 1024);
         printf ("\"MemoryFree\": \"%" PRIu64 " MB\", ", device_available_mem / 1024 / 1024);
+        printf ("\"MemoryUnified\": \"%d\", ", device_host_unified_memory);
         printf ("\"LocalMemory\": \"%" PRIu64 " MB\", ", device_local_mem_size / 1024);
-        printf ("\"PCI.Addr.BDFe\": \"%04x:%02x:%02x.%u\" ", (u16) pcie_domain, pcie_bus, pcie_device, pcie_function);
+        printf ("\"PCIAddrBDFe\": \"%04x:%02x:%02x.%u\" ", (u16) pcie_domain, pcie_bus, pcie_device, pcie_function);
       }
 
       if (user_options->machine_readable == true)
@@ -1738,6 +1750,8 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
       u64   device_maxmem_alloc       = device_param->device_maxmem_alloc;
       u64   device_available_mem      = device_param->device_available_mem;
       u64   device_local_mem_size     = device_param->device_local_mem_size;
+      int   device_host_unified_memory    = device_param->device_host_unified_memory;
+      u32   kernel_preferred_wgs_multiple = device_param->kernel_preferred_wgs_multiple;
 
       cl_device_type opencl_device_type         = device_param->opencl_device_type;
       cl_uint        opencl_device_vendor_id    = device_param->opencl_device_vendor_id;
@@ -1774,6 +1788,7 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
         event_log_info (hashcat_ctx, "  Vendor.........: %s", opencl_device_vendor);
         event_log_info (hashcat_ctx, "  Name...........: %s", device_name);
         event_log_info (hashcat_ctx, "  Processor(s)...: %u", device_processors);
+        event_log_info (hashcat_ctx, "  Preferred.Thrd.: %u", kernel_preferred_wgs_multiple);
         event_log_info (hashcat_ctx, "  Clock..........: N/A");
         event_log_info (hashcat_ctx, "  Memory.Total...: %" PRIu64 " MB (limited to %" PRIu64 " MB allocatable in one block)", device_global_mem / 1024 / 1024, device_maxmem_alloc / 1024 / 1024);
         event_log_info (hashcat_ctx, "  Memory.Free....: %" PRIu64 " MB", device_available_mem / 1024 / 1024);
@@ -1785,7 +1800,8 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
         printf ("\"VendorID\": \"%u\", ", opencl_device_vendor_id);
         printf ("\"Vendor\": \"%s\", ", opencl_device_vendor);
         printf ("\"Name\": \"%s\", ", device_name);
-        printf ("\"Processor(s)\": \"%u\", ", device_processors);
+        printf ("\"Processors\": \"%u\", ", device_processors);
+        printf ("\"PreferredThreadSize\": \"%u\", ", kernel_preferred_wgs_multiple);
         printf ("\"Clock\": \"%s\", ", "N/A");
         printf ("\"MemoryTotal\": \"%" PRIu64 " MB\", ", device_global_mem / 1024 / 1024);
         printf ("\"MemoryAllocPerBlock\": \"%" PRIu64 " MB\", ", device_maxmem_alloc / 1024 / 1024);
@@ -2000,20 +2016,22 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
         const hc_device_param_t *device_param = backend_ctx->devices_param + backend_devices_idx;
 
-        int            device_id                  = device_param->device_id;
-        char          *device_name                = device_param->device_name;
-        u32            device_processors          = device_param->device_processors;
-        u32            device_maxclock_frequency  = device_param->device_maxclock_frequency;
-        u64            device_maxmem_alloc        = device_param->device_maxmem_alloc;
-        u64            device_local_mem_size      = device_param->device_local_mem_size;
-        u64            device_available_mem       = device_param->device_available_mem;
-        u64            device_global_mem          = device_param->device_global_mem;
-        cl_device_type opencl_device_type         = device_param->opencl_device_type;
-        cl_uint        opencl_device_vendor_id    = device_param->opencl_device_vendor_id;
-        char          *opencl_device_vendor       = device_param->opencl_device_vendor;
-        char          *opencl_device_c_version    = device_param->opencl_device_c_version;
-        char          *opencl_device_version      = device_param->opencl_device_version;
-        char          *opencl_driver_version      = device_param->opencl_driver_version;
+        int            device_id                      = device_param->device_id;
+        char          *device_name                    = device_param->device_name;
+        u32            device_processors              = device_param->device_processors;
+        u32            device_maxclock_frequency      = device_param->device_maxclock_frequency;
+        u64            device_maxmem_alloc            = device_param->device_maxmem_alloc;
+        u64            device_local_mem_size          = device_param->device_local_mem_size;
+        u64            device_available_mem           = device_param->device_available_mem;
+        u64            device_global_mem              = device_param->device_global_mem;
+        int            device_host_unified_memory     = device_param->device_host_unified_memory;
+        u32            kernel_preferred_wgs_multiple  = device_param->kernel_preferred_wgs_multiple;
+        cl_device_type opencl_device_type             = device_param->opencl_device_type;
+        cl_uint        opencl_device_vendor_id        = device_param->opencl_device_vendor_id;
+        char          *opencl_device_vendor           = device_param->opencl_device_vendor;
+        char          *opencl_device_c_version        = device_param->opencl_device_c_version;
+        char          *opencl_device_version          = device_param->opencl_device_version;
+        char          *opencl_driver_version          = device_param->opencl_driver_version;
 
         if (device_param->device_id_alias_cnt)
         {
@@ -2047,9 +2065,11 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
           event_log_info (hashcat_ctx, "    Name...........: %s", device_name);
           event_log_info (hashcat_ctx, "    Version........: %s", opencl_device_version);
           event_log_info (hashcat_ctx, "    Processor(s)...: %u", device_processors);
+          event_log_info (hashcat_ctx, "    Preferred.Thrd.: %u", kernel_preferred_wgs_multiple);
           event_log_info (hashcat_ctx, "    Clock..........: %u", device_maxclock_frequency);
           event_log_info (hashcat_ctx, "    Memory.Total...: %" PRIu64 " MB (limited to %" PRIu64 " MB allocatable in one block)", device_global_mem / 1024 / 1024, device_maxmem_alloc / 1024 / 1024);
           event_log_info (hashcat_ctx, "    Memory.Free....: %" PRIu64 " MB", device_available_mem / 1024 / 1024);
+          event_log_info (hashcat_ctx, "    Memory.Unified.: %d", device_host_unified_memory);
           event_log_info (hashcat_ctx, "    Local.Memory...: %" PRIu64 " KB", device_local_mem_size / 1024);
           event_log_info (hashcat_ctx, "    OpenCL.Version.: %s", opencl_device_c_version);
           event_log_info (hashcat_ctx, "    Driver.Version.: %s", opencl_driver_version);
@@ -2060,11 +2080,13 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
           printf ("\"VendorID\": \"%u\", ", opencl_device_vendor_id);
           printf ("\"Vendor\": \"%s\", ", opencl_device_vendor);
           printf ("\"Name\": \"%s\", ", device_name);
-          printf ("\"Processor(s)\": \"%u\", ", device_processors);
+          printf ("\"Processors\": \"%u\", ", device_processors);
+          printf ("\"PreferredThreadSize\": \"%u\", ", kernel_preferred_wgs_multiple);
           printf ("\"Clock\": \"%u\", ", device_maxclock_frequency);
           printf ("\"MemoryTotal\": \"%" PRIu64 " MB\", ", device_global_mem / 1024 / 1024);
           printf ("\"MemoryAllocPerBlock\": \"%" PRIu64 " MB\", ", device_maxmem_alloc / 1024 / 1024);
           printf ("\"MemoryFree\": \"%" PRIu64 " MB\", ", device_available_mem / 1024 / 1024);
+          printf ("\"MemoryUnified\": \"%d\", ", device_host_unified_memory);
           printf ("\"LocalMemory\": \"%" PRIu64 " MB\", ", device_local_mem_size / 1024);
           printf ("\"OpenCLVersion\": \"%s\", ", opencl_device_c_version);
           printf ("\"DriverVersion\": \"%s\" ", opencl_device_version);

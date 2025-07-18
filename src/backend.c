@@ -6107,16 +6107,17 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
 
       device_param->device_processors = device_processors;
 
-      if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
-      {
+      // We have 32 threads now
+      //if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
+      //{
         // APUs return some weird numbers. These values seem more appropriate (from rocminfo)
         //Compute Unit:            2
         //SIMDs per CU:            2
         //Wavefront Size:          32(0x20)
         //Max Waves Per CU:        32(0x20)
 
-        device_param->device_processors = 2 * 32;
-      }
+      //  device_param->device_processors = 2 * 32;
+      //}
 
       // device_global_mem, device_maxmem_alloc, device_available_mem
 
@@ -7278,16 +7279,29 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
         device_param->device_processors = device_processors;
 
-        if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
+        // Intel iGPU need to be "corrected".
+        // From clinfo:
+        // Max compute units: 32
+        // Preferred work group size multiple (device): 64
+        // Preferred work group size multiple (kernel): 64
+        // This is misleading.
+
+        if ((device_param->opencl_device_type & CL_DEVICE_TYPE_GPU) && (device_param->device_host_unified_memory == 1) && (device_param->opencl_device_vendor_id == VENDOR_ID_INTEL_SDK))
         {
+          device_param->device_processors = 1;
+        }
+
+        // We have 32 threads now
+        //if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
+        //{
           // APUs return some weird numbers. These values seem more appropriate (from rocminfo)
           //Compute Unit:            2
           //SIMDs per CU:            2
           //Wavefront Size:          32(0x20)
           //Max Waves Per CU:        32(0x20)
 
-          device_param->device_processors = 2 * 32;
-        }
+        //  device_param->device_processors = 2 * 32;
+        //}
 
         #if defined (__APPLE__)
         if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)

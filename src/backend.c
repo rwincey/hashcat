@@ -9242,6 +9242,7 @@ void backend_ctx_devices_update_power (hashcat_ctx_t *hashcat_ctx)
 
         event_log_advice (hashcat_ctx, "The wordlist or mask that you are using is too small.");
         event_log_advice (hashcat_ctx, "This means that hashcat cannot use the full parallel power of your device(s).");
+        event_log_advice (hashcat_ctx, "Hashcat is expecting at least %" PRIu64 " base words but only got %.1f%% of that.", backend_ctx->kernel_power_all, (100.f * status_ctx->words_base) / backend_ctx->kernel_power_all);
         event_log_advice (hashcat_ctx, "Unless you supply more work, your cracking speed will drop.");
         event_log_advice (hashcat_ctx, "For tips on supplying more work, see: https://hashcat.net/faq/morework");
         event_log_advice (hashcat_ctx, NULL);

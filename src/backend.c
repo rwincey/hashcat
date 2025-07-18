@@ -9357,6 +9357,7 @@ static int get_hip_kernel_local_mem_size (hashcat_ctx_t *hashcat_ctx, hipFunctio
   return 0;
 }
 
+#if defined (__APPLE__)
 static int get_metal_kernel_wgs (hashcat_ctx_t *hashcat_ctx, mtl_pipeline pipeline, u32 *result)
 {
   return hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, pipeline, result);
@@ -9371,6 +9372,7 @@ static int get_metal_kernel_local_mem_size (hashcat_ctx_t *hashcat_ctx, mtl_pipe
 {
   return hc_mtlGetStaticThreadgroupMemoryLength (hashcat_ctx, pipeline, (unsigned int *) result);
 }
+#endif
 
 static int get_opencl_kernel_wgs (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, cl_kernel kernel, u32 *result)
 {

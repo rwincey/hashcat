@@ -663,13 +663,17 @@ int hc_clCreateKernel (void *hashcat_ctx, cl_program program, const char *kernel
   return 0;
 }
 
-int hc_clReleaseMemObject (void *hashcat_ctx, cl_mem mem)
+int hc_clReleaseMemObject (void *hashcat_ctx, cl_mem *mem)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   OCL_PTR *ocl = (OCL_PTR *) backend_ctx->ocl;
 
-  const cl_int CL_err = ocl->clReleaseMemObject (mem);
+  if (mem == NULL || *mem == NULL) return -1;
+
+  const cl_int CL_err = ocl->clReleaseMemObject (*mem);
+
+  *mem = NULL;
 
   if (CL_err != CL_SUCCESS)
   {
@@ -681,13 +685,17 @@ int hc_clReleaseMemObject (void *hashcat_ctx, cl_mem mem)
   return 0;
 }
 
-int hc_clReleaseKernel (void *hashcat_ctx, cl_kernel kernel)
+int hc_clReleaseKernel (void *hashcat_ctx, cl_kernel *kernel)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   OCL_PTR *ocl = (OCL_PTR *) backend_ctx->ocl;
 
-  const cl_int CL_err = ocl->clReleaseKernel (kernel);
+  if (kernel == NULL || *kernel == NULL) return -1;
+
+  const cl_int CL_err = ocl->clReleaseKernel (*kernel);
+
+  *kernel = NULL;
 
   if (CL_err != CL_SUCCESS)
   {
@@ -699,13 +707,17 @@ int hc_clReleaseKernel (void *hashcat_ctx, cl_kernel kernel)
   return 0;
 }
 
-int hc_clReleaseProgram (void *hashcat_ctx, cl_program program)
+int hc_clReleaseProgram (void *hashcat_ctx, cl_program *program)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   OCL_PTR *ocl = (OCL_PTR *) backend_ctx->ocl;
 
-  const cl_int CL_err = ocl->clReleaseProgram (program);
+  if (program == NULL || *program == NULL) return -1;
+
+  const cl_int CL_err = ocl->clReleaseProgram (*program);
+
+  *program = NULL;
 
   if (CL_err != CL_SUCCESS)
   {

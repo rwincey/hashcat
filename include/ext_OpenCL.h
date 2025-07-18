@@ -148,9 +148,9 @@ int hc_clBuildProgram            (void *hashcat_ctx, cl_program program, cl_uint
 int hc_clCompileProgram          (void *hashcat_ctx, cl_program program, cl_uint num_devices, const cl_device_id *device_list, const char *options, cl_uint num_input_headers, const cl_program *input_headers, const char **header_include_names, void (CL_CALLBACK *pfn_notify) (cl_program program, void *user_data), void *user_data);
 int hc_clLinkProgram             (void *hashcat_ctx, cl_context context, cl_uint num_devices, const cl_device_id *device_list, const char *options, cl_uint num_input_programs, const cl_program *input_programs, void (CL_CALLBACK *pfn_notify) (cl_program program, void *user_data), void *user_data, cl_program *program);
 int hc_clCreateKernel            (void *hashcat_ctx, cl_program program, const char *kernel_name, cl_kernel *kernel);
-int hc_clReleaseMemObject        (void *hashcat_ctx, cl_mem mem);
-int hc_clReleaseKernel           (void *hashcat_ctx, cl_kernel kernel);
-int hc_clReleaseProgram          (void *hashcat_ctx, cl_program program);
+int hc_clReleaseMemObject        (void *hashcat_ctx, cl_mem *mem);
+int hc_clReleaseKernel           (void *hashcat_ctx, cl_kernel *kernel);
+int hc_clReleaseProgram          (void *hashcat_ctx, cl_program *program);
 int hc_clReleaseCommandQueue     (void *hashcat_ctx, cl_command_queue command_queue);
 int hc_clReleaseContext          (void *hashcat_ctx, cl_context context);
 int hc_clEnqueueMapBuffer        (void *hashcat_ctx, cl_command_queue command_queue, cl_mem buffer, cl_bool blocking_map, cl_map_flags map_flags, size_t offset, size_t size, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event, void **buf);

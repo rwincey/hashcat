@@ -565,13 +565,17 @@ int hc_hipEventCreateWithFlags (void *hashcat_ctx, hipEvent_t *phEvent, unsigned
   return 0;
 }
 
-int hc_hipEventDestroy (void *hashcat_ctx, hipEvent_t hEvent)
+int hc_hipEventDestroy (void *hashcat_ctx, hipEvent_t *hEvent)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   HIP_PTR *hip = (HIP_PTR *) backend_ctx->hip;
 
-  const hipError_t HIP_err = hip->hipEventDestroy (hEvent);
+  if (hEvent == NULL || *hEvent == NULL) return -1;
+
+  const hipError_t HIP_err = hip->hipEventDestroy (*hEvent);
+
+  *hEvent = NULL;
 
   if (HIP_err != hipSuccess)
   {
@@ -781,13 +785,17 @@ int hc_hipMemAlloc (void *hashcat_ctx, hipDeviceptr_t *dptr, size_t bytesize)
   return 0;
 }
 
-int hc_hipMemFree (void *hashcat_ctx, hipDeviceptr_t dptr)
+int hc_hipMemFree (void *hashcat_ctx, hipDeviceptr_t *dptr)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   HIP_PTR *hip = (HIP_PTR *) backend_ctx->hip;
 
-  const hipError_t HIP_err = hip->hipMemFree (dptr);
+  if (dptr == NULL || *dptr == NULL) return -1;
+
+  const hipError_t HIP_err = hip->hipMemFree (*dptr);
+
+  *dptr = NULL;
 
   if (HIP_err != hipSuccess)
   {
@@ -1188,13 +1196,17 @@ int hc_hipModuleLoadDataEx (void *hashcat_ctx, hipModule_t *module, const void *
   return 0;
 }
 
-int hc_hipModuleUnload (void *hashcat_ctx, hipModule_t hmod)
+int hc_hipModuleUnload (void *hashcat_ctx, hipModule_t *hmod)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   HIP_PTR *hip = (HIP_PTR *) backend_ctx->hip;
 
-  const hipError_t HIP_err = hip->hipModuleUnload (hmod);
+  if (hmod == NULL || *hmod == NULL) return -1;
+
+  const hipError_t HIP_err = hip->hipModuleUnload (*hmod);
+
+  *hmod = NULL;
 
   if (HIP_err != hipSuccess)
   {
@@ -1350,13 +1362,17 @@ int hc_hipStreamCreateWithFlags (void *hashcat_ctx, hipStream_t *phStream, unsig
   return 0;
 }
 
-int hc_hipStreamDestroy (void *hashcat_ctx, hipStream_t hStream)
+int hc_hipStreamDestroy (void *hashcat_ctx, hipStream_t *hStream)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   HIP_PTR *hip = (HIP_PTR *) backend_ctx->hip;
 
-  const hipError_t HIP_err = hip->hipStreamDestroy (hStream);
+  if (hStream == NULL || *hStream == NULL) return -1;
+
+  const hipError_t HIP_err = hip->hipStreamDestroy (*hStream);
+
+  *hStream = NULL;
 
   if (HIP_err != hipSuccess)
   {

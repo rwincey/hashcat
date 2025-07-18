@@ -774,12 +774,12 @@ static bool opencl_test_instruction (hashcat_ctx_t *hashcat_ctx, cl_context cont
 
     #endif
 
-    hc_clReleaseProgram (hashcat_ctx, program);
+    hc_clReleaseProgram (hashcat_ctx, &program);
 
     return false;
   }
 
-  if (hc_clReleaseProgram (hashcat_ctx, program) == -1) return false;
+  if (hc_clReleaseProgram (hashcat_ctx, &program) == -1) return false;
 
   return true;
 }
@@ -3572,7 +3572,7 @@ int run_kernel_amp (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
 
     for (int i = 0; i < tmp_buf_cnt; i++)
     {
-      hc_mtlReleaseMemObject (hashcat_ctx, tmp_buf[i]);
+      hc_mtlReleaseMemObject (hashcat_ctx, &tmp_buf[i]);
 
       tmp_buf[i] = NULL;
     }
@@ -8705,7 +8705,7 @@ int backend_ctx_devices_init (hashcat_ctx_t *hashcat_ctx, const int comptime)
 
           if (tmp_device[c] != NULL)
           {
-            if (hc_mtlReleaseMemObject (hashcat_ctx, tmp_device[c]) == -1) return -1;
+            if (hc_mtlReleaseMemObject (hashcat_ctx, &tmp_device[c]) == -1) return -1;
           }
         }
 
@@ -9011,7 +9011,7 @@ int backend_ctx_devices_init (hashcat_ctx_t *hashcat_ctx, const int comptime)
 
               if (tmp_device[c] != NULL)
               {
-                if (hc_clReleaseMemObject (hashcat_ctx, tmp_device[c]) == -1) r = -1;
+                if (hc_clReleaseMemObject (hashcat_ctx, &tmp_device[c]) == -1) r = -1;
               }
             }
 
@@ -9988,7 +9988,7 @@ static bool load_kernel (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_p
 
         *opencl_program = fin;
 
-        hc_clReleaseProgram (hashcat_ctx, p1);
+        hc_clReleaseProgram (hashcat_ctx, &p1);
       }
 
       if (cache_disable == false)
@@ -17004,552 +17004,267 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_cuda == true)
     {
-      if (device_param->cuda_d_pws_buf)        hc_cuMemFree (hashcat_ctx, device_param->cuda_d_pws_buf);
-      if (device_param->cuda_d_pws_amp_buf)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_pws_amp_buf);
-      if (device_param->cuda_d_pws_comp_buf)   hc_cuMemFree (hashcat_ctx, device_param->cuda_d_pws_comp_buf);
-      if (device_param->cuda_d_pws_idx)        hc_cuMemFree (hashcat_ctx, device_param->cuda_d_pws_idx);
-      if (device_param->cuda_d_rules)          hc_cuMemFree (hashcat_ctx, device_param->cuda_d_rules);
-      //if (device_param->cuda_d_rules_c)        hc_cuMemFree (hashcat_ctx, device_param->cuda_d_rules_c);
-      if (device_param->cuda_d_combs)          hc_cuMemFree (hashcat_ctx, device_param->cuda_d_combs);
-      if (device_param->cuda_d_combs_c)        hc_cuMemFree (hashcat_ctx, device_param->cuda_d_combs_c);
-      if (device_param->cuda_d_bfs)            hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bfs);
-      //if (device_param->cuda_d_bfs_c)          hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bfs_c);
-      if (device_param->cuda_d_bitmap_s1_a)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s1_a);
-      if (device_param->cuda_d_bitmap_s1_b)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s1_b);
-      if (device_param->cuda_d_bitmap_s1_c)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s1_c);
-      if (device_param->cuda_d_bitmap_s1_d)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s1_d);
-      if (device_param->cuda_d_bitmap_s2_a)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s2_a);
-      if (device_param->cuda_d_bitmap_s2_b)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s2_b);
-      if (device_param->cuda_d_bitmap_s2_c)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s2_c);
-      if (device_param->cuda_d_bitmap_s2_d)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_bitmap_s2_d);
-      if (device_param->cuda_d_plain_bufs)     hc_cuMemFree (hashcat_ctx, device_param->cuda_d_plain_bufs);
-      if (device_param->cuda_d_digests_buf)    hc_cuMemFree (hashcat_ctx, device_param->cuda_d_digests_buf);
-      if (device_param->cuda_d_digests_shown)  hc_cuMemFree (hashcat_ctx, device_param->cuda_d_digests_shown);
-      if (device_param->cuda_d_salt_bufs)      hc_cuMemFree (hashcat_ctx, device_param->cuda_d_salt_bufs);
-      if (device_param->cuda_d_esalt_bufs)     hc_cuMemFree (hashcat_ctx, device_param->cuda_d_esalt_bufs);
-      if (device_param->cuda_d_tmps)           hc_cuMemFree (hashcat_ctx, device_param->cuda_d_tmps);
-      if (device_param->cuda_d_hooks)          hc_cuMemFree (hashcat_ctx, device_param->cuda_d_hooks);
-      if (device_param->cuda_d_result)         hc_cuMemFree (hashcat_ctx, device_param->cuda_d_result);
-      if (device_param->cuda_d_extra0_buf)     hc_cuMemFree (hashcat_ctx, device_param->cuda_d_extra0_buf);
-      if (device_param->cuda_d_extra1_buf)     hc_cuMemFree (hashcat_ctx, device_param->cuda_d_extra1_buf);
-      if (device_param->cuda_d_extra2_buf)     hc_cuMemFree (hashcat_ctx, device_param->cuda_d_extra2_buf);
-      if (device_param->cuda_d_extra3_buf)     hc_cuMemFree (hashcat_ctx, device_param->cuda_d_extra3_buf);
-      if (device_param->cuda_d_root_css_buf)   hc_cuMemFree (hashcat_ctx, device_param->cuda_d_root_css_buf);
-      if (device_param->cuda_d_markov_css_buf) hc_cuMemFree (hashcat_ctx, device_param->cuda_d_markov_css_buf);
-      if (device_param->cuda_d_tm_c)           hc_cuMemFree (hashcat_ctx, device_param->cuda_d_tm_c);
-      if (device_param->cuda_d_st_digests_buf) hc_cuMemFree (hashcat_ctx, device_param->cuda_d_st_digests_buf);
-      if (device_param->cuda_d_st_salts_buf)   hc_cuMemFree (hashcat_ctx, device_param->cuda_d_st_salts_buf);
-      if (device_param->cuda_d_st_esalts_buf)  hc_cuMemFree (hashcat_ctx, device_param->cuda_d_st_esalts_buf);
-      if (device_param->cuda_d_kernel_param)   hc_cuMemFree (hashcat_ctx, device_param->cuda_d_kernel_param);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_amp_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_comp_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_idx);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_rules);
+    //hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_rules_c);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_combs);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_combs_c);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bfs);
+    //hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bfs_c);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_a);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_b);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_c);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_d);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_a);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_b);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_c);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_d);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_plain_bufs);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_digests_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_digests_shown);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_salt_bufs);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_esalt_bufs);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_tmps);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_hooks);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_result);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra0_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra1_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra2_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra3_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_root_css_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_markov_css_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_tm_c);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_st_digests_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_st_salts_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_st_esalts_buf);
+      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_kernel_param);
 
-      if (device_param->cuda_event1)           hc_cuEventDestroy (hashcat_ctx, device_param->cuda_event1);
-      if (device_param->cuda_event2)           hc_cuEventDestroy (hashcat_ctx, device_param->cuda_event2);
-      if (device_param->cuda_event3)           hc_cuEventDestroy (hashcat_ctx, device_param->cuda_event3);
+      hc_cuEventDestroy      (hashcat_ctx, &device_param->cuda_event1);
+      hc_cuEventDestroy      (hashcat_ctx, &device_param->cuda_event2);
+      hc_cuEventDestroy      (hashcat_ctx, &device_param->cuda_event3);
 
-      if (device_param->cuda_stream)           hc_cuStreamDestroy (hashcat_ctx, device_param->cuda_stream);
+      hc_cuStreamDestroy     (hashcat_ctx, &device_param->cuda_stream);
 
-      if (device_param->cuda_module)           hc_cuModuleUnload (hashcat_ctx, device_param->cuda_module);
-      if (device_param->cuda_module_mp)        hc_cuModuleUnload (hashcat_ctx, device_param->cuda_module_mp);
-      if (device_param->cuda_module_amp)       hc_cuModuleUnload (hashcat_ctx, device_param->cuda_module_amp);
-      if (device_param->cuda_module_shared)    hc_cuModuleUnload (hashcat_ctx, device_param->cuda_module_shared);
+      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module);
+      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_mp);
+      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_amp);
+      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_shared);
 
-      //if (device_param->cuda_context)          hc_cuCtxDestroy (hashcat_ctx, device_param->cuda_context);
-
-      device_param->cuda_d_pws_buf            = 0;
-      device_param->cuda_d_pws_amp_buf        = 0;
-      device_param->cuda_d_pws_comp_buf       = 0;
-      device_param->cuda_d_pws_idx            = 0;
-      device_param->cuda_d_rules              = 0;
-      device_param->cuda_d_rules_c            = 0;
-      device_param->cuda_d_combs              = 0;
-      device_param->cuda_d_combs_c            = 0;
-      device_param->cuda_d_bfs                = 0;
-      device_param->cuda_d_bfs_c              = 0;
-      device_param->cuda_d_bitmap_s1_a        = 0;
-      device_param->cuda_d_bitmap_s1_b        = 0;
-      device_param->cuda_d_bitmap_s1_c        = 0;
-      device_param->cuda_d_bitmap_s1_d        = 0;
-      device_param->cuda_d_bitmap_s2_a        = 0;
-      device_param->cuda_d_bitmap_s2_b        = 0;
-      device_param->cuda_d_bitmap_s2_c        = 0;
-      device_param->cuda_d_bitmap_s2_d        = 0;
-      device_param->cuda_d_plain_bufs         = 0;
-      device_param->cuda_d_digests_buf        = 0;
-      device_param->cuda_d_digests_shown      = 0;
-      device_param->cuda_d_salt_bufs          = 0;
-      device_param->cuda_d_esalt_bufs         = 0;
-      device_param->cuda_d_tmps               = 0;
-      device_param->cuda_d_hooks              = 0;
-      device_param->cuda_d_result             = 0;
-      device_param->cuda_d_extra0_buf         = 0;
-      device_param->cuda_d_extra1_buf         = 0;
-      device_param->cuda_d_extra2_buf         = 0;
-      device_param->cuda_d_extra3_buf         = 0;
-      device_param->cuda_d_root_css_buf       = 0;
-      device_param->cuda_d_markov_css_buf     = 0;
-      device_param->cuda_d_tm_c               = 0;
-      device_param->cuda_d_st_digests_buf     = 0;
-      device_param->cuda_d_st_salts_buf       = 0;
-      device_param->cuda_d_st_esalts_buf      = 0;
-      device_param->cuda_d_kernel_param       = 0;
-
-      device_param->cuda_function1            = NULL;
-      device_param->cuda_function12           = NULL;
-      device_param->cuda_function2p           = NULL;
-      device_param->cuda_function2            = NULL;
-      device_param->cuda_function2e           = NULL;
-      device_param->cuda_function23           = NULL;
-      device_param->cuda_function3            = NULL;
-      device_param->cuda_function4            = NULL;
-      device_param->cuda_function_init2       = NULL;
-      device_param->cuda_function_loop2p      = NULL;
-      device_param->cuda_function_loop2       = NULL;
-      device_param->cuda_function_mp          = NULL;
-      device_param->cuda_function_mp_l        = NULL;
-      device_param->cuda_function_mp_r        = NULL;
-      device_param->cuda_function_tm          = NULL;
-      device_param->cuda_function_amp         = NULL;
-      device_param->cuda_function_memset      = NULL;
-      device_param->cuda_function_bzero       = NULL;
-      device_param->cuda_function_atinit      = NULL;
-      device_param->cuda_function_utf8toutf16le = NULL;
-      device_param->cuda_function_decompress  = NULL;
-      device_param->cuda_function_aux1        = NULL;
-      device_param->cuda_function_aux2        = NULL;
-      device_param->cuda_function_aux3        = NULL;
-      device_param->cuda_function_aux4        = NULL;
-
-      device_param->cuda_event1               = NULL;
-      device_param->cuda_event2               = NULL;
-      device_param->cuda_event3               = NULL;
-
-      device_param->cuda_stream               = NULL;
-
-      device_param->cuda_module               = NULL;
-      device_param->cuda_module_mp            = NULL;
-      device_param->cuda_module_amp           = NULL;
-      device_param->cuda_module_shared        = NULL;
-
-      //device_param->cuda_context              = NULL;
+      //if (device_param->cuda_context)    hc_cuCtxDestroy (hashcat_ctx, device_param->cuda_context);
+      //device_param->cuda_context         = NULL;
     }
 
     if (device_param->is_hip == true)
     {
-      if (device_param->hip_d_pws_buf)        hc_hipMemFree (hashcat_ctx, device_param->hip_d_pws_buf);
-      if (device_param->hip_d_pws_amp_buf)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_pws_amp_buf);
-      if (device_param->hip_d_pws_comp_buf)   hc_hipMemFree (hashcat_ctx, device_param->hip_d_pws_comp_buf);
-      if (device_param->hip_d_pws_idx)        hc_hipMemFree (hashcat_ctx, device_param->hip_d_pws_idx);
-      if (device_param->hip_d_rules)          hc_hipMemFree (hashcat_ctx, device_param->hip_d_rules);
-      //if (device_param->hip_d_rules_c)        hc_hipMemFree (hashcat_ctx, device_param->hip_d_rules_c);
-      if (device_param->hip_d_combs)          hc_hipMemFree (hashcat_ctx, device_param->hip_d_combs);
-      if (device_param->hip_d_combs_c)        hc_hipMemFree (hashcat_ctx, device_param->hip_d_combs_c);
-      if (device_param->hip_d_bfs)            hc_hipMemFree (hashcat_ctx, device_param->hip_d_bfs);
-      //if (device_param->hip_d_bfs_c)          hc_hipMemFree (hashcat_ctx, device_param->hip_d_bfs_c);
-      if (device_param->hip_d_bitmap_s1_a)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s1_a);
-      if (device_param->hip_d_bitmap_s1_b)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s1_b);
-      if (device_param->hip_d_bitmap_s1_c)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s1_c);
-      if (device_param->hip_d_bitmap_s1_d)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s1_d);
-      if (device_param->hip_d_bitmap_s2_a)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s2_a);
-      if (device_param->hip_d_bitmap_s2_b)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s2_b);
-      if (device_param->hip_d_bitmap_s2_c)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s2_c);
-      if (device_param->hip_d_bitmap_s2_d)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_bitmap_s2_d);
-      if (device_param->hip_d_plain_bufs)     hc_hipMemFree (hashcat_ctx, device_param->hip_d_plain_bufs);
-      if (device_param->hip_d_digests_buf)    hc_hipMemFree (hashcat_ctx, device_param->hip_d_digests_buf);
-      if (device_param->hip_d_digests_shown)  hc_hipMemFree (hashcat_ctx, device_param->hip_d_digests_shown);
-      if (device_param->hip_d_salt_bufs)      hc_hipMemFree (hashcat_ctx, device_param->hip_d_salt_bufs);
-      if (device_param->hip_d_esalt_bufs)     hc_hipMemFree (hashcat_ctx, device_param->hip_d_esalt_bufs);
-      if (device_param->hip_d_tmps)           hc_hipMemFree (hashcat_ctx, device_param->hip_d_tmps);
-      if (device_param->hip_d_hooks)          hc_hipMemFree (hashcat_ctx, device_param->hip_d_hooks);
-      if (device_param->hip_d_result)         hc_hipMemFree (hashcat_ctx, device_param->hip_d_result);
-      if (device_param->hip_d_extra0_buf)     hc_hipMemFree (hashcat_ctx, device_param->hip_d_extra0_buf);
-      if (device_param->hip_d_extra1_buf)     hc_hipMemFree (hashcat_ctx, device_param->hip_d_extra1_buf);
-      if (device_param->hip_d_extra2_buf)     hc_hipMemFree (hashcat_ctx, device_param->hip_d_extra2_buf);
-      if (device_param->hip_d_extra3_buf)     hc_hipMemFree (hashcat_ctx, device_param->hip_d_extra3_buf);
-      if (device_param->hip_d_root_css_buf)   hc_hipMemFree (hashcat_ctx, device_param->hip_d_root_css_buf);
-      if (device_param->hip_d_markov_css_buf) hc_hipMemFree (hashcat_ctx, device_param->hip_d_markov_css_buf);
-      if (device_param->hip_d_tm_c)           hc_hipMemFree (hashcat_ctx, device_param->hip_d_tm_c);
-      if (device_param->hip_d_st_digests_buf) hc_hipMemFree (hashcat_ctx, device_param->hip_d_st_digests_buf);
-      if (device_param->hip_d_st_salts_buf)   hc_hipMemFree (hashcat_ctx, device_param->hip_d_st_salts_buf);
-      if (device_param->hip_d_st_esalts_buf)  hc_hipMemFree (hashcat_ctx, device_param->hip_d_st_esalts_buf);
-      if (device_param->hip_d_kernel_param)   hc_hipMemFree (hashcat_ctx, device_param->hip_d_kernel_param);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_amp_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_comp_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_idx);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_rules);
+    //hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_rules_c);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_combs);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_combs_c);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bfs);
+    //hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bfs_c);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_a);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_b);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_c);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_d);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_a);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_b);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_c);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_d);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_plain_bufs);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_digests_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_digests_shown);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_salt_bufs);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_esalt_bufs);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_tmps);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_hooks);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_result);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra0_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra1_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra2_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra3_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_root_css_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_markov_css_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_tm_c);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_st_digests_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_st_salts_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_st_esalts_buf);
+      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_kernel_param);
 
-      if (device_param->hip_event1)           hc_hipEventDestroy (hashcat_ctx, device_param->hip_event1);
-      if (device_param->hip_event2)           hc_hipEventDestroy (hashcat_ctx, device_param->hip_event2);
-      if (device_param->hip_event3)           hc_hipEventDestroy (hashcat_ctx, device_param->hip_event3);
+      hc_hipEventDestroy     (hashcat_ctx, &device_param->hip_event1);
+      hc_hipEventDestroy     (hashcat_ctx, &device_param->hip_event2);
+      hc_hipEventDestroy     (hashcat_ctx, &device_param->hip_event3);
 
-      if (device_param->hip_stream)           hc_hipStreamDestroy (hashcat_ctx, device_param->hip_stream);
+      hc_hipStreamDestroy    (hashcat_ctx, &device_param->hip_stream);
 
-      if (device_param->hip_module)           hc_hipModuleUnload (hashcat_ctx, device_param->hip_module);
-      if (device_param->hip_module_mp)        hc_hipModuleUnload (hashcat_ctx, device_param->hip_module_mp);
-      if (device_param->hip_module_amp)       hc_hipModuleUnload (hashcat_ctx, device_param->hip_module_amp);
-      if (device_param->hip_module_shared)    hc_hipModuleUnload (hashcat_ctx, device_param->hip_module_shared);
-
-      device_param->hip_d_pws_buf            = 0;
-      device_param->hip_d_pws_amp_buf        = 0;
-      device_param->hip_d_pws_comp_buf       = 0;
-      device_param->hip_d_pws_idx            = 0;
-      device_param->hip_d_rules              = 0;
-      device_param->hip_d_rules_c            = 0;
-      device_param->hip_d_combs              = 0;
-      device_param->hip_d_combs_c            = 0;
-      device_param->hip_d_bfs                = 0;
-      device_param->hip_d_bfs_c              = 0;
-      device_param->hip_d_bitmap_s1_a        = 0;
-      device_param->hip_d_bitmap_s1_b        = 0;
-      device_param->hip_d_bitmap_s1_c        = 0;
-      device_param->hip_d_bitmap_s1_d        = 0;
-      device_param->hip_d_bitmap_s2_a        = 0;
-      device_param->hip_d_bitmap_s2_b        = 0;
-      device_param->hip_d_bitmap_s2_c        = 0;
-      device_param->hip_d_bitmap_s2_d        = 0;
-      device_param->hip_d_plain_bufs         = 0;
-      device_param->hip_d_digests_buf        = 0;
-      device_param->hip_d_digests_shown      = 0;
-      device_param->hip_d_salt_bufs          = 0;
-      device_param->hip_d_esalt_bufs         = 0;
-      device_param->hip_d_tmps               = 0;
-      device_param->hip_d_hooks              = 0;
-      device_param->hip_d_result             = 0;
-      device_param->hip_d_extra0_buf         = 0;
-      device_param->hip_d_extra1_buf         = 0;
-      device_param->hip_d_extra2_buf         = 0;
-      device_param->hip_d_extra3_buf         = 0;
-      device_param->hip_d_root_css_buf       = 0;
-      device_param->hip_d_markov_css_buf     = 0;
-      device_param->hip_d_tm_c               = 0;
-      device_param->hip_d_st_digests_buf     = 0;
-      device_param->hip_d_st_salts_buf       = 0;
-      device_param->hip_d_st_esalts_buf      = 0;
-      device_param->hip_d_kernel_param       = 0;
-
-      device_param->hip_function1            = NULL;
-      device_param->hip_function12           = NULL;
-      device_param->hip_function2p           = NULL;
-      device_param->hip_function2            = NULL;
-      device_param->hip_function2e           = NULL;
-      device_param->hip_function23           = NULL;
-      device_param->hip_function3            = NULL;
-      device_param->hip_function4            = NULL;
-      device_param->hip_function_init2       = NULL;
-      device_param->hip_function_loop2p      = NULL;
-      device_param->hip_function_loop2       = NULL;
-      device_param->hip_function_mp          = NULL;
-      device_param->hip_function_mp_l        = NULL;
-      device_param->hip_function_mp_r        = NULL;
-      device_param->hip_function_tm          = NULL;
-      device_param->hip_function_amp         = NULL;
-      device_param->hip_function_memset      = NULL;
-      device_param->hip_function_bzero       = NULL;
-      device_param->hip_function_atinit      = NULL;
-      device_param->hip_function_utf8toutf16le = NULL;
-      device_param->hip_function_decompress  = NULL;
-      device_param->hip_function_aux1        = NULL;
-      device_param->hip_function_aux2        = NULL;
-      device_param->hip_function_aux3        = NULL;
-      device_param->hip_function_aux4        = NULL;
-
-      device_param->hip_event1               = NULL;
-      device_param->hip_event2               = NULL;
-      device_param->hip_event3               = NULL;
-
-      device_param->hip_stream               = NULL;
-
-      device_param->hip_module               = NULL;
-      device_param->hip_module_mp            = NULL;
-      device_param->hip_module_amp           = NULL;
-      device_param->hip_module_shared        = NULL;
+      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module);
+      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_mp);
+      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_amp);
+      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_shared);
     }
 
     #if defined (__APPLE__)
     if (device_param->is_metal == true)
     {
-      if (device_param->metal_d_pws_buf)              hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_pws_buf);
-      if (device_param->metal_d_pws_amp_buf)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_pws_amp_buf);
-      if (device_param->metal_d_pws_comp_buf)         hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_pws_comp_buf);
-      if (device_param->metal_d_pws_idx)              hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_pws_idx);
-      if (device_param->metal_d_rules)                hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_rules);
-      if (device_param->metal_d_rules_c)              hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_rules_c);
-      if (device_param->metal_d_combs)                hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_combs);
-      if (device_param->metal_d_combs_c)              hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_combs_c);
-      if (device_param->metal_d_bfs)                  hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bfs);
-      if (device_param->metal_d_bfs_c)                hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bfs_c);
-      if (device_param->metal_d_bitmap_s1_a)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s1_a);
-      if (device_param->metal_d_bitmap_s1_b)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s1_b);
-      if (device_param->metal_d_bitmap_s1_c)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s1_c);
-      if (device_param->metal_d_bitmap_s1_d)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s1_d);
-      if (device_param->metal_d_bitmap_s2_a)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s2_a);
-      if (device_param->metal_d_bitmap_s2_b)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s2_b);
-      if (device_param->metal_d_bitmap_s2_c)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s2_c);
-      if (device_param->metal_d_bitmap_s2_d)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_bitmap_s2_d);
-      if (device_param->metal_d_plain_bufs)           hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_plain_bufs);
-      if (device_param->metal_d_digests_buf)          hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_digests_buf);
-      if (device_param->metal_d_digests_shown)        hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_digests_shown);
-      if (device_param->metal_d_salt_bufs)            hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_salt_bufs);
-      if (device_param->metal_d_esalt_bufs)           hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_esalt_bufs);
-      if (device_param->metal_d_tmps)                 hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_tmps);
-      if (device_param->metal_d_hooks)                hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_hooks);
-      if (device_param->metal_d_result)               hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_result);
-      if (device_param->metal_d_extra0_buf)           hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_extra0_buf);
-      if (device_param->metal_d_extra1_buf)           hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_extra1_buf);
-      if (device_param->metal_d_extra2_buf)           hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_extra2_buf);
-      if (device_param->metal_d_extra3_buf)           hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_extra3_buf);
-      if (device_param->metal_d_root_css_buf)         hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_root_css_buf);
-      if (device_param->metal_d_markov_css_buf)       hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_markov_css_buf);
-      if (device_param->metal_d_tm_c)                 hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_tm_c);
-      if (device_param->metal_d_st_digests_buf)       hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_st_digests_buf);
-      if (device_param->metal_d_st_salts_buf)         hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_st_salts_buf);
-      if (device_param->metal_d_st_esalts_buf)        hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_st_esalts_buf);
-      if (device_param->metal_d_kernel_param)         hc_mtlReleaseMemObject (hashcat_ctx, device_param->metal_d_kernel_param);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_pws_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_pws_amp_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_pws_comp_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_pws_idx);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_rules);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_rules_c);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_combs);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_combs_c);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bfs);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bfs_c);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s1_a);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s1_b);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s1_c);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s1_d);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s2_a);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s2_b);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s2_c);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_bitmap_s2_d);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_plain_bufs);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_digests_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_digests_shown);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_salt_bufs);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_esalt_bufs);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_tmps);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_hooks);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_result);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_extra0_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_extra1_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_extra2_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_extra3_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_root_css_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_markov_css_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_tm_c);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_st_digests_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_st_salts_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_st_esalts_buf);
+      hc_mtlReleaseMemObject (hashcat_ctx, &device_param->metal_d_kernel_param);
 
-      if (device_param->metal_function1)              hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function1);
-      if (device_param->metal_function12)             hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function12);
-      if (device_param->metal_function2p)             hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function2p);
-      if (device_param->metal_function2)              hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function2);
-      if (device_param->metal_function2e)             hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function2e);
-      if (device_param->metal_function23)             hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function23);
-      if (device_param->metal_function3)              hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function3);
-      if (device_param->metal_function4)              hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function4);
-      if (device_param->metal_function_init2)         hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_init2);
-      if (device_param->metal_function_loop2p)        hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_loop2p);
-      if (device_param->metal_function_loop2)         hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_loop2);
-      if (device_param->metal_function_mp)            hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_mp);
-      if (device_param->metal_function_mp_l)          hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_mp_l);
-      if (device_param->metal_function_mp_r)          hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_mp_r);
-      if (device_param->metal_function_tm)            hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_tm);
-      if (device_param->metal_function_amp)           hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_amp);
-      if (device_param->metal_function_memset)        hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_memset);
-      if (device_param->metal_function_bzero)         hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_bzero);
-      if (device_param->metal_function_atinit)        hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_atinit);
-      if (device_param->metal_function_utf8toutf16le) hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_utf8toutf16le);
-      if (device_param->metal_function_decompress)    hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_decompress);
-      if (device_param->metal_function_aux1)          hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_aux1);
-      if (device_param->metal_function_aux2)          hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_aux2);
-      if (device_param->metal_function_aux3)          hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_aux3);
-      if (device_param->metal_function_aux4)          hc_mtlReleaseFunction (hashcat_ctx, device_param->metal_function_aux4);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function1);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function12);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function2p);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function2);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function2e);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function23);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function3);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function4);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_init2);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_loop2p);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_loop2);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_mp);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_mp_l);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_mp_r);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_tm);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_amp);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_memset);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_bzero);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_atinit);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_utf8toutf16le);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_decompress);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_aux1);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_aux2);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_aux3);
+      hc_mtlReleaseFunction  (hashcat_ctx, &device_param->metal_function_aux4);
 
-      if (device_param->metal_library)                hc_mtlReleaseLibrary (hashcat_ctx, device_param->metal_library);
-      if (device_param->metal_library_mp)             hc_mtlReleaseLibrary (hashcat_ctx, device_param->metal_library_mp);
-      if (device_param->metal_library_amp)            hc_mtlReleaseLibrary (hashcat_ctx, device_param->metal_library_amp);
-      if (device_param->metal_library_shared)         hc_mtlReleaseLibrary (hashcat_ctx, device_param->metal_library_shared);
+      hc_mtlReleaseLibrary   (hashcat_ctx, &device_param->metal_library);
+      hc_mtlReleaseLibrary   (hashcat_ctx, &device_param->metal_library_mp);
+      hc_mtlReleaseLibrary   (hashcat_ctx, &device_param->metal_library_amp);
+      hc_mtlReleaseLibrary   (hashcat_ctx, &device_param->metal_library_shared);
 
-      //if (device_param->metal_command_queue)          hc_mtlReleaseCommandQueue (hashcat_ctx, device_param->metal_command_queue);
+      //if (device_param->metal_command_queue) hc_mtlReleaseCommandQueue (hashcat_ctx, device_param->metal_command_queue);
+      //if (device_param->metal_device)    hc_mtlReleaseDevice (hashcat_ctx, device_param->metal_device);
 
-      //if (device_param->metal_device)                 hc_mtlReleaseDevice (hashcat_ctx, device_param->metal_device);
-
-      device_param->metal_d_pws_buf              = NULL;
-      device_param->metal_d_pws_amp_buf          = NULL;
-      device_param->metal_d_pws_comp_buf         = NULL;
-      device_param->metal_d_pws_idx              = NULL;
-      device_param->metal_d_rules                = NULL;
-      device_param->metal_d_rules_c              = NULL;
-      device_param->metal_d_combs                = NULL;
-      device_param->metal_d_combs_c              = NULL;
-      device_param->metal_d_bfs                  = NULL;
-      device_param->metal_d_bfs_c                = NULL;
-      device_param->metal_d_bitmap_s1_a          = NULL;
-      device_param->metal_d_bitmap_s1_b          = NULL;
-      device_param->metal_d_bitmap_s1_c          = NULL;
-      device_param->metal_d_bitmap_s1_d          = NULL;
-      device_param->metal_d_bitmap_s2_a          = NULL;
-      device_param->metal_d_bitmap_s2_b          = NULL;
-      device_param->metal_d_bitmap_s2_c          = NULL;
-      device_param->metal_d_bitmap_s2_d          = NULL;
-      device_param->metal_d_plain_bufs           = NULL;
-      device_param->metal_d_digests_buf          = NULL;
-      device_param->metal_d_digests_shown        = NULL;
-      device_param->metal_d_salt_bufs            = NULL;
-      device_param->metal_d_esalt_bufs           = NULL;
-      device_param->metal_d_tmps                 = NULL;
-      device_param->metal_d_hooks                = NULL;
-      device_param->metal_d_result               = NULL;
-      device_param->metal_d_extra0_buf           = NULL;
-      device_param->metal_d_extra1_buf           = NULL;
-      device_param->metal_d_extra2_buf           = NULL;
-      device_param->metal_d_extra3_buf           = NULL;
-      device_param->metal_d_root_css_buf         = NULL;
-      device_param->metal_d_markov_css_buf       = NULL;
-      device_param->metal_d_tm_c                 = NULL;
-      device_param->metal_d_st_digests_buf       = NULL;
-      device_param->metal_d_st_salts_buf         = NULL;
-      device_param->metal_d_st_esalts_buf        = NULL;
-      device_param->metal_d_kernel_param         = NULL;
-      device_param->metal_function1              = NULL;
-      device_param->metal_function12             = NULL;
-      device_param->metal_function2p             = NULL;
-      device_param->metal_function2              = NULL;
-      device_param->metal_function2e             = NULL;
-      device_param->metal_function23             = NULL;
-      device_param->metal_function3              = NULL;
-      device_param->metal_function4              = NULL;
-      device_param->metal_function_init2         = NULL;
-      device_param->metal_function_loop2p        = NULL;
-      device_param->metal_function_loop2         = NULL;
-      device_param->metal_function_mp            = NULL;
-      device_param->metal_function_mp_l          = NULL;
-      device_param->metal_function_mp_r          = NULL;
-      device_param->metal_function_tm            = NULL;
-      device_param->metal_function_amp           = NULL;
-      device_param->metal_function_memset        = NULL;
-      device_param->metal_function_bzero         = NULL;
-      device_param->metal_function_atinit        = NULL;
-      device_param->metal_function_utf8toutf16le = NULL;
-      device_param->metal_function_decompress    = NULL;
-      device_param->metal_function_aux1          = NULL;
-      device_param->metal_function_aux2          = NULL;
-      device_param->metal_function_aux3          = NULL;
-      device_param->metal_function_aux4          = NULL;
-      device_param->metal_library                = NULL;
-      device_param->metal_library_mp             = NULL;
-      device_param->metal_library_amp            = NULL;
-      device_param->metal_library_shared         = NULL;
-      //device_param->metal_command_queue          = NULL;
-      //device_param->metal_device                 = NULL;
+      //device_param->metal_command_queue  = NULL;
+      //device_param->metal_device         = NULL;
     }
     #endif // __APPLE__
 
     if (device_param->is_opencl == true)
     {
-      if (device_param->opencl_d_pws_buf)        hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_pws_buf);
-      if (device_param->opencl_d_pws_amp_buf)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_pws_amp_buf);
-      if (device_param->opencl_d_pws_comp_buf)   hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_pws_comp_buf);
-      if (device_param->opencl_d_pws_idx)        hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_pws_idx);
-      if (device_param->opencl_d_rules)          hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_rules);
-      if (device_param->opencl_d_rules_c)        hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_rules_c);
-      if (device_param->opencl_d_combs)          hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_combs);
-      if (device_param->opencl_d_combs_c)        hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_combs_c);
-      if (device_param->opencl_d_bfs)            hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bfs);
-      if (device_param->opencl_d_bfs_c)          hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bfs_c);
-      if (device_param->opencl_d_bitmap_s1_a)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s1_a);
-      if (device_param->opencl_d_bitmap_s1_b)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s1_b);
-      if (device_param->opencl_d_bitmap_s1_c)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s1_c);
-      if (device_param->opencl_d_bitmap_s1_d)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s1_d);
-      if (device_param->opencl_d_bitmap_s2_a)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s2_a);
-      if (device_param->opencl_d_bitmap_s2_b)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s2_b);
-      if (device_param->opencl_d_bitmap_s2_c)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s2_c);
-      if (device_param->opencl_d_bitmap_s2_d)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_bitmap_s2_d);
-      if (device_param->opencl_d_plain_bufs)     hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_plain_bufs);
-      if (device_param->opencl_d_digests_buf)    hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_digests_buf);
-      if (device_param->opencl_d_digests_shown)  hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_digests_shown);
-      if (device_param->opencl_d_salt_bufs)      hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_salt_bufs);
-      if (device_param->opencl_d_esalt_bufs)     hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_esalt_bufs);
-      if (device_param->opencl_d_tmps)           hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_tmps);
-      if (device_param->opencl_d_hooks)          hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_hooks);
-      if (device_param->opencl_d_result)         hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_result);
-      if (device_param->opencl_d_extra0_buf)     hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_extra0_buf);
-      if (device_param->opencl_d_extra1_buf)     hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_extra1_buf);
-      if (device_param->opencl_d_extra2_buf)     hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_extra2_buf);
-      if (device_param->opencl_d_extra3_buf)     hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_extra3_buf);
-      if (device_param->opencl_d_root_css_buf)   hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_root_css_buf);
-      if (device_param->opencl_d_markov_css_buf) hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_markov_css_buf);
-      if (device_param->opencl_d_tm_c)           hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_tm_c);
-      if (device_param->opencl_d_st_digests_buf) hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_st_digests_buf);
-      if (device_param->opencl_d_st_salts_buf)   hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_st_salts_buf);
-      if (device_param->opencl_d_st_esalts_buf)  hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_st_esalts_buf);
-      if (device_param->opencl_d_kernel_param)   hc_clReleaseMemObject (hashcat_ctx, device_param->opencl_d_kernel_param);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_amp_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_comp_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_idx);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_rules);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_rules_c);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_combs);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_combs_c);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bfs);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bfs_c);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_a);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_b);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_c);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_d);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_a);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_b);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_c);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_d);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_plain_bufs);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_digests_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_digests_shown);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_salt_bufs);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_esalt_bufs);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_tmps);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_hooks);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_result);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra0_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra1_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra2_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra3_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_root_css_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_markov_css_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_tm_c);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_st_digests_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_st_salts_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_st_esalts_buf);
+      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_kernel_param);
 
-      if (device_param->opencl_kernel1)          hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel1);
-      if (device_param->opencl_kernel12)         hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel12);
-      if (device_param->opencl_kernel2p)         hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel2p);
-      if (device_param->opencl_kernel2)          hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel2);
-      if (device_param->opencl_kernel2e)         hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel2e);
-      if (device_param->opencl_kernel23)         hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel23);
-      if (device_param->opencl_kernel3)          hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel3);
-      if (device_param->opencl_kernel4)          hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel4);
-      if (device_param->opencl_kernel_init2)     hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_init2);
-      if (device_param->opencl_kernel_loop2p)    hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_loop2p);
-      if (device_param->opencl_kernel_loop2)     hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_loop2);
-      if (device_param->opencl_kernel_mp)        hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_mp);
-      if (device_param->opencl_kernel_mp_l)      hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_mp_l);
-      if (device_param->opencl_kernel_mp_r)      hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_mp_r);
-      if (device_param->opencl_kernel_tm)        hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_tm);
-      if (device_param->opencl_kernel_amp)       hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_amp);
-      if (device_param->opencl_kernel_memset)    hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_memset);
-      if (device_param->opencl_kernel_bzero)     hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_bzero);
-      if (device_param->opencl_kernel_atinit)    hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_atinit);
-      if (device_param->opencl_kernel_utf8toutf16le) hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_utf8toutf16le);
-      if (device_param->opencl_kernel_decompress)hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_decompress);
-      if (device_param->opencl_kernel_aux1)      hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_aux1);
-      if (device_param->opencl_kernel_aux2)      hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_aux2);
-      if (device_param->opencl_kernel_aux3)      hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_aux3);
-      if (device_param->opencl_kernel_aux4)      hc_clReleaseKernel (hashcat_ctx, device_param->opencl_kernel_aux4);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel1);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel12);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel2p);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel2);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel2e);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel23);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel3);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel4);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_init2);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_loop2p);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_loop2);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_mp);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_mp_l);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_mp_r);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_tm);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_amp);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_memset);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_bzero);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_atinit);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_utf8toutf16le);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_decompress);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux1);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux2);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux3);
+      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux4);
 
-      if (device_param->opencl_program)          hc_clReleaseProgram (hashcat_ctx, device_param->opencl_program);
-      if (device_param->opencl_program_mp)       hc_clReleaseProgram (hashcat_ctx, device_param->opencl_program_mp);
-      if (device_param->opencl_program_amp)      hc_clReleaseProgram (hashcat_ctx, device_param->opencl_program_amp);
-      if (device_param->opencl_program_shared)   hc_clReleaseProgram (hashcat_ctx, device_param->opencl_program_shared);
+      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program);
+      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program_mp);
+      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program_amp);
+      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program_shared);
 
-      //if (device_param->opencl_command_queue)    hc_clReleaseCommandQueue (hashcat_ctx, device_param->opencl_command_queue);
+      //if (device_param->opencl_command_queue) hc_clReleaseCommandQueue (hashcat_ctx, device_param->opencl_command_queue);
+      //if (device_param->opencl_context)  hc_clReleaseContext (hashcat_ctx, device_param->opencl_context);
 
-      //if (device_param->opencl_context)          hc_clReleaseContext (hashcat_ctx, device_param->opencl_context);
-
-      device_param->opencl_d_pws_buf           = NULL;
-      device_param->opencl_d_pws_amp_buf       = NULL;
-      device_param->opencl_d_pws_comp_buf      = NULL;
-      device_param->opencl_d_pws_idx           = NULL;
-      device_param->opencl_d_rules             = NULL;
-      device_param->opencl_d_rules_c           = NULL;
-      device_param->opencl_d_combs             = NULL;
-      device_param->opencl_d_combs_c           = NULL;
-      device_param->opencl_d_bfs               = NULL;
-      device_param->opencl_d_bfs_c             = NULL;
-      device_param->opencl_d_bitmap_s1_a       = NULL;
-      device_param->opencl_d_bitmap_s1_b       = NULL;
-      device_param->opencl_d_bitmap_s1_c       = NULL;
-      device_param->opencl_d_bitmap_s1_d       = NULL;
-      device_param->opencl_d_bitmap_s2_a       = NULL;
-      device_param->opencl_d_bitmap_s2_b       = NULL;
-      device_param->opencl_d_bitmap_s2_c       = NULL;
-      device_param->opencl_d_bitmap_s2_d       = NULL;
-      device_param->opencl_d_plain_bufs        = NULL;
-      device_param->opencl_d_digests_buf       = NULL;
-      device_param->opencl_d_digests_shown     = NULL;
-      device_param->opencl_d_salt_bufs         = NULL;
-      device_param->opencl_d_esalt_bufs        = NULL;
-      device_param->opencl_d_tmps              = NULL;
-      device_param->opencl_d_hooks             = NULL;
-      device_param->opencl_d_result            = NULL;
-      device_param->opencl_d_extra0_buf        = NULL;
-      device_param->opencl_d_extra1_buf        = NULL;
-      device_param->opencl_d_extra2_buf        = NULL;
-      device_param->opencl_d_extra3_buf        = NULL;
-      device_param->opencl_d_root_css_buf      = NULL;
-      device_param->opencl_d_markov_css_buf    = NULL;
-      device_param->opencl_d_tm_c              = NULL;
-      device_param->opencl_d_st_digests_buf    = NULL;
-      device_param->opencl_d_st_salts_buf      = NULL;
-      device_param->opencl_d_st_esalts_buf     = NULL;
-      device_param->opencl_d_kernel_param      = NULL;
-      device_param->opencl_kernel1             = NULL;
-      device_param->opencl_kernel12            = NULL;
-      device_param->opencl_kernel2p            = NULL;
-      device_param->opencl_kernel2             = NULL;
-      device_param->opencl_kernel2e            = NULL;
-      device_param->opencl_kernel23            = NULL;
-      device_param->opencl_kernel3             = NULL;
-      device_param->opencl_kernel4             = NULL;
-      device_param->opencl_kernel_init2        = NULL;
-      device_param->opencl_kernel_loop2p       = NULL;
-      device_param->opencl_kernel_loop2        = NULL;
-      device_param->opencl_kernel_mp           = NULL;
-      device_param->opencl_kernel_mp_l         = NULL;
-      device_param->opencl_kernel_mp_r         = NULL;
-      device_param->opencl_kernel_tm           = NULL;
-      device_param->opencl_kernel_amp          = NULL;
-      device_param->opencl_kernel_memset       = NULL;
-      device_param->opencl_kernel_bzero        = NULL;
-      device_param->opencl_kernel_atinit       = NULL;
-      device_param->opencl_kernel_utf8toutf16le = NULL;
-      device_param->opencl_kernel_decompress   = NULL;
-      device_param->opencl_kernel_aux1         = NULL;
-      device_param->opencl_kernel_aux2         = NULL;
-      device_param->opencl_kernel_aux3         = NULL;
-      device_param->opencl_kernel_aux4         = NULL;
-      device_param->opencl_program             = NULL;
-      device_param->opencl_program_mp          = NULL;
-      device_param->opencl_program_amp         = NULL;
-      device_param->opencl_program_shared      = NULL;
-      //device_param->opencl_command_queue       = NULL;
-      //device_param->opencl_context             = NULL;
+      //device_param->opencl_command_queue = NULL;
+      //device_param->opencl_context       = NULL;
     }
 
     device_param->h_tmps              = NULL;

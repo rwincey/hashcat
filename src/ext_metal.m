@@ -867,7 +867,7 @@ int hc_mtlCreateBuffer (void *hashcat_ctx, mtl_device_id metal_device, size_t si
   return 0;
 }
 
-int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem metal_buffer)
+int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem *metal_buffer)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
@@ -875,44 +875,46 @@ int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem metal_buffer)
 
   if (mtl == NULL) return -1;
 
-  if (metal_buffer == nil)
-  {
-    event_log_error (hashcat_ctx, "%s(): invalid metal buffer", __func__);
+  if (metal_buffer == NULL || *metal_buffer == nil) return -1;
 
-    return -1;
-  }
+  [*metal_buffer setPurgeableState:MTLPurgeableStateEmpty];
+  [*metal_buffer release];
 
-  [metal_buffer setPurgeableState:MTLPurgeableStateEmpty];
-  [metal_buffer release];
+  *metal_buffer = nil;
 
   return 0;
 }
 
-int hc_mtlReleaseFunction (void *hashcat_ctx, mtl_function metal_function)
+int hc_mtlReleaseFunction (void *hashcat_ctx, mtl_function *metal_function)
 {
-  if (metal_function == nil)
-  {
-    event_log_error (hashcat_ctx, "%s(): invalid metal function", __func__);
+  backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
-    return -1;
-  }
+  MTL_PTR *mtl = (MTL_PTR *) backend_ctx->mtl;
 
-  [metal_function release];
+  if (mtl == NULL) return -1;
+
+  if (metal_function == NULL || *metal_function == nil) return -1;
+
+  [*metal_function release];
+
+  *metal_function = nil;
 
   return 0;
 }
 
-int hc_mtlReleaseLibrary (void *hashcat_ctx, mtl_library metal_library)
+int hc_mtlReleaseLibrary (void *hashcat_ctx, mtl_library *metal_library)
 {
-  if (metal_library == nil)
-  {
-    event_log_error (hashcat_ctx, "%s(): invalid metal library", __func__);
+  backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
-    return -1;
-  }
+  MTL_PTR *mtl = (MTL_PTR *) backend_ctx->mtl;
 
-  [metal_library release];
-  metal_library = nil;
+  if (mtl == NULL) return -1;
+
+  if (metal_library == NULL || *metal_library == nil) return -1;
+
+  [*metal_library release];
+
+  *metal_library = nil;
 
   return 0;
 }
@@ -927,6 +929,7 @@ int hc_mtlReleaseCommandQueue (void *hashcat_ctx, mtl_command_queue command_queu
   }
 
   [command_queue release];
+
   command_queue = nil;
 
   return 0;
@@ -942,6 +945,7 @@ int hc_mtlReleaseDevice (void *hashcat_ctx, mtl_device_id metal_device)
   }
 
   [metal_device release];
+
   metal_device = nil;
 
   return 0;

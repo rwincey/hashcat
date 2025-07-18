@@ -2,7 +2,7 @@
 /**
  * Author......: See docs/credits.txt
  * License.....: MIT
- * 
+ *
  * Based on module m30600
  */
 
@@ -488,7 +488,7 @@ DECLSPEC u32 u16_bin_to_u32_hex (const u32 v)
        | ((v1 < 10) ? '0' + v1 : 'a' - 10 + v1) << 0;
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_init (KERN_ATTR_TMPS_ESALT (bcrypt_tmp_t, hmac_b64_salt_t))
+KERNEL_FQ KERNEL_FA void m30601_init (KERN_ATTR_TMPS_ESALT (bcrypt_tmp_t, hmac_b64_salt_t))
 {
   /**
    * base
@@ -499,7 +499,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_init (KERN_ATTR_TMPS_
   const u64 lsz = get_local_size (0);
 
   CONSTANT_AS u32a *s_bin2base64 = bin2base64;
-  
+
   if (gid >= GID_CNT) return;
 
   u32 pw[64] = { 0 };
@@ -808,7 +808,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_init (KERN_ATTR_TMPS_
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_loop (KERN_ATTR_TMPS (bcrypt_tmp_t))
+KERNEL_FQ KERNEL_FA void m30601_loop (KERN_ATTR_TMPS (bcrypt_tmp_t))
 {
   /**
    * base
@@ -1011,7 +1011,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_loop (KERN_ATTR_TMPS 
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30601_comp (KERN_ATTR_TMPS (bcrypt_tmp_t))
+KERNEL_FQ KERNEL_FA void m30601_comp (KERN_ATTR_TMPS (bcrypt_tmp_t))
 {
   /**
    * base

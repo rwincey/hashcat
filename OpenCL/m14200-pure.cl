@@ -3,7 +3,8 @@
  * License.....: MIT
  */
 
-#define NEW_SIMD_CODE
+// Breaks benchmark in CPU mode -D1
+//#define NEW_SIMD_CODE
 
 #ifdef KERNEL_STATIC
 #include M2S(INCLUDE_PATH/inc_vendor.h)

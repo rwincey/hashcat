@@ -1,9 +1,9 @@
 /**
  * Author......: See docs/credits.txt
  * License.....: MIT
- * 
+ *
  * Based on module m30600
- * 
+ *
  * Implementation following https://passlib.readthedocs.io/en/stable/lib/passlib.hash.bcrypt_sha256.html
  * Example hash:pass from passlib website:
  * $bcrypt-sha256$v=2,t=2b,r=12$n79VH.0Q2TMWmt3Oqt9uku$Kq4Noyk3094Y2QlB8NdRT8SvGiI4ft2:password
@@ -318,6 +318,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

@@ -11036,7 +11036,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     char *build_options_buf = (char *) hcmalloc (build_options_sz);
 
-    int build_options_len = snprintf (build_options_buf, build_options_sz, "-D KERNEL_STATIC ");
+    #if !defined (__APPLE__) && defined (DEBUG) && (DEBUG >= 1)
+    int build_options_len = snprintf(build_options_buf, build_options_sz, "-g -D KERNEL_STATIC ");
+    #else
+    int build_options_len = snprintf(build_options_buf, build_options_sz, "-D KERNEL_STATIC ");
+    #endif
 
     if ((device_param->is_cuda == true) || (device_param->is_hip == true))
     {

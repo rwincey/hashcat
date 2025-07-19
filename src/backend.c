@@ -11051,10 +11051,14 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     char *build_options_buf = (char *) hcmalloc (build_options_sz);
 
-    #if !defined (__APPLE__) && defined (DEBUG) && (DEBUG >= 1)
-    int build_options_len = snprintf(build_options_buf, build_options_sz, "-g -D KERNEL_STATIC ");
-    #else
     int build_options_len = snprintf(build_options_buf, build_options_sz, "-D KERNEL_STATIC ");
+
+    #if defined (DEBUG) && (DEBUG >= 1)
+    // only HIP and OpenCL have '-g'
+    if (device_param->is_hip == true || device_param->is_opencl == true)
+    {
+      build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-g ");
+    }
     #endif
 
     if ((device_param->is_cuda == true) || (device_param->is_hip == true))
@@ -17053,8 +17057,37 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
       hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_amp);
       hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_shared);
 
-      //if (device_param->cuda_context)    hc_cuCtxDestroy (hashcat_ctx, device_param->cuda_context);
-      //device_param->cuda_context         = NULL;
+      device_param->cuda_d_rules_c              = 0;
+      device_param->cuda_d_bfs_c                = 0;
+
+      device_param->cuda_function1              = NULL;
+      device_param->cuda_function12             = NULL;
+      device_param->cuda_function2p             = NULL;
+      device_param->cuda_function2              = NULL;
+      device_param->cuda_function2e             = NULL;
+      device_param->cuda_function23             = NULL;
+      device_param->cuda_function3              = NULL;
+      device_param->cuda_function4              = NULL;
+      device_param->cuda_function_init2         = NULL;
+      device_param->cuda_function_loop2p        = NULL;
+      device_param->cuda_function_loop2         = NULL;
+      device_param->cuda_function_mp            = NULL;
+      device_param->cuda_function_mp_l          = NULL;
+      device_param->cuda_function_mp_r          = NULL;
+      device_param->cuda_function_tm            = NULL;
+      device_param->cuda_function_amp           = NULL;
+      device_param->cuda_function_memset        = NULL;
+      device_param->cuda_function_bzero         = NULL;
+      device_param->cuda_function_atinit        = NULL;
+      device_param->cuda_function_utf8toutf16le = NULL;
+      device_param->cuda_function_decompress    = NULL;
+      device_param->cuda_function_aux1          = NULL;
+      device_param->cuda_function_aux2          = NULL;
+      device_param->cuda_function_aux3          = NULL;
+      device_param->cuda_function_aux4          = NULL;
+
+      //if (device_param->cuda_context)         hc_cuCtxDestroy (hashcat_ctx, device_param->cuda_context);
+      //device_param->cuda_context              = NULL;
     }
 
     if (device_param->is_hip == true)
@@ -17107,6 +17140,35 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
       hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_mp);
       hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_amp);
       hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_shared);
+
+      device_param->hip_d_rules_c              = 0;
+      device_param->hip_d_bfs_c                = 0;
+
+      device_param->hip_function1              = NULL;
+      device_param->hip_function12             = NULL;
+      device_param->hip_function2p             = NULL;
+      device_param->hip_function2              = NULL;
+      device_param->hip_function2e             = NULL;
+      device_param->hip_function23             = NULL;
+      device_param->hip_function3              = NULL;
+      device_param->hip_function4              = NULL;
+      device_param->hip_function_init2         = NULL;
+      device_param->hip_function_loop2p        = NULL;
+      device_param->hip_function_loop2         = NULL;
+      device_param->hip_function_mp            = NULL;
+      device_param->hip_function_mp_l          = NULL;
+      device_param->hip_function_mp_r          = NULL;
+      device_param->hip_function_tm            = NULL;
+      device_param->hip_function_amp           = NULL;
+      device_param->hip_function_memset        = NULL;
+      device_param->hip_function_bzero         = NULL;
+      device_param->hip_function_atinit        = NULL;
+      device_param->hip_function_utf8toutf16le = NULL;
+      device_param->hip_function_decompress    = NULL;
+      device_param->hip_function_aux1          = NULL;
+      device_param->hip_function_aux2          = NULL;
+      device_param->hip_function_aux3          = NULL;
+      device_param->hip_function_aux4          = NULL;
     }
 
     #if defined (__APPLE__)

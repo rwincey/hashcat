@@ -795,7 +795,7 @@ int hc_hipMemFree (void *hashcat_ctx, hipDeviceptr_t *dptr)
 
   const hipError_t HIP_err = hip->hipMemFree (*dptr);
 
-  *dptr = NULL;
+  *dptr = 0;
 
   if (HIP_err != hipSuccess)
   {

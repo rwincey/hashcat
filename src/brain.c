@@ -209,9 +209,9 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
 
     XXH64_update (state, &hex_wordlist, sizeof (hex_wordlist));
 
-    const int wordlist_autohex_disable = user_options->wordlist_autohex_disable;
+    const int wordlist_autohex = user_options->wordlist_autohex;
 
-    XXH64_update (state, &wordlist_autohex_disable, sizeof (wordlist_autohex_disable));
+    XXH64_update (state, &wordlist_autohex, sizeof (wordlist_autohex));
 
     if (user_options->encoding_from)
     {
@@ -259,9 +259,9 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
 
     XXH64_update (state, &hex_wordlist, sizeof (hex_wordlist));
 
-    const int wordlist_autohex_disable = user_options->wordlist_autohex_disable;
+    const int wordlist_autohex = user_options->wordlist_autohex;
 
-    XXH64_update (state, &wordlist_autohex_disable, sizeof (wordlist_autohex_disable));
+    XXH64_update (state, &wordlist_autohex, sizeof (wordlist_autohex));
 
     if (user_options->encoding_from)
     {
@@ -302,12 +302,12 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
     XXH64_update (state, &hex_charset, sizeof (hex_charset));
 
     const int markov_classic   = user_options->markov_classic;
-    const int markov_disable   = user_options->markov_disable;
+    const int markov           = user_options->markov;
     const int markov_inverse   = user_options->markov_inverse;
     const int markov_threshold = user_options->markov_threshold;
 
     XXH64_update (state, &markov_classic,   sizeof (markov_classic));
-    XXH64_update (state, &markov_disable,   sizeof (markov_disable));
+    XXH64_update (state, &markov,           sizeof (markov));
     XXH64_update (state, &markov_inverse,   sizeof (markov_inverse));
     XXH64_update (state, &markov_threshold, sizeof (markov_threshold));
 
@@ -344,6 +344,34 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
       const char *custom_charset_4 = user_options->custom_charset_4;
 
       XXH64_update (state, custom_charset_4, strlen (custom_charset_4));
+    }
+
+    if (user_options->custom_charset_5)
+    {
+      const char *custom_charset_5 = user_options->custom_charset_5;
+
+      XXH64_update (state, custom_charset_5, strlen (custom_charset_5));
+    }
+
+    if (user_options->custom_charset_6)
+    {
+      const char *custom_charset_6 = user_options->custom_charset_6;
+
+      XXH64_update (state, custom_charset_6, strlen (custom_charset_6));
+    }
+
+    if (user_options->custom_charset_7)
+    {
+      const char *custom_charset_7 = user_options->custom_charset_7;
+
+      XXH64_update (state, custom_charset_7, strlen (custom_charset_7));
+    }
+
+    if (user_options->custom_charset_8)
+    {
+      const char *custom_charset_8 = user_options->custom_charset_8;
+
+      XXH64_update (state, custom_charset_8, strlen (custom_charset_8));
     }
   }
   else if (user_options->attack_mode == ATTACK_MODE_HYBRID1)
@@ -361,12 +389,12 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
     XXH64_update (state, &hex_charset, sizeof (hex_charset));
 
     const int markov_classic   = user_options->markov_classic;
-    const int markov_disable   = user_options->markov_disable;
+    const int markov           = user_options->markov;
     const int markov_inverse   = user_options->markov_inverse;
     const int markov_threshold = user_options->markov_threshold;
 
     XXH64_update (state, &markov_classic,   sizeof (markov_classic));
-    XXH64_update (state, &markov_disable,   sizeof (markov_disable));
+    XXH64_update (state, &markov,           sizeof (markov));
     XXH64_update (state, &markov_inverse,   sizeof (markov_inverse));
     XXH64_update (state, &markov_threshold, sizeof (markov_threshold));
 
@@ -405,13 +433,41 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
       XXH64_update (state, custom_charset_4, strlen (custom_charset_4));
     }
 
+    if (user_options->custom_charset_5)
+    {
+      const char *custom_charset_5 = user_options->custom_charset_5;
+
+      XXH64_update (state, custom_charset_5, strlen (custom_charset_5));
+    }
+
+    if (user_options->custom_charset_6)
+    {
+      const char *custom_charset_6 = user_options->custom_charset_6;
+
+      XXH64_update (state, custom_charset_6, strlen (custom_charset_6));
+    }
+
+    if (user_options->custom_charset_7)
+    {
+      const char *custom_charset_7 = user_options->custom_charset_7;
+
+      XXH64_update (state, custom_charset_7, strlen (custom_charset_7));
+    }
+
+    if (user_options->custom_charset_8)
+    {
+      const char *custom_charset_8 = user_options->custom_charset_8;
+
+      XXH64_update (state, custom_charset_8, strlen (custom_charset_8));
+    }
+
     const int hex_wordlist = user_options->hex_wordlist;
 
     XXH64_update (state, &hex_wordlist, sizeof (hex_wordlist));
 
-    const int wordlist_autohex_disable = user_options->wordlist_autohex_disable;
+    const int wordlist_autohex = user_options->wordlist_autohex;
 
-    XXH64_update (state, &wordlist_autohex_disable, sizeof (wordlist_autohex_disable));
+    XXH64_update (state, &wordlist_autohex, sizeof (wordlist_autohex));
 
     if (user_options->encoding_from)
     {
@@ -456,12 +512,12 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
     XXH64_update (state, &hex_charset, sizeof (hex_charset));
 
     const int markov_classic   = user_options->markov_classic;
-    const int markov_disable   = user_options->markov_disable;
+    const int markov           = user_options->markov;
     const int markov_inverse   = user_options->markov_inverse;
     const int markov_threshold = user_options->markov_threshold;
 
     XXH64_update (state, &markov_classic,   sizeof (markov_classic));
-    XXH64_update (state, &markov_disable,   sizeof (markov_disable));
+    XXH64_update (state, &markov,           sizeof (markov));
     XXH64_update (state, &markov_inverse,   sizeof (markov_inverse));
     XXH64_update (state, &markov_threshold, sizeof (markov_threshold));
 
@@ -504,9 +560,9 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
 
     XXH64_update (state, &hex_wordlist, sizeof (hex_wordlist));
 
-    const int wordlist_autohex_disable = user_options->wordlist_autohex_disable;
+    const int wordlist_autohex = user_options->wordlist_autohex;
 
-    XXH64_update (state, &wordlist_autohex_disable, sizeof (wordlist_autohex_disable));
+    XXH64_update (state, &wordlist_autohex, sizeof (wordlist_autohex));
 
     if (user_options->encoding_from)
     {
@@ -549,9 +605,9 @@ u32 brain_compute_attack (hashcat_ctx_t *hashcat_ctx)
 
     XXH64_update (state, &hex_wordlist, sizeof (hex_wordlist));
 
-    const int wordlist_autohex_disable = user_options->wordlist_autohex_disable;
+    const int wordlist_autohex = user_options->wordlist_autohex;
 
-    XXH64_update (state, &wordlist_autohex_disable, sizeof (wordlist_autohex_disable));
+    XXH64_update (state, &wordlist_autohex, sizeof (wordlist_autohex));
 
     if (user_options->encoding_from)
     {
@@ -3052,6 +3108,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   {
     brain_logging (stderr, 0, "setsockopt: %s\n", strerror (errno));
 
+    close(server_fd);
+
     if (brain_password == NULL) hcfree (auth_password);
 
     return -1;
@@ -3060,6 +3118,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   if (setsockopt (server_fd, SOL_TCP, TCP_NODELAY, &one, sizeof (one)) == -1)
   {
     brain_logging (stderr, 0, "setsockopt: %s\n", strerror (errno));
+
+    close(server_fd);
 
     if (brain_password == NULL) hcfree (auth_password);
 
@@ -3104,6 +3164,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
     {
       brain_logging (stderr, 0, "%s: %s\n", listen_host, gai_strerror (rc_getaddrinfo));
 
+      close(server_fd);
+
       if (brain_password == NULL) hcfree (auth_password);
 
       return -1;
@@ -3114,6 +3176,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   {
     brain_logging (stderr, 0, "bind: %s\n", strerror (errno));
 
+    close(server_fd);
+
     if (brain_password == NULL) hcfree (auth_password);
 
     return -1;
@@ -3122,6 +3186,8 @@ int brain_server (const char *listen_host, const int listen_port, const char *br
   if (listen (server_fd, 5) == -1)
   {
     brain_logging (stderr, 0, "listen: %s\n", strerror (errno));
+
+    close(server_fd);
 
     if (brain_password == NULL) hcfree (auth_password);
 

@@ -81,7 +81,7 @@ u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED con
 
   u32 pw_max = PW_MAX - 4;
 
-  if (user_options->optimized_kernel_enable == true && hashconfig->has_optimized_kernel == true)
+  if (user_options->optimized_kernel == true && hashconfig->has_optimized_kernel == true)
   {
     pw_max = PW_MAX_OLD - 4;
   }
@@ -363,6 +363,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

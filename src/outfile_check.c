@@ -77,7 +77,7 @@ static int outfile_remove (hashcat_ctx_t *hashcat_ctx)
 
   int out_cnt = 0;
 
-  u32 check_left = outfile_check_timer; // or 1 if we want to check it at startup
+  u32 check_left = 1; // or outfile_check_timer if we want to check it after the --outfile-check-timer delay
 
   while (status_ctx->shutdown_inner == false)
   {
@@ -343,13 +343,13 @@ int outcheck_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
   outcheck_ctx->enabled = false;
 
+  if (user_options->backend_info   > 0)    return 0;
+  if (user_options->hash_info      > 0)    return 0;
   if (user_options->keyspace      == true) return 0;
   if (user_options->benchmark     == true) return 0;
-  if (user_options->hash_info     == true) return 0;
   if (user_options->speed_only    == true) return 0;
   if (user_options->progress_only == true) return 0;
   if (user_options->identify      == true) return 0;
-  if (user_options->backend_info   > 0)    return 0;
 
   if (hashconfig->outfile_check_disable == true) return 0;
   if (user_options->outfile_check_timer == 0)    return 0;

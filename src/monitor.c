@@ -42,6 +42,7 @@ int get_runtime_left (const hashcat_ctx_t *hashcat_ctx)
 
 static int monitor (hashcat_ctx_t *hashcat_ctx)
 {
+  bridge_ctx_t   *bridge_ctx    = hashcat_ctx->bridge_ctx;
   hashes_t       *hashes        = hashcat_ctx->hashes;
   hwmon_ctx_t    *hwmon_ctx     = hashcat_ctx->hwmon_ctx;
   backend_ctx_t  *backend_ctx   = hashcat_ctx->backend_ctx;
@@ -55,9 +56,10 @@ static int monitor (hashcat_ctx_t *hashcat_ctx)
   bool restore_check      = false;
   bool hwmon_check        = false;
   bool performance_check  = false;
+  bool performance_warned = false;
 
   const int    sleep_time = 1;
-  const double exec_low   = 50.0;  // in ms
+  const double exec_low   = 25.0;  // in ms
   const double util_low   = 90.0;  // in percent
 
   if (user_options->runtime)
@@ -87,7 +89,10 @@ static int monitor (hashcat_ctx_t *hashcat_ctx)
 
   if (hwmon_ctx->enabled == true)
   {
-    performance_check = true; // this check simply requires hwmon to work
+    if (bridge_ctx->enabled == false)
+    {
+      performance_check = true; // this check simply requires hwmon to work
+    }
   }
 
   if ((runtime_check == false) && (remove_check == false) && (status_check == false) && (restore_check == false) && (hwmon_check == false) && (performance_check == false))
@@ -245,7 +250,7 @@ static int monitor (hashcat_ctx_t *hashcat_ctx)
       }
     }
 
-    if (performance_check == true)
+    if (performance_check == true && status_ctx->devices_status == STATUS_RUNNING && performance_warned == false)
     {
       int exec_cnt = 0;
       int util_cnt = 0;
@@ -285,18 +290,22 @@ static int monitor (hashcat_ctx_t *hashcat_ctx)
       if (exec_cnt > 0) exec_avg = exec_total / exec_cnt;
       if (util_cnt > 0) util_avg = util_total / util_cnt;
 
-      if ((exec_avg > 0) && (exec_avg < exec_low))
+      if (((exec_avg > 0) && (exec_avg < exec_low)) || ((util_avg > 0) && (util_avg < util_low)))
       {
         performance_warnings++;
-
-        if (performance_warnings == 10) EVENT_DATA (EVENT_MONITOR_PERFORMANCE_HINT, NULL, 0);
+      }
+      else
+      {
+        if (performance_warnings > 0)
+        {
+          performance_warnings--;
+        }
       }
 
-      if ((util_avg > 0) && (util_avg < util_low))
+      if (performance_warnings == 10)
       {
-        performance_warnings++;
-
-        if (performance_warnings == 10) EVENT_DATA (EVENT_MONITOR_PERFORMANCE_HINT, NULL, 0);
+        performance_warned = true;
+        EVENT_DATA (EVENT_MONITOR_PERFORMANCE_HINT, NULL, 0);
       }
     }
 

@@ -6,14 +6,6 @@
 #ifndef INC_RP_COMMON_H
 #define INC_RP_COMMON_H
 
-#ifndef DECLSPEC
-#define DECLSPEC
-#endif
-
-#ifndef MAYBE_UNUSED
-#define MAYBE_UNUSED
-#endif
-
 #ifdef IS_METAL
 #define HC_INLINE_RP __attribute__ ((noinline))
 #else
@@ -87,14 +79,5 @@
 #define RULE_OP_REJECT_CONTAINS_CLASS    0x09
 
 #define RP_PASSWORD_SIZE 256
-
-DECLSPEC bool is_l (u8 c);
-DECLSPEC bool is_u (u8 c);
-DECLSPEC bool is_d (u8 c);
-DECLSPEC bool is_lh (u8 c);
-DECLSPEC bool is_uh (u8 c);
-DECLSPEC bool is_s (u8 c);
-
-DECLSPEC u32  generate_cmask (const u32 value);
 
 #endif // INC_RP_COMMON_H

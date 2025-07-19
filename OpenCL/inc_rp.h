@@ -8,7 +8,6 @@
 
 #include "inc_rp_common.h"
 
-DECLSPEC u32 generate_cmask (const u32 value);
 DECLSPEC void append_four_byte (PRIVATE_AS const u32 *buf_src, const int off_src, PRIVATE_AS u32 *buf_dst, const int off_dst);
 DECLSPEC void append_three_byte (PRIVATE_AS const u32 *buf_src, const int off_src, PRIVATE_AS u32 *buf_dst, const int off_dst);
 DECLSPEC void append_two_byte (PRIVATE_AS const u32 *buf_src, const int off_src, PRIVATE_AS u32 *buf_dst, const int off_dst);

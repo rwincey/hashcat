@@ -7,8 +7,9 @@
 #include "inc_types.h"
 #include "inc_platform.h"
 #include "inc_common.h"
-#include "inc_rp_common.h"
+
 #include "inc_rp_optimized.h"
+#include "inc_rp_common.cl"
 
 #ifndef MAYBE_UNUSED
 #define MAYBE_UNUSED

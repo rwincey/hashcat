@@ -9,7 +9,12 @@
 #include "inc_common.h"
 #include "inc_rp_common.h"
 
-CONSTANT_VK u8 s_lookup[128] =
+#ifdef HC_CPU_OPENCL_EMU_H
+#undef DECLSPEC
+#define DECLSPEC static
+#endif
+
+CONSTANT_VK static u8 s_lookup[128] =
 {
   // 0-31: control characters (0)
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -34,37 +39,37 @@ CONSTANT_VK u8 s_lookup[128] =
   0
 };
 
-DECLSPEC bool is_l (u8 c)
+DECLSPEC MAYBE_UNUSED bool is_l (u8 c)
 {
   return (c >= 'a' && c <= 'z');
 }
 
-DECLSPEC bool is_u (u8 c)
+DECLSPEC MAYBE_UNUSED bool is_u (u8 c)
 {
   return (c >= 'A' && c <= 'Z');
 }
 
-DECLSPEC bool is_d (u8 c)
+DECLSPEC MAYBE_UNUSED bool is_d (u8 c)
 {
   return (c >= '0' && c <= '9');
 }
 
-DECLSPEC bool is_lh (u8 c)
+DECLSPEC MAYBE_UNUSED bool is_lh (u8 c)
 {
   return (is_d (c) || (c >= 'a' && c <= 'f'));
 }
 
-DECLSPEC bool is_uh (u8 c)
+DECLSPEC MAYBE_UNUSED bool is_uh (u8 c)
 {
   return (is_d (c) || (c >= 'A' && c <= 'F'));
 }
 
-DECLSPEC bool is_s (u8 c)
+DECLSPEC MAYBE_UNUSED bool is_s (u8 c)
 {
   return s_lookup[c] == 1;
 }
 
-DECLSPEC u32 generate_cmask (const u32 value)
+DECLSPEC MAYBE_UNUSED u32 generate_cmask (const u32 value)
 {
   const u32 rmask =  ((value & 0x40404040u) >> 1u)
                   & ~((value & 0x80808080u) >> 2u);
@@ -74,3 +79,8 @@ DECLSPEC u32 generate_cmask (const u32 value)
 
   return rmask & ~hmask & lmask;
 }
+
+#ifdef HC_CPU_OPENCL_EMU_H
+#undef DECLSPEC
+#define DECLSPEC
+#endif

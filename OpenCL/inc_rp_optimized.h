@@ -8,7 +8,6 @@
 
 #include "inc_rp_common.h"
 
-DECLSPEC u32 generate_cmask_optimized (const u32 value);
 DECLSPEC void truncate_right_optimized (PRIVATE_AS u32 *buf0, PRIVATE_AS u32 *buf1, const u32 offset);
 DECLSPEC void truncate_left_optimized (PRIVATE_AS u32 *buf0, PRIVATE_AS u32 *buf1, const u32 offset);
 DECLSPEC void lshift_block_optimized (PRIVATE_AS const u32 *in0, PRIVATE_AS const u32 *in1, PRIVATE_AS u32 *out0, PRIVATE_AS u32 *out1);

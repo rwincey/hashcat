@@ -94,7 +94,6 @@ cpanm Authen::Passphrase::LANManager   \
       Net::DNS::RR::NSEC3              \
       Net::DNS::SEC                    \
       POSIX                            \
-      Text::Iconv                      \
       ;
 
 ERRORS=$((ERRORS+$?))

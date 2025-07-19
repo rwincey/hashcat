@@ -999,14 +999,14 @@ int hc_mtlMemcpyDtoD (void *hashcat_ctx, mtl_command_queue command_queue, mtl_me
 
   if (buf_src_off + buf_size > [buf_src length])
   {
-    event_log_error(hashcat_ctx, "%s(): src buffer offset + size out of bounds", __func__);
+    event_log_error (hashcat_ctx, "%s(): src buffer offset + size out of bounds", __func__);
 
     return -1;
   }
 
   if (buf_dst_off + buf_size > [buf_dst length])
   {
-    event_log_error(hashcat_ctx, "%s(): dst buffer offset + size out of bounds", __func__);
+    event_log_error (hashcat_ctx, "%s(): dst buffer offset + size out of bounds", __func__);
 
     return -1;
   }
@@ -1085,7 +1085,7 @@ int hc_mtlMemcpyHtoD (void *hashcat_ctx, mtl_command_queue command_queue, mtl_me
 
   if (buf_dst_off + buf_size > [buf_dst length])
   {
-    event_log_error(hashcat_ctx, "%s(): buffer offset + size out of bounds", __func__);
+    event_log_error (hashcat_ctx, "%s(): buffer offset + size out of bounds", __func__);
 
     return -1;
   }

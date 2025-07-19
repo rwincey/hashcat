@@ -774,12 +774,12 @@ static bool opencl_test_instruction (hashcat_ctx_t *hashcat_ctx, cl_context cont
 
     #endif
 
-    hc_clReleaseProgram (hashcat_ctx, &program);
+    hc_clReleaseProgramPtr (hashcat_ctx, &program);
 
     return false;
   }
 
-  if (hc_clReleaseProgram (hashcat_ctx, &program) == -1) return false;
+  if (hc_clReleaseProgramPtr (hashcat_ctx, &program) == -1) return false;
 
   return true;
 }
@@ -9011,7 +9011,7 @@ int backend_ctx_devices_init (hashcat_ctx_t *hashcat_ctx, const int comptime)
 
               if (tmp_device[c] != NULL)
               {
-                if (hc_clReleaseMemObject (hashcat_ctx, &tmp_device[c]) == -1) r = -1;
+                if (hc_clReleaseMemObjectPtr (hashcat_ctx, &tmp_device[c]) == -1) r = -1;
               }
             }
 
@@ -9988,7 +9988,7 @@ static bool load_kernel (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_p
 
         *opencl_program = fin;
 
-        hc_clReleaseProgram (hashcat_ctx, &p1);
+        hc_clReleaseProgramPtr (hashcat_ctx, &p1);
       }
 
       if (cache_disable == false)
@@ -17008,54 +17008,54 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_cuda == true)
     {
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_amp_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_comp_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_pws_idx);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_rules);
-    //hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_rules_c);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_combs);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_combs_c);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bfs);
-    //hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bfs_c);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_a);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_b);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_c);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_d);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_a);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_b);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_c);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_d);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_plain_bufs);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_digests_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_digests_shown);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_salt_bufs);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_esalt_bufs);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_tmps);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_hooks);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_result);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra0_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra1_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra2_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_extra3_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_root_css_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_markov_css_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_tm_c);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_st_digests_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_st_salts_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_st_esalts_buf);
-      hc_cuMemFree           (hashcat_ctx, &device_param->cuda_d_kernel_param);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_pws_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_pws_amp_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_pws_comp_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_pws_idx);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_rules);
+    //hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_rules_c);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_combs);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_combs_c);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bfs);
+    //hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bfs_c);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_a);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_b);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_c);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s1_d);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_a);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_b);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_c);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_bitmap_s2_d);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_plain_bufs);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_digests_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_digests_shown);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_salt_bufs);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_esalt_bufs);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_tmps);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_hooks);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_result);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_extra0_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_extra1_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_extra2_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_extra3_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_root_css_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_markov_css_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_tm_c);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_st_digests_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_st_salts_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_st_esalts_buf);
+      hc_cuMemFreePtr           (hashcat_ctx, &device_param->cuda_d_kernel_param);
 
-      hc_cuEventDestroy      (hashcat_ctx, &device_param->cuda_event1);
-      hc_cuEventDestroy      (hashcat_ctx, &device_param->cuda_event2);
-      hc_cuEventDestroy      (hashcat_ctx, &device_param->cuda_event3);
+      hc_cuEventDestroyPtr      (hashcat_ctx, &device_param->cuda_event1);
+      hc_cuEventDestroyPtr      (hashcat_ctx, &device_param->cuda_event2);
+      hc_cuEventDestroyPtr      (hashcat_ctx, &device_param->cuda_event3);
 
-      hc_cuStreamDestroy     (hashcat_ctx, &device_param->cuda_stream);
+      hc_cuStreamDestroyPtr     (hashcat_ctx, &device_param->cuda_stream);
 
-      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module);
-      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_mp);
-      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_amp);
-      hc_cuModuleUnload      (hashcat_ctx, &device_param->cuda_module_shared);
+      hc_cuModuleUnloadPtr      (hashcat_ctx, &device_param->cuda_module);
+      hc_cuModuleUnloadPtr      (hashcat_ctx, &device_param->cuda_module_mp);
+      hc_cuModuleUnloadPtr      (hashcat_ctx, &device_param->cuda_module_amp);
+      hc_cuModuleUnloadPtr      (hashcat_ctx, &device_param->cuda_module_shared);
 
       device_param->cuda_d_rules_c              = 0;
       device_param->cuda_d_bfs_c                = 0;
@@ -17092,54 +17092,54 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_hip == true)
     {
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_amp_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_comp_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_pws_idx);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_rules);
-    //hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_rules_c);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_combs);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_combs_c);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bfs);
-    //hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bfs_c);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_a);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_b);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_c);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s1_d);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_a);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_b);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_c);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_bitmap_s2_d);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_plain_bufs);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_digests_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_digests_shown);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_salt_bufs);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_esalt_bufs);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_tmps);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_hooks);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_result);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra0_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra1_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra2_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_extra3_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_root_css_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_markov_css_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_tm_c);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_st_digests_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_st_salts_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_st_esalts_buf);
-      hc_hipMemFree          (hashcat_ctx, &device_param->hip_d_kernel_param);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_pws_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_pws_amp_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_pws_comp_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_pws_idx);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_rules);
+    //hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_rules_c);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_combs);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_combs_c);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bfs);
+    //hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bfs_c);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s1_a);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s1_b);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s1_c);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s1_d);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s2_a);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s2_b);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s2_c);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_bitmap_s2_d);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_plain_bufs);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_digests_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_digests_shown);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_salt_bufs);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_esalt_bufs);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_tmps);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_hooks);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_result);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_extra0_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_extra1_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_extra2_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_extra3_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_root_css_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_markov_css_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_tm_c);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_st_digests_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_st_salts_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_st_esalts_buf);
+      hc_hipMemFreePtr          (hashcat_ctx, &device_param->hip_d_kernel_param);
 
-      hc_hipEventDestroy     (hashcat_ctx, &device_param->hip_event1);
-      hc_hipEventDestroy     (hashcat_ctx, &device_param->hip_event2);
-      hc_hipEventDestroy     (hashcat_ctx, &device_param->hip_event3);
+      hc_hipEventDestroyPtr     (hashcat_ctx, &device_param->hip_event1);
+      hc_hipEventDestroyPtr     (hashcat_ctx, &device_param->hip_event2);
+      hc_hipEventDestroyPtr     (hashcat_ctx, &device_param->hip_event3);
 
-      hc_hipStreamDestroy    (hashcat_ctx, &device_param->hip_stream);
+      hc_hipStreamDestroyPtr    (hashcat_ctx, &device_param->hip_stream);
 
-      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module);
-      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_mp);
-      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_amp);
-      hc_hipModuleUnload     (hashcat_ctx, &device_param->hip_module_shared);
+      hc_hipModuleUnloadPtr     (hashcat_ctx, &device_param->hip_module);
+      hc_hipModuleUnloadPtr     (hashcat_ctx, &device_param->hip_module_mp);
+      hc_hipModuleUnloadPtr     (hashcat_ctx, &device_param->hip_module_amp);
+      hc_hipModuleUnloadPtr     (hashcat_ctx, &device_param->hip_module_shared);
 
       device_param->hip_d_rules_c              = 0;
       device_param->hip_d_bfs_c                = 0;
@@ -17253,74 +17253,74 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_opencl == true)
     {
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_amp_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_comp_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_pws_idx);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_rules);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_rules_c);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_combs);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_combs_c);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bfs);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bfs_c);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_a);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_b);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_c);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_d);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_a);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_b);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_c);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_d);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_plain_bufs);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_digests_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_digests_shown);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_salt_bufs);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_esalt_bufs);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_tmps);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_hooks);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_result);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra0_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra1_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra2_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_extra3_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_root_css_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_markov_css_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_tm_c);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_st_digests_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_st_salts_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_st_esalts_buf);
-      hc_clReleaseMemObject  (hashcat_ctx, &device_param->opencl_d_kernel_param);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_pws_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_pws_amp_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_pws_comp_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_pws_idx);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_rules);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_rules_c);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_combs);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_combs_c);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bfs);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bfs_c);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_a);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_b);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_c);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s1_d);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_a);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_b);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_c);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_bitmap_s2_d);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_plain_bufs);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_digests_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_digests_shown);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_salt_bufs);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_esalt_bufs);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_tmps);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_hooks);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_result);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_extra0_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_extra1_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_extra2_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_extra3_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_root_css_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_markov_css_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_tm_c);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_st_digests_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_st_salts_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_st_esalts_buf);
+      hc_clReleaseMemObjectPtr  (hashcat_ctx, &device_param->opencl_d_kernel_param);
 
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel1);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel12);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel2p);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel2);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel2e);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel23);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel3);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel4);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_init2);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_loop2p);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_loop2);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_mp);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_mp_l);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_mp_r);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_tm);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_amp);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_memset);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_bzero);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_atinit);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_utf8toutf16le);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_decompress);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux1);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux2);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux3);
-      hc_clReleaseKernel     (hashcat_ctx, &device_param->opencl_kernel_aux4);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel1);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel12);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel2p);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel2);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel2e);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel23);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel3);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel4);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_init2);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_loop2p);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_loop2);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_mp);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_mp_l);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_mp_r);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_tm);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_amp);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_memset);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_bzero);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_atinit);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_utf8toutf16le);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_decompress);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_aux1);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_aux2);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_aux3);
+      hc_clReleaseKernelPtr     (hashcat_ctx, &device_param->opencl_kernel_aux4);
 
-      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program);
-      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program_mp);
-      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program_amp);
-      hc_clReleaseProgram    (hashcat_ctx, &device_param->opencl_program_shared);
+      hc_clReleaseProgramPtr    (hashcat_ctx, &device_param->opencl_program);
+      hc_clReleaseProgramPtr    (hashcat_ctx, &device_param->opencl_program_mp);
+      hc_clReleaseProgramPtr    (hashcat_ctx, &device_param->opencl_program_amp);
+      hc_clReleaseProgramPtr    (hashcat_ctx, &device_param->opencl_program_shared);
 
       //if (device_param->opencl_command_queue) hc_clReleaseCommandQueue (hashcat_ctx, device_param->opencl_command_queue);
       //if (device_param->opencl_context)  hc_clReleaseContext (hashcat_ctx, device_param->opencl_context);

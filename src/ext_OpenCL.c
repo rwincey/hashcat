@@ -249,6 +249,45 @@ void ocl_close (void *hashcat_ctx)
   }
 }
 
+int hc_clReleaseMemObjectPtr (void *hashcat_ctx, cl_mem *mem)
+{
+  int rc = -1;
+
+  if (mem == NULL || *mem == NULL) return rc;
+
+  rc = hc_clReleaseMemObject (hashcat_ctx, *mem);
+
+  *mem = NULL;
+
+  return rc;
+}
+
+int hc_clReleaseKernelPtr (void *hashcat_ctx, cl_kernel *kernel)
+{
+  int rc = -1;
+
+  if (kernel == NULL || *kernel == NULL) return rc;
+
+  rc = hc_clReleaseKernel (hashcat_ctx, *kernel);
+
+  *kernel = NULL;
+
+  return rc;
+}
+
+int hc_clReleaseProgramPtr (void *hashcat_ctx, cl_program *program)
+{
+  int rc = -1;
+
+  if (program == NULL || *program == NULL) return rc;
+
+  rc = hc_clReleaseProgram (hashcat_ctx, *program);
+
+  *program = NULL;
+
+  return rc;
+}
+
 int hc_clEnqueueNDRangeKernel (void *hashcat_ctx, cl_command_queue command_queue, cl_kernel kernel, cl_uint work_dim, const size_t *global_work_offset, const size_t *global_work_size, const size_t *local_work_size, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
@@ -663,17 +702,13 @@ int hc_clCreateKernel (void *hashcat_ctx, cl_program program, const char *kernel
   return 0;
 }
 
-int hc_clReleaseMemObject (void *hashcat_ctx, cl_mem *mem)
+int hc_clReleaseMemObject (void *hashcat_ctx, cl_mem mem)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   OCL_PTR *ocl = (OCL_PTR *) backend_ctx->ocl;
 
-  if (mem == NULL || *mem == NULL) return -1;
-
-  const cl_int CL_err = ocl->clReleaseMemObject (*mem);
-
-  *mem = NULL;
+  const cl_int CL_err = ocl->clReleaseMemObject (mem);
 
   if (CL_err != CL_SUCCESS)
   {
@@ -685,17 +720,13 @@ int hc_clReleaseMemObject (void *hashcat_ctx, cl_mem *mem)
   return 0;
 }
 
-int hc_clReleaseKernel (void *hashcat_ctx, cl_kernel *kernel)
+int hc_clReleaseKernel (void *hashcat_ctx, cl_kernel kernel)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   OCL_PTR *ocl = (OCL_PTR *) backend_ctx->ocl;
 
-  if (kernel == NULL || *kernel == NULL) return -1;
-
-  const cl_int CL_err = ocl->clReleaseKernel (*kernel);
-
-  *kernel = NULL;
+  const cl_int CL_err = ocl->clReleaseKernel (kernel);
 
   if (CL_err != CL_SUCCESS)
   {
@@ -707,17 +738,13 @@ int hc_clReleaseKernel (void *hashcat_ctx, cl_kernel *kernel)
   return 0;
 }
 
-int hc_clReleaseProgram (void *hashcat_ctx, cl_program *program)
+int hc_clReleaseProgram (void *hashcat_ctx, cl_program program)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   OCL_PTR *ocl = (OCL_PTR *) backend_ctx->ocl;
 
-  if (program == NULL || *program == NULL) return -1;
-
-  const cl_int CL_err = ocl->clReleaseProgram (*program);
-
-  *program = NULL;
+  const cl_int CL_err = ocl->clReleaseProgram (program);
 
   if (CL_err != CL_SUCCESS)
   {

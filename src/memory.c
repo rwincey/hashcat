@@ -47,8 +47,6 @@ void *hcrealloc (void *ptr, const size_t oldsz, const size_t addsz)
 
 char *hcstrdup (const char *s)
 {
-  if (s == NULL) return (NULL);
-
   const size_t len = strlen (s);
 
   char *b = (char *) hcmalloc (len + 1);

@@ -1260,6 +1260,11 @@ typedef hc_cuda_lib_t CUDA_PTR;
 int  cuda_init                 (void *hashcat_ctx);
 void cuda_close                (void *hashcat_ctx);
 
+int hc_cuEventDestroyPtr       (void *hashcat_ctx, CUevent *hEvent);
+int hc_cuMemFreePtr            (void *hashcat_ctx, CUdeviceptr *dptr);
+int hc_cuModuleUnloadPtr       (void *hashcat_ctx, CUmodule *hmod);
+int hc_cuStreamDestroyPtr      (void *hashcat_ctx, CUstream *hStream);
+
 int hc_cuCtxCreate             (void *hashcat_ctx, CUcontext *pctx, unsigned int flags, CUdevice dev);
 int hc_cuCtxDestroy            (void *hashcat_ctx, CUcontext ctx);
 int hc_cuCtxSetCurrent         (void *hashcat_ctx, CUcontext ctx);
@@ -1272,7 +1277,7 @@ int hc_cuDeviceGetName         (void *hashcat_ctx, char *name, int len, CUdevice
 int hc_cuDeviceTotalMem        (void *hashcat_ctx, size_t *bytes, CUdevice dev);
 int hc_cuDriverGetVersion      (void *hashcat_ctx, int *driverVersion);
 int hc_cuEventCreate           (void *hashcat_ctx, CUevent *phEvent, unsigned int Flags);
-int hc_cuEventDestroy          (void *hashcat_ctx, CUevent *hEvent);
+int hc_cuEventDestroy          (void *hashcat_ctx, CUevent hEvent);
 int hc_cuEventElapsedTime      (void *hashcat_ctx, float *pMilliseconds, CUevent hStart, CUevent hEnd);
 int hc_cuEventQuery            (void *hashcat_ctx, CUevent hEvent);
 int hc_cuEventRecord           (void *hashcat_ctx, CUevent hEvent, CUstream hStream);
@@ -1292,14 +1297,14 @@ int hc_cuMemcpyDtoHAsync       (void *hashcat_ctx, void *dstHost, CUdeviceptr sr
 int hc_cuMemcpyHtoDAsync       (void *hashcat_ctx, CUdeviceptr dstDevice, const void *srcHost, size_t ByteCount, CUstream hStream);
 int hc_cuMemsetD32Async        (void *hashcat_ctx, CUdeviceptr dstDevice, unsigned int ui, size_t N, CUstream hStream);
 int hc_cuMemsetD8Async         (void *hashcat_ctx, CUdeviceptr dstDevice, unsigned char uc, size_t N, CUstream hStream);
-int hc_cuMemFree               (void *hashcat_ctx, CUdeviceptr *dptr);
+int hc_cuMemFree               (void *hashcat_ctx, CUdeviceptr dptr);
 int hc_cuMemGetInfo            (void *hashcat_ctx, size_t *free, size_t *total);
 int hc_cuModuleGetFunction     (void *hashcat_ctx, CUfunction *hfunc, CUmodule hmod, const char *name);
 int hc_cuModuleGetGlobal       (void *hashcat_ctx, CUdeviceptr *dptr, size_t *bytes, CUmodule hmod, const char *name);
 int hc_cuModuleLoadDataEx      (void *hashcat_ctx, CUmodule *module, const void *image, unsigned int numOptions, CUjit_option *options, void **optionValues);
-int hc_cuModuleUnload          (void *hashcat_ctx, CUmodule *hmod);
+int hc_cuModuleUnload          (void *hashcat_ctx, CUmodule hmod);
 int hc_cuStreamCreate          (void *hashcat_ctx, CUstream *phStream, unsigned int Flags);
-int hc_cuStreamDestroy         (void *hashcat_ctx, CUstream *hStream);
+int hc_cuStreamDestroy         (void *hashcat_ctx, CUstream hStream);
 int hc_cuStreamSynchronize     (void *hashcat_ctx, CUstream hStream);
 int hc_cuCtxPushCurrent        (void *hashcat_ctx, CUcontext ctx);
 int hc_cuCtxPopCurrent         (void *hashcat_ctx, CUcontext *pctx);

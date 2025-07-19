@@ -145,11 +145,7 @@
 - Apple Driver: Updated requirements to use Apple OpenCL API to macOS 13.0 - use
 - Backend: Added workaround to get rid of internal runtimes memory leaks
 - Backend: Updated filename chksum format to prevent invalid cache on Apple Silicon when switching arch
-- Backend: Updated the definitions of the following functions to use a pointer to the buffer instead of the value:
-           (OpenCL) hc_clReleaseMemObject, hc_clReleaseKernel, hc_clReleaseProgram
-           (CUDA)   hc_cuModuleUnload, hc_cuMemFree, hc_cuStreamDestroy, hc_cuEventDestroy
-           (HIP)    hc_hipEventDestroy, hc_hipMemFree, hc_hipModuleUnload, hc_hipStreamDestroy
-           (Metal)  hc_mtlReleaseMemObject, hc_mtlReleaseFunction, hc_mtlReleaseLibrary
+- Backend: Updated OpenCL/CUDA/HIP/Metal API's
 - Backend: Splitting backend_ctx_devices_init into smaller runtime-specific functions
 - Backend Checks: Describe workaround in error message when detecting more than 64 backend devices
 - Backend Info: Added --machine-readable format

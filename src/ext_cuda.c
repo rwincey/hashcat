@@ -144,6 +144,58 @@ void cuda_close (void *hashcat_ctx)
   }
 }
 
+int hc_cuEventDestroyPtr (void *hashcat_ctx, CUevent *hEvent)
+{
+  int rc = -1;
+
+  if (hEvent == NULL || *hEvent == NULL) return rc;
+
+  rc = hc_cuEventDestroy (hashcat_ctx, *hEvent);
+
+  *hEvent = NULL;
+
+  return rc;
+}
+
+int hc_cuMemFreePtr (void *hashcat_ctx, CUdeviceptr *dptr)
+{
+  int rc = -1;
+
+  if (dptr == NULL || *dptr == 0) return rc;
+
+  rc = hc_cuMemFree (hashcat_ctx, *dptr);
+
+  *dptr = 0;
+
+  return rc;
+}
+
+int hc_cuModuleUnloadPtr (void *hashcat_ctx, CUmodule *hmod)
+{
+  int rc = -1;
+
+  if (hmod == NULL || *hmod == NULL) return rc;
+
+  rc = hc_cuModuleUnload (hashcat_ctx, *hmod);
+
+  *hmod = NULL;
+
+  return rc;
+}
+
+int hc_cuStreamDestroyPtr (void *hashcat_ctx, CUstream *hStream)
+{
+  int rc = -1;
+
+  if (hStream == NULL || *hStream == NULL) return rc;
+
+  rc = hc_cuStreamDestroy (hashcat_ctx, *hStream);
+
+  *hStream = NULL;
+
+  return rc;
+}
+
 int hc_cuInit (void *hashcat_ctx, unsigned int Flags)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
@@ -414,17 +466,13 @@ int hc_cuModuleLoadDataEx (void *hashcat_ctx, CUmodule *module, const void *imag
   return 0;
 }
 
-int hc_cuModuleUnload (void *hashcat_ctx, CUmodule *hmod)
+int hc_cuModuleUnload (void *hashcat_ctx, CUmodule hmod)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   CUDA_PTR *cuda = (CUDA_PTR *) backend_ctx->cuda;
 
-  if (hmod == NULL || *hmod == NULL) return -1;
-
-  const CUresult CU_err = cuda->cuModuleUnload (*hmod);
-
-  *hmod = NULL;
+  const CUresult CU_err = cuda->cuModuleUnload (hmod);
 
   if (CU_err != CUDA_SUCCESS)
   {
@@ -499,17 +547,13 @@ int hc_cuMemAlloc (void *hashcat_ctx, CUdeviceptr *dptr, size_t bytesize)
   return 0;
 }
 
-int hc_cuMemFree (void *hashcat_ctx, CUdeviceptr *dptr)
+int hc_cuMemFree (void *hashcat_ctx, CUdeviceptr dptr)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   CUDA_PTR *cuda = (CUDA_PTR *) backend_ctx->cuda;
 
-  if (dptr == NULL || *dptr == 0) return -1;
-
-  const CUresult CU_err = cuda->cuMemFree (*dptr);
-
-  *dptr = 0;
+  const CUresult CU_err = cuda->cuMemFree (dptr);
 
   if (CU_err != CUDA_SUCCESS)
   {
@@ -963,17 +1007,13 @@ int hc_cuStreamCreate (void *hashcat_ctx, CUstream *phStream, unsigned int Flags
   return 0;
 }
 
-int hc_cuStreamDestroy (void *hashcat_ctx, CUstream *hStream)
+int hc_cuStreamDestroy (void *hashcat_ctx, CUstream hStream)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   CUDA_PTR *cuda = (CUDA_PTR *) backend_ctx->cuda;
 
-  if (hStream == NULL || *hStream == NULL) return -1;
-
-  const CUresult CU_err = cuda->cuStreamDestroy (*hStream);
-
-  *hStream = NULL;
+  const CUresult CU_err = cuda->cuStreamDestroy (hStream);
 
   if (CU_err != CUDA_SUCCESS)
   {
@@ -1102,17 +1142,13 @@ int hc_cuEventCreate (void *hashcat_ctx, CUevent *phEvent, unsigned int Flags)
   return 0;
 }
 
-int hc_cuEventDestroy (void *hashcat_ctx, CUevent *hEvent)
+int hc_cuEventDestroy (void *hashcat_ctx, CUevent hEvent)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
   CUDA_PTR *cuda = (CUDA_PTR *) backend_ctx->cuda;
 
-  if (hEvent == NULL || *hEvent == NULL) return -1;
-
-  const CUresult CU_err = cuda->cuEventDestroy (*hEvent);
-
-  *hEvent = NULL;
+  const CUresult CU_err = cuda->cuEventDestroy (hEvent);
 
   if (CU_err != CUDA_SUCCESS)
   {

@@ -168,6 +168,7 @@
 - Status Code: Add specific return code for self-test fail (-11)
 - Scrypt: Increase buffer sizes in module for hash mode 8900 to allow longer scrypt digests
 - Unicode: Update UTF-8 to UTF-16 conversion to match RFC 3629
+- Unit tests: Updated install_modules.sh, test.pl and some test modules (1000, 16000, 31300, 31500, 31600) by removing Text:Iconv and using Encode instead
 - Unit tests: Updated install_modules.sh with Crypt::Argon2
 - Unit tests: Updated install_modules.sh with Crypt::Passwd::XS, to test suite works also on Apple (ex: 1800)
 - Unit tests: Updated install_modules.sh to use an external module for Digest::BLAKE2, due to maintenance being discontinued

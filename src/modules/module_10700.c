@@ -24,8 +24,7 @@ static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_REGISTER_LIMIT;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
-                                  | OPTS_TYPE_HASH_COPY
-                                  | OPTS_TYPE_MAXIMUM_THREADS;
+                                  | OPTS_TYPE_HASH_COPY;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
 static const char *ST_PASS        = "hashcat";
 static const char *ST_HASH        = "$pdf$5*6*256*-1028*1*16*62137640825124540503886403748430*127*0391647179352257f7181236ba371e540c2dbb82fac1c462313eb58b772a54956213764082512454050388640374843000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000*127*00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000*32*0000000000000000000000000000000000000000000000000000000000000000*32*0000000000000000000000000000000000000000000000000000000000000000";
@@ -47,22 +46,22 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 
 typedef struct pdf
 {
-  int  V;
-  int  R;
-  int  P;
+  int V;
+  int R;
+  int P;
 
-  int  enc_md;
+  int enc_md;
 
-  u32  id_buf[8];
-  u32  u_buf[32];
-  u32  o_buf[32];
+  u32 id_buf[8];
+  u32 u_buf[32];
+  u32 o_buf[32];
 
-  int  id_len;
-  int  o_len;
-  int  u_len;
+  int id_len;
+  int o_len;
+  int u_len;
 
-  u32  rc4key[2];
-  u32  rc4data[2];
+  u32 rc4key[2];
+  u32 rc4data[2];
 
 } pdf_t;
 
@@ -71,7 +70,7 @@ typedef struct pdf17l8_tmp
   union
   {
     u32 dgst32[16];
-    u64  dgst64[8];
+    u64 dgst64[8];
   } d;
 
   u32 dgst_len;
@@ -82,12 +81,42 @@ typedef struct pdf17l8_tmp
 static const char *SIGNATURE_PDF  = "$pdf$";
 static const int   ROUNDS_PDF17L8 = 64;
 
+u32 module_kernel_loops_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
+{
+  u32 kernel_loops_min = KERNEL_LOOPS_MIN;
+
+  if (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL)
+  {
+    kernel_loops_min = 1;
+  }
+
+  return kernel_loops_min;
+}
+
+u32 module_kernel_loops_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
+{
+  u32 kernel_loops_max = KERNEL_LOOPS_MAX;
+
+  if (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL)
+  {
+    kernel_loops_max = 1;
+  }
+
+  return kernel_loops_max;
+}
+
 bool module_unstable_warning (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hc_device_param_t *device_param)
 {
-  // AppleM1, OpenCL, MTLCompilerService, createKernel: newComputePipelineState failed (or never-end with pure kernel)
   if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU))
   {
-    return true;
+    if (device_param->is_metal == true)
+    {
+      if (strncmp (device_param->device_name, "Intel", 5) == 0)
+      {
+        // Intel Iris Graphics, Metal Version 244.303: failed to create 'm10700_loop' pipeline, timeout reached (status 49)
+        return true;
+      }
+    }
   }
 
   return false;
@@ -121,42 +150,49 @@ u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED con
   return pw_max;
 }
 
-u32 module_kernel_threads_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
-{
-  const u32 kernel_threads_max = 256;
-
-  return kernel_threads_max;
-}
-
 char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hashes_t *hashes, MAYBE_UNUSED const hc_device_param_t *device_param)
 {
+  const u32 shared_size_scratch = (32 + 64 + 16); // LOCAL_VK u32 s_sc[FIXED_LOCAL_SIZE][PWMAXSZ4 + BLMAXSZ4 + AESSZ4];
+  const u32 shared_size_aes     = (5 * 1024);     // LOCAL_VK u32 s_te0[256];
+
   char *jit_build_options = NULL;
 
-  if ((device_param->opencl_device_vendor_id == VENDOR_ID_AMD) && (device_param->has_vperm == false))
+  if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
   {
-    // this is a workaround to avoid a Segmentation fault and self-test fails on AMD GPU PRO
-
-    hc_asprintf (&jit_build_options, "-cl-opt-disable");
+    hc_asprintf (&jit_build_options, "-D FIXED_LOCAL_SIZE=%u", 1);
   }
-
-  if ((device_param->opencl_device_vendor_id == VENDOR_ID_AMD) && (device_param->has_vperm == true))
+  else
   {
-    if ((hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL) == 0)
+    u32 overhead = 0;
+
+    if (device_param->opencl_device_vendor_id == VENDOR_ID_NV)
     {
-      // this is a workaround to avoid a compile time of over an hour (and then to not work) on ROCM in pure kernel mode
+      // note we need to use device_param->device_local_mem_size - 4 because opencl jit returns with:
+      // Entry function '...' uses too much shared data (0xc004 bytes, 0xc000 max)
+      // on my development system. no clue where the 4 bytes are spent.
+      // I did some research on this and it seems to be related with the datatype.
+      // For example, if i used u8 instead, there's only 1 byte wasted.
 
-      hc_asprintf (&jit_build_options, "-cl-opt-disable");
+      if (device_param->is_opencl == true)
+      {
+        overhead = 1;
+      }
     }
-  }
 
-  if (device_param->opencl_device_vendor_id == VENDOR_ID_AMD_USE_HIP)
-  {
-    if ((hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL) == 1)
+    const u32 device_local_mem_size = MIN (device_param->device_local_mem_size, 48*1024);
+
+    u32 fixed_local_size = ((device_local_mem_size - overhead) - shared_size_aes) / shared_size_scratch;
+
+    if (user_options->kernel_threads_chgd == true)
     {
-      // this is a workaround to avoid a compile time of over an hour (and then to not work) on ROCM in pure kernel mode
-
-      hc_asprintf (&jit_build_options, "-D NO_INLINE");
+      fixed_local_size = user_options->kernel_threads;
     }
+    else
+    {
+      if (fixed_local_size > device_param->kernel_preferred_wgs_multiple) fixed_local_size -= fixed_local_size % device_param->kernel_preferred_wgs_multiple;
+    }
+
+    hc_asprintf (&jit_build_options, "-D FIXED_LOCAL_SIZE=%u -D _unroll", fixed_local_size);
   }
 
   return jit_build_options;
@@ -170,6 +206,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 16;
 
   token.signatures_cnt    = 1;
@@ -179,92 +217,88 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
-  token.len_min[1] = 1;
-  token.len_max[1] = 1;
   token.sep[1]     = '*';
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[1]     = 1;
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
-  token.len_min[2] = 1;
-  token.len_max[2] = 1;
   token.sep[2]     = '*';
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[2]     = 1;
+  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
-  token.len_min[3] = 3;
-  token.len_max[3] = 3;
   token.sep[3]     = '*';
-  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[3]     = 3;
+  token.attr[3]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
-  token.len_min[4] = 1;
-  token.len_max[4] = 6;
   token.sep[4]     = '*';
+  token.len_min[4] = 1;
+  token.len_max[4] = 11;
   token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH;
 
-  token.len_min[5] = 1;
-  token.len_max[5] = 1;
   token.sep[5]     = '*';
-  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[5]     = 1;
+  token.attr[5]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
+  token.sep[6]     = '*';
   token.len_min[6] = 1;
   token.len_max[6] = 4;
-  token.sep[6]     = '*';
   token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
+  token.sep[7]     = '*';
   token.len_min[7] = 0;
   token.len_max[7] = 1024;
-  token.sep[7]     = '*';
   token.attr[7]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
+  token.sep[8]     = '*';
   token.len_min[8] = 1;
   token.len_max[8] = 4;
-  token.sep[8]     = '*';
   token.attr[8]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
+  token.sep[9]     = '*';
   token.len_min[9] = 0;
   token.len_max[9] = 1024;
-  token.sep[9]     = '*';
   token.attr[9]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
+  token.sep[10]     = '*';
   token.len_min[10] = 1;
   token.len_max[10] = 4;
-  token.sep[10]     = '*';
   token.attr[10]    = TOKEN_ATTR_VERIFY_LENGTH
                     | TOKEN_ATTR_VERIFY_DIGIT;
 
+  token.sep[11]     = '*';
   token.len_min[11] = 0;
   token.len_max[11] = 1024;
-  token.sep[11]     = '*';
   token.attr[11]    = TOKEN_ATTR_VERIFY_LENGTH
                     | TOKEN_ATTR_VERIFY_HEX;
 
+  token.sep[12]     = '*';
   token.len_min[12] = 1;
   token.len_max[12] = 4;
-  token.sep[12]     = '*';
   token.attr[12]    = TOKEN_ATTR_VERIFY_LENGTH
                     | TOKEN_ATTR_VERIFY_DIGIT;
 
+  token.sep[13]     = '*';
   token.len_min[13] = 0;
   token.len_max[13] = 1024;
-  token.sep[13]     = '*';
   token.attr[13]    = TOKEN_ATTR_VERIFY_LENGTH
                     | TOKEN_ATTR_VERIFY_HEX;
 
+  token.sep[14]     = '*';
   token.len_min[14] = 1;
   token.len_max[14] = 4;
-  token.sep[14]     = '*';
   token.attr[14]    = TOKEN_ATTR_VERIFY_LENGTH
                     | TOKEN_ATTR_VERIFY_DIGIT;
 
+  token.sep[15]     = '*';
   token.len_min[15] = 0;
   token.len_max[15] = 1024;
-  token.sep[15]     = '*';
   token.attr[15]    = TOKEN_ATTR_VERIFY_LENGTH
                     | TOKEN_ATTR_VERIFY_HEX;
 
@@ -309,7 +343,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   for (int i = 0, j = 0; i < 8 + 2; i += 1, j += 8)
   {
-    pdf->u_buf[i] = hex_to_u32 ((const u8 *) &u_buf_pos[j]);
+    pdf->u_buf[i] = hex_to_u32 (&u_buf_pos[j]);
   }
 
   salt->salt_buf[0] = pdf->u_buf[8];
@@ -348,6 +382,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;
@@ -390,9 +426,9 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_jit_cache_disable        = MODULE_DEFAULT;
   module_ctx->module_kernel_accel_max         = MODULE_DEFAULT;
   module_ctx->module_kernel_accel_min         = MODULE_DEFAULT;
-  module_ctx->module_kernel_loops_max         = MODULE_DEFAULT;
-  module_ctx->module_kernel_loops_min         = MODULE_DEFAULT;
-  module_ctx->module_kernel_threads_max       = module_kernel_threads_max;
+  module_ctx->module_kernel_loops_max         = module_kernel_loops_max;
+  module_ctx->module_kernel_loops_min         = module_kernel_loops_min;
+  module_ctx->module_kernel_threads_max       = MODULE_DEFAULT;
   module_ctx->module_kernel_threads_min       = MODULE_DEFAULT;
   module_ctx->module_kern_type                = module_kern_type;
   module_ctx->module_kern_type_dynamic        = MODULE_DEFAULT;

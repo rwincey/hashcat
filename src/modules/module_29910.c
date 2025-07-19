@@ -92,6 +92,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 8;
 
   token.signatures_cnt    = 1;
@@ -102,39 +104,33 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.sep[1]     = '$';
-  token.len_min[1] = 1;
-  token.len_max[1] = 1;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[1]     = 1;
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
   token.sep[2]     = '$';
-  token.len_min[2] = 1;
-  token.len_max[2] = 1;
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[2]     = 1;
+  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
   token.sep[3]     = '$';
-  token.len_min[3] = 16;
-  token.len_max[3] = 16;
-  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[3]     = 16;
+  token.attr[3]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[4]     = '$';
-  token.len_min[4] = 16;
-  token.len_max[4] = 16;
-  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[4]     = 16;
+  token.attr[4]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[5]     = '$';
-  token.len_min[5] = 2;
-  token.len_max[5] = 2;
-  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[5]     = 2;
+  token.attr[5]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
   token.sep[6]     = '$';
-  token.len_min[6] = 64;
-  token.len_max[6] = 64;
-  token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[6]     = 64;
+  token.attr[6]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[7]     = '$';
@@ -174,15 +170,15 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const u8 *iv_pos = token.buf[3];
 
-  encdatavault->iv[0] = byte_swap_32 (hex_to_u32 ((const u8 *) &iv_pos[0]));
-  encdatavault->iv[1] = byte_swap_32 (hex_to_u32 ((const u8 *) &iv_pos[8]));
+  encdatavault->iv[0] = byte_swap_32 (hex_to_u32 (&iv_pos[0]));
+  encdatavault->iv[1] = byte_swap_32 (hex_to_u32 (&iv_pos[8]));
 
   // ct
 
   const u8 *ct_pos = token.buf[4];
 
-  encdatavault->ct[0] = byte_swap_32 (hex_to_u32 ((const u8 *) &ct_pos[0]));
-  encdatavault->ct[1] = byte_swap_32 (hex_to_u32 ((const u8 *) &ct_pos[8]));
+  encdatavault->ct[0] = byte_swap_32 (hex_to_u32 (&ct_pos[0]));
+  encdatavault->ct[1] = byte_swap_32 (hex_to_u32 (&ct_pos[8]));
 
   // salt length
 
@@ -196,14 +192,14 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const u8 *salt_pos = token.buf[6];
 
-  salt->salt_buf[0] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[ 0]));
-  salt->salt_buf[1] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[ 8]));
-  salt->salt_buf[2] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[16]));
-  salt->salt_buf[3] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[24]));
-  salt->salt_buf[4] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[32]));
-  salt->salt_buf[5] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[40]));
-  salt->salt_buf[6] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[48]));
-  salt->salt_buf[7] = byte_swap_32 (hex_to_u32 ((const u8 *) &salt_pos[56]));
+  salt->salt_buf[0] = byte_swap_32 (hex_to_u32 (&salt_pos[ 0]));
+  salt->salt_buf[1] = byte_swap_32 (hex_to_u32 (&salt_pos[ 8]));
+  salt->salt_buf[2] = byte_swap_32 (hex_to_u32 (&salt_pos[16]));
+  salt->salt_buf[3] = byte_swap_32 (hex_to_u32 (&salt_pos[24]));
+  salt->salt_buf[4] = byte_swap_32 (hex_to_u32 (&salt_pos[32]));
+  salt->salt_buf[5] = byte_swap_32 (hex_to_u32 (&salt_pos[40]));
+  salt->salt_buf[6] = byte_swap_32 (hex_to_u32 (&salt_pos[48]));
+  salt->salt_buf[7] = byte_swap_32 (hex_to_u32 (&salt_pos[56]));
 
   salt->salt_len = 32;
 
@@ -259,6 +255,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

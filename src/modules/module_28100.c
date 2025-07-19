@@ -72,6 +72,23 @@ typedef struct winhello_tmp
 
 static const char *SIGNATURE_WINHELLO = "$WINHELLO$";
 
+bool module_unstable_warning (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hc_device_param_t *device_param)
+{
+  if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU))
+  {
+    if (device_param->is_metal == true)
+    {
+      if (strncmp (device_param->device_name, "Intel", 5) == 0)
+      {
+        // Intel Iris Graphics, Metal Version 244.303: failed to create 'm28100_comp' pipeline, timeout reached
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const u64 esalt_size = (const u64) sizeof (winhello_t);
@@ -108,69 +125,62 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 9;
 
   token.signatures_cnt    = 1;
   token.signatures_buf[0] = SIGNATURE_WINHELLO;
 
-  token.len_min[0] = 10;
-  token.len_max[0] = 10;
   token.sep[0]     = '*';
-  token.attr[0]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[0]     = 10;
+  token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
-  token.len_min[1] = 6; // fixed SHA512
-  token.len_max[1] = 6;
   token.sep[1]     = '*';
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH;
+  token.len[1]     = 6; // fixed SHA512
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH;
 
   // pbkdf2 iter
-  token.len_min[2] = 5; // fixed 10000
-  token.len_max[2] = 5;
   token.sep[2]     = '*';
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[2]     = 5; // fixed 10000
+  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
   // pbdfk2 salt
-  token.len_min[3] = 8;
-  token.len_max[3] = 8;
   token.sep[3]     = '*';
-  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[3]     = 8;
+  token.attr[3]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // sign (hash)
-  token.len_min[4] = 128;
-  token.len_max[4] = 128;
   token.sep[4]     = '*';
-  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[4]     = 128;
+  token.attr[4]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // mk
-  token.len_min[5] = 128;
-  token.len_max[5] = 128;
   token.sep[5]     = '*';
-  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[5]     = 128;
+  token.attr[5]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // hmac
-  token.len_min[6] = 64;
-  token.len_max[6] = 64;
   token.sep[6]     = '*';
-  token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[6]     = 64;
+  token.attr[6]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // verify blob
-  token.len_min[7] = 1384;
-  token.len_max[7] = 1384;
   token.sep[7]     = '*';
-  token.attr[7]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[7]     = 1384;
+  token.attr[7]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // magicv
-  token.len_min[8] = 34; // fixed 785435725a573571565662727670754100
-  token.len_max[8] = 34;
   token.sep[8]     = '*';
-  token.attr[8]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[8]     = 34; // fixed 785435725a573571565662727670754100
+  token.attr[8]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
@@ -284,7 +294,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   winhello->mk_buf_pc[6] = 0;
   winhello->mk_buf_pc[7] = 0;
 
-  // yes we can precompute the first block of both sha512 here, because length is 128 + hmac lenght + magic length, but
+  // yes we can precompute the first block of both sha512 here, because length is 128 + hmac length + magic length, but
   // speed improvement is negligible, but readability would drop a lot
 
   return (PARSER_OK);
@@ -393,6 +403,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;
@@ -458,6 +470,6 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_st_hash                  = module_st_hash;
   module_ctx->module_st_pass                  = module_st_pass;
   module_ctx->module_tmp_size                 = module_tmp_size;
-  module_ctx->module_unstable_warning         = MODULE_DEFAULT;
+  module_ctx->module_unstable_warning         = module_unstable_warning;
   module_ctx->module_warmup_disable           = MODULE_DEFAULT;
 }

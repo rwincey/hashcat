@@ -95,27 +95,26 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 4;
 
   token.signatures_cnt    = 1;
   token.signatures_buf[0] = SIGNATURE_KEYCHAIN;
 
   token.sep[0]     = '*';
-  token.len_min[0] = 10;
-  token.len_max[0] = 10;
-  token.attr[0]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[0]     = 10;
+  token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.sep[1]     = '*';
-  token.len_min[1] = 40;
-  token.len_max[1] = 40;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[1]     = 40;
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[2]     = '*';
-  token.len_min[2] = 16;
-  token.len_max[2] = 16;
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[2]     = 16;
+  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.len[3]     = 96;
@@ -164,19 +163,19 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
 int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const void *digest_buf, MAYBE_UNUSED const salt_t *salt, MAYBE_UNUSED const void *esalt_buf, MAYBE_UNUSED const void *hook_salt_buf, MAYBE_UNUSED const hashinfo_t *hash_info, char *line_buf, MAYBE_UNUSED const int line_size)
 {
-  keychain_t *keychain = (keychain_t *) esalt_buf;
+  const keychain_t *keychain = (const keychain_t *) esalt_buf;
 
   // iv
 
   u8 iv[17] = { 0 };
 
-  hex_encode ((u8 *) keychain->iv, 8, iv);
+  hex_encode ((const u8 *) keychain->iv, 8, iv);
 
   // data
 
   u8 data[97] = { 0 };
 
-  hex_encode ((u8 *) keychain->data, 48, data);
+  hex_encode ((const u8 *) keychain->data, 48, data);
 
   return snprintf (line_buf, line_size, "%s*%08x%08x%08x%08x%08x*%s*%s",
     SIGNATURE_KEYCHAIN,
@@ -201,6 +200,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

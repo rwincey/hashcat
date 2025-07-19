@@ -109,6 +109,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 3;
 
   token.signatures_cnt    = 1;
@@ -119,15 +121,13 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.sep[1]     = '$';
-  token.len_min[1] = 24;
-  token.len_max[1] = 24;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[1]     = 24;
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_BASE64A;
 
   token.sep[2]     = '$';
-  token.len_min[2] = 88;
-  token.len_max[2] = 88;
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[2]     = 88;
+  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_BASE64A;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
@@ -141,7 +141,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   // save original salt for encode function
   // this is the only reason why we have an esalt in this hash-mode
 
-  const char *salt_pos = (char *) token.buf[1];
+  const char *salt_pos = (const char *) token.buf[1];
   const int   salt_len = token.len[1];
 
   memcpy (solarwinds->salt_buf, salt_pos, salt_len);
@@ -154,7 +154,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   memset (tmp_buf, 0, sizeof (tmp_buf));
 
-  int tmp_len = base64_decode (base64_to_int, (u8 *)salt_pos, salt_len, tmp_buf);
+  int tmp_len = base64_decode (base64_to_int, (const u8 *)salt_pos, salt_len, tmp_buf);
 
   if (tmp_len != 16) return (PARSER_SALT_LENGTH);
 
@@ -189,7 +189,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
 int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const void *digest_buf, MAYBE_UNUSED const salt_t *salt, MAYBE_UNUSED const void *esalt_buf, MAYBE_UNUSED const void *hook_salt_buf, MAYBE_UNUSED const hashinfo_t *hash_info, char *line_buf, MAYBE_UNUSED const int line_size)
 {
-  const u64 *digest = (u64 *) digest_buf;
+  const u64 *digest = (const u64 *) digest_buf;
 
   const solarwinds_t *solarwinds = (const solarwinds_t *) esalt_buf;
 
@@ -228,6 +228,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

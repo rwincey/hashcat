@@ -17,6 +17,18 @@
 
 #if defined (__APPLE__)
 #include <sys/sysctl.h>
+#include <mach/mach.h>
+#endif
+
+#if defined (_WIN)
+#include <winsock2.h>
+#endif
+
+#if defined (_POSIX)
+#include <sys/utsname.h>
+#if !defined (__APPLE__)
+#include <sys/sysinfo.h>
+#endif
 #endif
 
 static const char *const PA_000 = "OK";
@@ -63,6 +75,10 @@ static const char *const PA_040 = "Invalid or unsupported cipher";
 static const char *const PA_041 = "Invalid filesize";
 static const char *const PA_042 = "IV length exception";
 static const char *const PA_043 = "CT length exception";
+static const char *const PA_044 = "PT length exception";
+static const char *const PA_045 = "PT offset exception";
+static const char *const PA_046 = "Invalid or unsupported CryptoAPI hash type";
+static const char *const PA_047 = "Invalid CryptoAPI key size";
 static const char *const PA_255 = "Unknown error";
 
 static const char *const OPTI_STR_OPTIMIZED_KERNEL     = "Optimized-Kernel";
@@ -80,12 +96,17 @@ static const char *const OPTI_STR_BRUTE_FORCE          = "Brute-Force";
 static const char *const OPTI_STR_RAW_HASH             = "Raw-Hash";
 static const char *const OPTI_STR_REGISTER_LIMIT       = "Register-Limit";
 static const char *const OPTI_STR_SLOW_HASH_SIMD_INIT  = "Slow-Hash-SIMD-INIT";
+static const char *const OPTI_STR_SLOW_HASH_SIMD_INIT2 = "Slow-Hash-SIMD-INIT-2";
 static const char *const OPTI_STR_SLOW_HASH_SIMD_LOOP  = "Slow-Hash-SIMD-LOOP";
+static const char *const OPTI_STR_SLOW_HASH_SIMD_LOOP2 = "Slow-Hash-SIMD-LOOP-2";
 static const char *const OPTI_STR_SLOW_HASH_SIMD_COMP  = "Slow-Hash-SIMD-COMP";
 static const char *const OPTI_STR_USES_BITS_8          = "Uses-8-Bit";
 static const char *const OPTI_STR_USES_BITS_16         = "Uses-16-Bit";
 static const char *const OPTI_STR_USES_BITS_32         = "Uses-32-Bit";
 static const char *const OPTI_STR_USES_BITS_64         = "Uses-64-Bit";
+static const char *const OPTI_STR_SLOW_HASH_DIMY_INIT  = "Slow-Hash-DimensionY-INIT";
+static const char *const OPTI_STR_SLOW_HASH_DIMY_LOOP  = "Slow-Hash-DimensionY-LOOP";
+static const char *const OPTI_STR_SLOW_HASH_DIMY_COMP  = "Slow-Hash-DimensionY-COMP";
 
 static const char *const HASH_CATEGORY_UNDEFINED_STR              = "Undefined";
 static const char *const HASH_CATEGORY_RAW_HASH_STR               = "Raw Hash";
@@ -111,6 +132,7 @@ static const char *const HASH_CATEGORY_FRAMEWORK_STR              = "Framework";
 static const char *const HASH_CATEGORY_PRIVATE_KEY_STR            = "Private Key";
 static const char *const HASH_CATEGORY_IMS_STR                    = "Instant Messaging Service";
 static const char *const HASH_CATEGORY_CRYPTOCURRENCY_WALLET_STR  = "Cryptocurrency Wallet";
+static const char *const HASH_CATEGORY_APPLICATION_DATABASE_STR   = "Application Database";
 
 int sort_by_string_sized (const void *p1, const void *p2)
 {
@@ -185,6 +207,11 @@ bool overflow_check_u64_mul (const u64 a, const u64 b)
 bool is_power_of_2 (const u32 v)
 {
   return (v && !(v & (v - 1)));
+}
+
+u32 smallest_repeat_double (const u32 v)
+{
+  return (v / (v & -v));
 }
 
 u32 mydivc32 (const u32 dividend, const u32 divisor)
@@ -336,6 +363,19 @@ bool hc_path_is_directory (const char *path)
   if (stat (path, &s) == -1) return false;
 
   if (S_ISDIR (s.st_mode)) return true;
+
+  return false;
+}
+
+bool hc_path_is_fifo (const char *path)
+{
+  struct stat s;
+
+  memset (&s, 0, sizeof (s));
+
+  if (stat (path, &s) == -1) return false;
+
+  if (S_ISFIFO (s.st_mode) == true) return true;
 
   return false;
 }
@@ -525,7 +565,7 @@ bool hc_string_is_digit (const char *s)
   return true;
 }
 
-void setup_environment_variables (const folder_config_t *folder_config)
+void setup_environment_variables (const folder_config_t *folder_config, const user_options_t *user_options)
 {
   char *compute = getenv ("COMPUTE");
 
@@ -567,6 +607,14 @@ void setup_environment_variables (const folder_config_t *folder_config)
     // we can't free tmpdir at this point!
   }
 
+  // creates too much cpu load
+  if (getenv ("AMD_DIRECT_DISPATCH") == NULL)
+    putenv ((char *) "AMD_DIRECT_DISPATCH=0");
+
+  if (user_options->hash_mode == 72000) // ugly but rare hack, we might move this to modules at a later stage
+    if (getenv ("PYTHON_GIL") == NULL)
+     putenv ((char *) "PYTHON_GIL=0");
+
   /*
   if (getenv ("CL_CONFIG_USE_VECTORIZER") == NULL)
     putenv ((char *) "CL_CONFIG_USE_VECTORIZER=False");
@@ -577,7 +625,7 @@ void setup_environment_variables (const folder_config_t *folder_config)
   #endif
 }
 
-void setup_umask ()
+void setup_umask (void)
 {
   umask (077);
 }
@@ -606,11 +654,11 @@ u32 get_random_num (const u32 min, const u32 max)
 
   #if defined (_WIN)
 
-  return (((u32) rand () % (max - min)) + min);
+  return (((u32) rand () % (max - min + 1)) + min);
 
   #else
 
-  return (((u32) random () % (max - min)) + min);
+  return (((u32) random () % (max - min + 1)) + min);
 
   #endif
 }
@@ -661,7 +709,7 @@ void hc_string_trim_trailing (char *s)
   s[new_len] = 0;
 }
 
-int hc_get_processor_count ()
+int hc_get_processor_count (void)
 {
   int cnt = 0;
 
@@ -686,6 +734,11 @@ bool hc_same_files (char *file1, char *file2)
 {
   if ((file1 != NULL) && (file2 != NULL))
   {
+    if (hc_path_is_fifo (file1) == true || hc_path_is_fifo (file2) == true)
+    {
+      return false;
+    }
+
     struct stat tmpstat_file1;
     struct stat tmpstat_file2;
 
@@ -887,7 +940,11 @@ int select_read_timeout (int sockfd, const int sec)
   fd_set fds;
 
   FD_ZERO (&fds);
+#if defined(_WIN)
+  FD_SET ((SOCKET)sockfd, &fds);
+#else
   FD_SET (sockfd, &fds);
+#endif
 
   return select (sockfd + 1, &fds, NULL, NULL, &tv);
 }
@@ -902,7 +959,11 @@ int select_write_timeout (int sockfd, const int sec)
   fd_set fds;
 
   FD_ZERO (&fds);
+#if defined(_WIN)
+  FD_SET ((SOCKET)sockfd, &fds);
+#else
   FD_SET (sockfd, &fds);
+#endif
 
   return select (sockfd + 1, NULL, &fds, NULL, &tv);
 }
@@ -985,6 +1046,7 @@ const char *strhashcategory (const u32 hash_category)
     case HASH_CATEGORY_PRIVATE_KEY:             return HASH_CATEGORY_PRIVATE_KEY_STR;
     case HASH_CATEGORY_IMS:                     return HASH_CATEGORY_IMS_STR;
     case HASH_CATEGORY_CRYPTOCURRENCY_WALLET:   return HASH_CATEGORY_CRYPTOCURRENCY_WALLET_STR;
+    case HASH_CATEGORY_APPLICATION_DATABASE:    return HASH_CATEGORY_APPLICATION_DATABASE_STR;
   }
 
   return NULL;
@@ -994,27 +1056,32 @@ const char *stroptitype (const u32 opti_type)
 {
   switch (opti_type)
   {
-    case OPTI_TYPE_OPTIMIZED_KERNEL:    return OPTI_STR_OPTIMIZED_KERNEL;
-    case OPTI_TYPE_ZERO_BYTE:           return OPTI_STR_ZERO_BYTE;
-    case OPTI_TYPE_PRECOMPUTE_INIT:     return OPTI_STR_PRECOMPUTE_INIT;
-    case OPTI_TYPE_MEET_IN_MIDDLE:      return OPTI_STR_MEET_IN_MIDDLE;
-    case OPTI_TYPE_EARLY_SKIP:          return OPTI_STR_EARLY_SKIP;
-    case OPTI_TYPE_NOT_SALTED:          return OPTI_STR_NOT_SALTED;
-    case OPTI_TYPE_NOT_ITERATED:        return OPTI_STR_NOT_ITERATED;
-    case OPTI_TYPE_PREPENDED_SALT:      return OPTI_STR_PREPENDED_SALT;
-    case OPTI_TYPE_APPENDED_SALT:       return OPTI_STR_APPENDED_SALT;
-    case OPTI_TYPE_SINGLE_HASH:         return OPTI_STR_SINGLE_HASH;
-    case OPTI_TYPE_SINGLE_SALT:         return OPTI_STR_SINGLE_SALT;
-    case OPTI_TYPE_BRUTE_FORCE:         return OPTI_STR_BRUTE_FORCE;
-    case OPTI_TYPE_RAW_HASH:            return OPTI_STR_RAW_HASH;
-    case OPTI_TYPE_REGISTER_LIMIT:      return OPTI_STR_REGISTER_LIMIT;
-    case OPTI_TYPE_SLOW_HASH_SIMD_INIT: return OPTI_STR_SLOW_HASH_SIMD_INIT;
-    case OPTI_TYPE_SLOW_HASH_SIMD_LOOP: return OPTI_STR_SLOW_HASH_SIMD_LOOP;
-    case OPTI_TYPE_SLOW_HASH_SIMD_COMP: return OPTI_STR_SLOW_HASH_SIMD_COMP;
-    case OPTI_TYPE_USES_BITS_8:         return OPTI_STR_USES_BITS_8;
-    case OPTI_TYPE_USES_BITS_16:        return OPTI_STR_USES_BITS_16;
-    case OPTI_TYPE_USES_BITS_32:        return OPTI_STR_USES_BITS_32;
-    case OPTI_TYPE_USES_BITS_64:        return OPTI_STR_USES_BITS_64;
+    case OPTI_TYPE_OPTIMIZED_KERNEL:     return OPTI_STR_OPTIMIZED_KERNEL;
+    case OPTI_TYPE_ZERO_BYTE:            return OPTI_STR_ZERO_BYTE;
+    case OPTI_TYPE_PRECOMPUTE_INIT:      return OPTI_STR_PRECOMPUTE_INIT;
+    case OPTI_TYPE_MEET_IN_MIDDLE:       return OPTI_STR_MEET_IN_MIDDLE;
+    case OPTI_TYPE_EARLY_SKIP:           return OPTI_STR_EARLY_SKIP;
+    case OPTI_TYPE_NOT_SALTED:           return OPTI_STR_NOT_SALTED;
+    case OPTI_TYPE_NOT_ITERATED:         return OPTI_STR_NOT_ITERATED;
+    case OPTI_TYPE_PREPENDED_SALT:       return OPTI_STR_PREPENDED_SALT;
+    case OPTI_TYPE_APPENDED_SALT:        return OPTI_STR_APPENDED_SALT;
+    case OPTI_TYPE_SINGLE_HASH:          return OPTI_STR_SINGLE_HASH;
+    case OPTI_TYPE_SINGLE_SALT:          return OPTI_STR_SINGLE_SALT;
+    case OPTI_TYPE_BRUTE_FORCE:          return OPTI_STR_BRUTE_FORCE;
+    case OPTI_TYPE_RAW_HASH:             return OPTI_STR_RAW_HASH;
+    case OPTI_TYPE_REGISTER_LIMIT:       return OPTI_STR_REGISTER_LIMIT;
+    case OPTI_TYPE_SLOW_HASH_SIMD_INIT:  return OPTI_STR_SLOW_HASH_SIMD_INIT;
+    case OPTI_TYPE_SLOW_HASH_SIMD_INIT2: return OPTI_STR_SLOW_HASH_SIMD_INIT2;
+    case OPTI_TYPE_SLOW_HASH_SIMD_LOOP:  return OPTI_STR_SLOW_HASH_SIMD_LOOP;
+    case OPTI_TYPE_SLOW_HASH_SIMD_LOOP2: return OPTI_STR_SLOW_HASH_SIMD_LOOP2;
+    case OPTI_TYPE_SLOW_HASH_SIMD_COMP:  return OPTI_STR_SLOW_HASH_SIMD_COMP;
+    case OPTI_TYPE_SLOW_HASH_DIMY_INIT:  return OPTI_STR_SLOW_HASH_DIMY_INIT;
+    case OPTI_TYPE_SLOW_HASH_DIMY_LOOP:  return OPTI_STR_SLOW_HASH_DIMY_LOOP;
+    case OPTI_TYPE_SLOW_HASH_DIMY_COMP:  return OPTI_STR_SLOW_HASH_DIMY_COMP;
+    case OPTI_TYPE_USES_BITS_8:          return OPTI_STR_USES_BITS_8;
+    case OPTI_TYPE_USES_BITS_16:         return OPTI_STR_USES_BITS_16;
+    case OPTI_TYPE_USES_BITS_32:         return OPTI_STR_USES_BITS_32;
+    case OPTI_TYPE_USES_BITS_64:         return OPTI_STR_USES_BITS_64;
   }
 
   return NULL;
@@ -1068,6 +1135,10 @@ const char *strparser (const u32 parser_status)
     case PARSER_FILE_SIZE:            return PA_041;
     case PARSER_IV_LENGTH:            return PA_042;
     case PARSER_CT_LENGTH:            return PA_043;
+    case PARSER_PT_LENGTH:            return PA_044;
+    case PARSER_PT_OFFSET:            return PA_045;
+    case PARSER_CRYPTOAPI_KERNELTYPE: return PA_046;
+    case PARSER_CRYPTOAPI_KEYSIZE:    return PA_047;
   }
 
   return PA_255;
@@ -1129,10 +1200,6 @@ int input_tokenizer (const u8 *input_buf, const int input_len, hc_token_t *token
       int len = token->len[token_idx];
 
       if (len_left < len) return (PARSER_TOKEN_LENGTH);
-
-      token->buf[token_idx + 1] = token->buf[token_idx] + len;
-
-      len_left -= len;
     }
     else
     {
@@ -1151,7 +1218,10 @@ int input_tokenizer (const u8 *input_buf, const int input_len, hc_token_t *token
           len_left -= len + 1; // +1 = separator
         }
       }
+    }
 
+    if (token->sep[token_idx] != 0x00)
+    {
       const u8 *next_pos = NULL;
 
       if (token->attr[token_idx] & TOKEN_ATTR_SEPARATOR_FARTHEST)
@@ -1167,11 +1237,68 @@ int input_tokenizer (const u8 *input_buf, const int input_len, hc_token_t *token
 
       const int len = next_pos - token->buf[token_idx];
 
+      if (token->attr[token_idx] & TOKEN_ATTR_FIXED_LENGTH)
+      {
+        if (len != token->len[token_idx]) return (PARSER_TOKEN_LENGTH);
+      }
+
       token->len[token_idx] = len;
 
       token->buf[token_idx + 1] = next_pos + 1; // +1 = separator
 
       len_left -= len + 1; // +1 = separator
+    }
+    else
+    {
+      const int len = token->len[token_idx];
+
+      if (len)
+      {
+        token->buf[token_idx + 1] = token->buf[token_idx] + len;
+
+        len_left -= len;
+
+        if (token->sep[token_idx] != 0)
+        {
+          token->buf[token_idx + 1]++; // +1 = separator
+
+          len_left--; // -1 = separator
+        }
+      }
+
+      const int len_min = token->len_min[token_idx];
+      const int len_max = token->len_max[token_idx];
+
+      if (len_max)
+      {
+        bool matched = false;
+
+        if (token->attr[token_idx] & TOKEN_ATTR_VERIFY_SIGNATURE)
+        {
+          for (int signature_idx = 0; signature_idx < token->signatures_cnt; signature_idx++)
+          {
+            const int len_sig = strlen (token->signatures_buf[signature_idx]);
+
+            if (len_sig > len_left) continue;
+
+            if ((len_sig >= len_min) && (len_sig <= len_max))
+            {
+              if (memcmp (token->buf[token_idx], token->signatures_buf[signature_idx], len_sig) == 0)
+              {
+                token->len[token_idx] = len_sig;
+
+                token->buf[token_idx + 1] = token->buf[token_idx] + len_sig;
+
+                len_left -= len_sig;
+
+                matched = true;
+              }
+            }
+          }
+
+          if (matched == false) return (PARSER_SIGNATURE_UNMATCHED);
+        }
+      }
     }
   }
 
@@ -1384,6 +1511,38 @@ int generic_salt_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, const u8 *
   return tmp_len;
 }
 
+int get_current_arch ()
+{
+  #if defined (_WIN)
+
+  SYSTEM_INFO sysinfo;
+
+  GetNativeSystemInfo (&sysinfo);
+
+  switch (sysinfo.wProcessorArchitecture)
+  {
+    case PROCESSOR_ARCHITECTURE_AMD64: return 1;
+    case PROCESSOR_ARCHITECTURE_INTEL: return 2;
+    case PROCESSOR_ARCHITECTURE_ARM64: return 3;
+    case PROCESSOR_ARCHITECTURE_ARM: return 4;
+    default: return 0;
+  }
+
+  #else
+
+  struct utsname uts;
+
+  if (uname(&uts) != 0) return 0; // same as default, it doesn't matter if it fails here
+
+  if (strstr(uts.machine, "x86_64")) return 1;
+  else if (strstr(uts.machine, "i386") || strstr(uts.machine, "i686")) return 2;
+  else if (strstr(uts.machine, "aarch64") || strstr(uts.machine, "arm64")) return 3;
+  else if (strstr(uts.machine, "arm")) return 4;
+  else return 0;
+
+  #endif
+}
+
 #if defined (__APPLE__)
 
 bool is_apple_silicon (void)
@@ -1428,3 +1587,174 @@ char *file_to_buffer (const char *filename)
 
   return NULL;
 }
+
+int extract_dynamicx_hash (const u8 *input_buf, const int input_len, u8 **output_buf, int *output_len)
+{
+  int hash_mode = -1;
+
+  if (sscanf ((char *) input_buf, "$dynamic_%d$", &hash_mode) != 1) return -1;
+
+  *output_buf = (u8 *) strchr ((char *) input_buf + 10, '$');
+
+  if (*output_buf == NULL) return -1;
+
+  *output_buf += 1; // the $ itself
+
+  *output_len = input_len - (*output_buf - input_buf);
+
+  return hash_mode;
+}
+
+bool check_file_suffix (const char *file, const char *suffix)
+{
+  if (file == NULL)   return false;
+  if (suffix == NULL) return false;
+
+  const size_t len_file = strlen (file);
+  const size_t len_suffix = strlen (suffix);
+
+  if (len_suffix > len_file) return false;
+
+  return strcmp (file + len_file - len_suffix, suffix) == 0;
+}
+
+bool remove_file_suffix (char *file, const char *suffix)
+{
+  if (file == NULL)   return false;
+  if (suffix == NULL) return false;
+
+  if (check_file_suffix (file, suffix) == false) return false;
+
+  const size_t len_file = strlen (file);
+  const size_t len_suffix = strlen (suffix);
+
+  file[len_file - len_suffix] = 0;
+
+  return true;
+}
+
+#if defined (_WIN)
+#define DEVNULL "NUL"
+#else
+#define DEVNULL "/dev/null"
+#endif
+
+int suppress_stderr (void)
+{
+  int null_fd = open (DEVNULL, O_WRONLY);
+
+  if (null_fd < 0) return -1;
+
+  int saved_fd = dup (fileno (stderr));
+
+  if (saved_fd < 0)
+  {
+    close (null_fd);
+
+    return -1;
+  }
+
+  dup2 (null_fd, fileno (stderr));
+
+  close (null_fd);
+
+  return saved_fd;
+}
+
+void restore_stderr (int saved_fd)
+{
+  if (saved_fd < 0) return;
+
+  dup2 (saved_fd, fileno (stderr));
+
+  close (saved_fd);
+}
+
+bool get_free_memory (u64 *free_mem)
+{
+  #if defined (_WIN)
+
+  MEMORYSTATUSEX memStatus;
+
+  memStatus.dwLength = sizeof (memStatus);
+
+  if (GlobalMemoryStatusEx (&memStatus))
+  {
+    *free_mem = (u64) memStatus.ullAvailPhys;
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+
+  #elif defined (__APPLE__)
+
+  mach_port_t host_port = mach_host_self ();
+
+  mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
+
+  vm_statistics_data_t vm_stat;
+
+  if (host_statistics (host_port, HOST_VM_INFO, (host_info_t) &vm_stat, &count) != KERN_SUCCESS)
+  {
+    return false;
+  }
+
+  int64_t page_size;
+
+  host_page_size (host_port, (vm_size_t*) &page_size);
+
+  *free_mem = (u64) (vm_stat.free_count + vm_stat.inactive_count) * page_size;
+
+  return true;
+
+  #else
+
+  struct sysinfo info;
+
+  if (sysinfo (&info) != 0) return false;
+
+  *free_mem = (u64) info.freeram * info.mem_unit;
+
+  return true;
+
+  #endif
+}
+
+u32 previous_power_of_two (const u32 x)
+{
+  // https://stackoverflow.com/questions/2679815/previous-power-of-2
+  // really cool!
+
+  if (x == 0) return 0;
+
+  u32 r = x;
+
+  r |= (r >>  1);
+  r |= (r >>  2);
+  r |= (r >>  4);
+  r |= (r >>  8);
+  r |= (r >> 16);
+
+  return r - (r >> 1);
+}
+
+u32 next_power_of_two (const u32 x)
+{
+  if (x == 0) return 1;
+
+  u32 r = x - 1;
+
+  r |= (r >>  1);
+  r |= (r >>  2);
+  r |= (r >>  4);
+  r |= (r >>  8);
+  r |= (r >> 16);
+
+  r++;
+
+  return r;
+}
+

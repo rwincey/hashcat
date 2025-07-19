@@ -67,6 +67,13 @@ u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED
   return esalt_size;
 }
 
+u32 module_kernel_threads_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
+{
+  u32 kernel_threads_max = 256;
+
+  return kernel_threads_max;
+}
+
 u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const bool optimized_kernel = (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL);
@@ -89,27 +96,26 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 7;
 
   token.signatures_cnt    = 1;
   token.signatures_buf[0] = SIGNATURE_JKS_SHA1;
 
   token.sep[0]     = '*';
-  token.len_min[0] = 10;
-  token.len_max[0] = 10;
-  token.attr[0]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[0]     = 10;
+  token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.sep[1]     = '*';
-  token.len_min[1] = 40;
-  token.len_max[1] = 40;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[1]     = 40;
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[2]     = '*';
-  token.len_min[2] = 40;
-  token.len_max[2] = 40;
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[2]     = 40;
+  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[3]     = '*';
@@ -119,15 +125,13 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[4]     = '*';
-  token.len_min[4] = 2;
-  token.len_max[4] = 2;
-  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[4]     = 2;
+  token.attr[4]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[5]     = '*';
-  token.len_min[5] = 28;
-  token.len_max[5] = 28;
-  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[5]     = 28;
+  token.attr[5]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   token.sep[6]     = '*';
@@ -143,21 +147,21 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const u8 *checksum_pos = token.buf[1];
 
-  jks_sha1->checksum[0] = hex_to_u32 ((const u8 *) &checksum_pos[ 0]);
-  jks_sha1->checksum[1] = hex_to_u32 ((const u8 *) &checksum_pos[ 8]);
-  jks_sha1->checksum[2] = hex_to_u32 ((const u8 *) &checksum_pos[16]);
-  jks_sha1->checksum[3] = hex_to_u32 ((const u8 *) &checksum_pos[24]);
-  jks_sha1->checksum[4] = hex_to_u32 ((const u8 *) &checksum_pos[32]);
+  jks_sha1->checksum[0] = hex_to_u32 (&checksum_pos[ 0]);
+  jks_sha1->checksum[1] = hex_to_u32 (&checksum_pos[ 8]);
+  jks_sha1->checksum[2] = hex_to_u32 (&checksum_pos[16]);
+  jks_sha1->checksum[3] = hex_to_u32 (&checksum_pos[24]);
+  jks_sha1->checksum[4] = hex_to_u32 (&checksum_pos[32]);
 
   // iv
 
   const u8 *iv_pos = token.buf[2];
 
-  jks_sha1->iv[0] = hex_to_u32 ((const u8 *) &iv_pos[ 0]);
-  jks_sha1->iv[1] = hex_to_u32 ((const u8 *) &iv_pos[ 8]);
-  jks_sha1->iv[2] = hex_to_u32 ((const u8 *) &iv_pos[16]);
-  jks_sha1->iv[3] = hex_to_u32 ((const u8 *) &iv_pos[24]);
-  jks_sha1->iv[4] = hex_to_u32 ((const u8 *) &iv_pos[32]);
+  jks_sha1->iv[0] = hex_to_u32 (&iv_pos[ 0]);
+  jks_sha1->iv[1] = hex_to_u32 (&iv_pos[ 8]);
+  jks_sha1->iv[2] = hex_to_u32 (&iv_pos[16]);
+  jks_sha1->iv[3] = hex_to_u32 (&iv_pos[24]);
+  jks_sha1->iv[4] = hex_to_u32 (&iv_pos[32]);
 
   // enc_key
 
@@ -168,7 +172,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   for (int i = 0, j = 0; j < enc_key_len; i += 1, j += 2)
   {
-    enc_key_buf[i] = hex_to_u8 ((const u8 *) &enc_key_pos[j]);
+    enc_key_buf[i] = hex_to_u8 (&enc_key_pos[j]);
 
     jks_sha1->enc_key_len++;
   }
@@ -179,7 +183,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   u8 *der = (u8 *) jks_sha1->der;
 
-  der[0] = hex_to_u8 ((const u8 *) &der1_pos[0]);
+  der[0] = hex_to_u8 (&der1_pos[0]);
 
   // der2
 
@@ -187,7 +191,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   for (int i = 6, j = 0; j < 28; i += 1, j += 2)
   {
-    der[i] = hex_to_u8 ((const u8 *) &der2_pos[j]);
+    der[i] = hex_to_u8 (&der2_pos[j]);
   }
 
   der[1] = 0;
@@ -227,18 +231,18 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   char enc_key[16384 + 1] = { 0 };
 
-  u8 *ptr = (u8 *) jks_sha1->enc_key_buf;
+  const u8 *ptr = (const u8 *) jks_sha1->enc_key_buf;
 
   for (u32 i = 0, j = 0; i < jks_sha1->enc_key_len; i += 1, j += 2)
   {
-    sprintf (enc_key + j, "%02X", ptr[i]);
+    snprintf (enc_key + j, 3, "%02X", ptr[i]);
   }
 
-  u8 *der = (u8 *) jks_sha1->der;
+  const u8 *der = (const u8 *) jks_sha1->der;
 
   char alias[65] = { 0 };
 
-  memcpy (alias, (char *) jks_sha1->alias, 64);
+  memcpy (alias, (const char *) jks_sha1->alias, 64);
 
   const int line_len = snprintf (line_buf, line_size, "%s*%08X%08X%08X%08X%08X*%08X%08X%08X%08X%08X*%s*%02X*%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X*%s",
     SIGNATURE_JKS_SHA1,
@@ -285,6 +289,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;
@@ -329,7 +335,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_kernel_accel_min         = MODULE_DEFAULT;
   module_ctx->module_kernel_loops_max         = MODULE_DEFAULT;
   module_ctx->module_kernel_loops_min         = MODULE_DEFAULT;
-  module_ctx->module_kernel_threads_max       = MODULE_DEFAULT;
+  module_ctx->module_kernel_threads_max       = module_kernel_threads_max;
   module_ctx->module_kernel_threads_min       = MODULE_DEFAULT;
   module_ctx->module_kern_type                = module_kern_type;
   module_ctx->module_kern_type_dynamic        = MODULE_DEFAULT;

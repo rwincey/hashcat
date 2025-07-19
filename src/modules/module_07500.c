@@ -54,6 +54,23 @@ typedef struct krb5pa
 
 static const char *SIGNATURE_KRB5PA = "$krb5pa$23$";
 
+bool module_unstable_warning (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hc_device_param_t *device_param)
+{
+  if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU))
+  {
+    if (device_param->is_metal == true)
+    {
+      if (strncmp (device_param->device_name, "Intel", 5) == 0)
+      {
+        // Intel Iris Graphics, Metal Version 244.303: self-test failed
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hashes_t *hashes, MAYBE_UNUSED const hc_device_param_t *device_param)
 {
   char *jit_build_options = NULL;
@@ -104,6 +121,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 6;
 
   token.signatures_cnt    = 1;
@@ -113,19 +132,19 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
+  token.sep[1]     = '$';
   token.len_min[1] = 0;
   token.len_max[1] = 64;
-  token.sep[1]     = '$';
   token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH;
 
+  token.sep[2]     = '$';
   token.len_min[2] = 0;
   token.len_max[2] = 64;
-  token.sep[2]     = '$';
   token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH;
 
+  token.sep[3]     = '$';
   token.len_min[3] = 0;
   token.len_max[3] = 128;
-  token.sep[3]     = '$';
   token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH;
 
   token.len[4]     = 72;
@@ -214,8 +233,8 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 {
   const krb5pa_t *krb5pa = (const krb5pa_t *) esalt_buf;
 
-  u8 *ptr_timestamp = (u8 *) krb5pa->timestamp;
-  u8 *ptr_checksum  = (u8 *) krb5pa->checksum;
+  const u8 *ptr_timestamp = (const u8 *) krb5pa->timestamp;
+  const u8 *ptr_checksum  = (const u8 *) krb5pa->checksum;
 
   char data[128] = { 0 };
 
@@ -223,21 +242,21 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   for (u32 i = 0; i < 36; i++, ptr_data += 2)
   {
-    sprintf (ptr_data, "%02x", ptr_timestamp[i]);
+    snprintf (ptr_data, 3, "%02x", ptr_timestamp[i]);
   }
 
   for (u32 i = 0; i < 16; i++, ptr_data += 2)
   {
-    sprintf (ptr_data, "%02x", ptr_checksum[i]);
+    snprintf (ptr_data, 3, "%02x", ptr_checksum[i]);
   }
 
   *ptr_data = 0;
 
   const int line_len = snprintf (line_buf, line_size, "%s%s$%s$%s$%s",
     SIGNATURE_KRB5PA,
-    (char *) krb5pa->user,
-    (char *) krb5pa->realm,
-    (char *) krb5pa->salt,
+    (const char *) krb5pa->user,
+    (const char *) krb5pa->realm,
+    (const char *) krb5pa->salt,
     data);
 
   return line_len;
@@ -254,6 +273,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;
@@ -319,6 +340,6 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_st_hash                  = module_st_hash;
   module_ctx->module_st_pass                  = module_st_pass;
   module_ctx->module_tmp_size                 = MODULE_DEFAULT;
-  module_ctx->module_unstable_warning         = MODULE_DEFAULT;
+  module_ctx->module_unstable_warning         = module_unstable_warning;
   module_ctx->module_warmup_disable           = MODULE_DEFAULT;
 }

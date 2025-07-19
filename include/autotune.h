@@ -3,9 +3,11 @@
  * License.....: MIT
  */
 
-#ifndef _AUTOTUNE_H
-#define _AUTOTUNE_H
+#ifndef HC_AUTOTUNE_H
+#define HC_AUTOTUNE_H
+
+int find_tuning_function (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param);
 
 HC_API_CALL void *thread_autotune (void *p);
 
-#endif // _AUTOTUNE_H
+#endif // HC_AUTOTUNE_H

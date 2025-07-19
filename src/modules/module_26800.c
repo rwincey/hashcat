@@ -21,8 +21,10 @@ static const u32   DGST_SIZE      = DGST_SIZE_4_6;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_NETWORK_PROTOCOL;
 static const char *HASH_NAME      = "SNMPv3 HMAC-SHA256-192";
 static const u64   KERN_TYPE      = 26800;
-static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE;
+static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
+                                  | OPTI_TYPE_REGISTER_LIMIT;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
+                                  | OPTS_TYPE_NATIVE_THREADS
                                   | OPTS_TYPE_PT_GENERATE_LE;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
 static const char *ST_PASS        = "hashcat1";
@@ -77,6 +79,23 @@ typedef struct snmpv3
 
 } snmpv3_t;
 
+bool module_unstable_warning (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hc_device_param_t *device_param)
+{
+  if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU))
+  {
+    if (device_param->is_metal == true)
+    {
+      if (strncmp (device_param->device_name, "Intel", 5) == 0)
+      {
+        // Intel Iris Graphics, Metal Version 244.303: self-test failed
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 u32 module_pw_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const u32 pw_min = 8;
@@ -123,6 +142,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 5;
   token.signatures_cnt    = 1;
   token.signatures_buf[0] = SIGNATURE_SNMPV3;
@@ -132,28 +153,28 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   // packet number
+  token.sep[1]     = '$';
   token.len_min[1] = 1;
   token.len_max[1] = 8;
-  token.sep[1]     = '$';
   token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
   // salt
+  token.sep[2]     = '$';
   token.len_min[2] = SNMPV3_MSG_AUTH_PARAMS_LEN * 2;
   token.len_max[2] = SNMPV3_SALT_MAX * 2;
-  token.sep[2]     = '$';
   token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // engineid
+  token.sep[3]     = '$';
   token.len_min[3] = 26;
   token.len_max[3] = SNMPV3_ENGINEID_MAX;
-  token.sep[3]     = '$';
   token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
   // digest
-  token.len[4]     = SNMPV3_MSG_AUTH_PARAMS_LEN * 2;
   token.sep[4]     = '$';
+  token.len[4]     = SNMPV3_MSG_AUTH_PARAMS_LEN * 2;
   token.attr[4]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_HEX;
 
@@ -168,7 +189,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   memset (snmpv3->packet_number, 0, sizeof (snmpv3->packet_number));
 
-  strncpy ((char *) snmpv3->packet_number, (char *) packet_number_pos, packet_number_len);
+  strncpy ((char *) snmpv3->packet_number, (const char *) packet_number_pos, packet_number_len);
 
   // salt
 
@@ -229,19 +250,19 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 {
   const u32 *digest = (const u32 *) digest_buf;
 
-  snmpv3_t *snmpv3 = (snmpv3_t *) esalt_buf;
+  const snmpv3_t *snmpv3 = (const snmpv3_t *) esalt_buf;
 
   u8 *out_buf = (u8 *) line_buf;
 
-  int out_len = snprintf (line_buf, line_size, "%s%s$", SIGNATURE_SNMPV3, (char *) snmpv3->packet_number);
+  int out_len = snprintf (line_buf, line_size, "%s%s$", SIGNATURE_SNMPV3, (const char *) snmpv3->packet_number);
 
-  out_len += hex_encode ((u8 *) snmpv3->salt_buf, snmpv3->salt_len, out_buf + out_len);
+  out_len += hex_encode ((const u8 *) snmpv3->salt_buf, snmpv3->salt_len, out_buf + out_len);
 
   out_buf[out_len] = '$';
 
   out_len++;
 
-  out_len += hex_encode ((u8 *) snmpv3->engineID_buf, snmpv3->engineID_len, out_buf + out_len);
+  out_len += hex_encode ((const u8 *) snmpv3->engineID_buf, snmpv3->engineID_len, out_buf + out_len);
 
   out_buf[out_len] = '$';
 
@@ -279,6 +300,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;
@@ -344,6 +367,6 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_st_hash                  = module_st_hash;
   module_ctx->module_st_pass                  = module_st_pass;
   module_ctx->module_tmp_size                 = module_tmp_size;
-  module_ctx->module_unstable_warning         = MODULE_DEFAULT;
+  module_ctx->module_unstable_warning         = module_unstable_warning;
   module_ctx->module_warmup_disable           = MODULE_DEFAULT;
 }

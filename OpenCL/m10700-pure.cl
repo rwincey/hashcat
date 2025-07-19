@@ -25,22 +25,24 @@
 
 typedef struct pdf
 {
-  int  V;
-  int  R;
-  int  P;
+  int V;
+  int R;
+  int P;
 
-  int  enc_md;
+  int enc_md;
 
-  u32  id_buf[8];
-  u32  u_buf[32];
-  u32  o_buf[32];
+  u32 id_buf[8];
+  u32 u_buf[32];
+  u32 o_buf[32];
 
-  int  id_len;
-  int  o_len;
-  int  u_len;
+  int id_len;
+  int o_len;
+  int u_len;
 
-  u32  rc4key[2];
-  u32  rc4data[2];
+  u32 rc4key[2];
+  u32 rc4data[2];
+
+  int P_minus;
 
 } pdf_t;
 
@@ -1165,7 +1167,7 @@ DECLSPEC u32 do_round (PRIVATE_AS const u32 *w, const u32 pw_len, PRIVATE_AS pdf
   return ex;
 }
 
-KERNEL_FQ void m10700_init (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
+KERNEL_FQ KERNEL_FA void m10700_init (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
 {
   /**
    * base
@@ -1209,7 +1211,7 @@ KERNEL_FQ void m10700_init (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
   tmps[gid] = tmp;
 }
 
-KERNEL_FQ void m10700_loop (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
+KERNEL_FQ KERNEL_FA void m10700_loop (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -1256,8 +1258,6 @@ KERNEL_FQ void m10700_loop (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
 
   const u32 pw_len = pws[gid].pw_len;
 
-  if (pw_len == 0) return;
-
   u32 w[64] = { 0 };
 
   for (u32 i = 0, idx = 0; i < pw_len; i += 4, idx += 1)
@@ -1289,7 +1289,7 @@ KERNEL_FQ void m10700_loop (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
   tmps[gid] = tmp;
 }
 
-KERNEL_FQ void m10700_comp (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
+KERNEL_FQ KERNEL_FA void m10700_comp (KERN_ATTR_TMPS_ESALT (pdf17l8_tmp_t, pdf_t))
 {
   /**
    * modifier

@@ -80,7 +80,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
 
   int fmode = S_IRUSR|S_IWUSR;
 
-  if (strncmp (mode, "a", 1) == 0 || strncmp (mode, "ab", 2) == 0)
+  if (strncmp (mode, "a", 1) == 0)
   {
     oflag = O_WRONLY | O_CREAT | O_APPEND;
 
@@ -88,7 +88,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
     if (strncmp (mode, "ab", 2) == 0) oflag |= O_BINARY;
     #endif
   }
-  else if (strncmp (mode, "r", 1) == 0 || strncmp (mode, "rb", 2) == 0)
+  else if (strncmp (mode, "r", 1) == 0)
   {
     oflag = O_RDONLY;
     fmode = -1;
@@ -97,7 +97,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
     if (strncmp (mode, "rb", 2) == 0) oflag |= O_BINARY;
     #endif
   }
-  else if (strncmp (mode, "w", 1) == 0 || strncmp (mode, "wb", 2) == 0)
+  else if (strncmp (mode, "w", 1) == 0)
   {
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 
@@ -116,28 +116,32 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
   bool is_gzip = false;
   bool is_zip  = false;
   bool is_xz   = false;
+  bool is_fifo = hc_path_is_fifo (path);
 
-  int fd_tmp = open (path, O_RDONLY);
-
-  if (fd_tmp != -1)
+  if (is_fifo == false)
   {
-    lseek (fd_tmp, 0, SEEK_SET);
+    int fd_tmp = open (path, O_RDONLY);
 
-    if (read (fd_tmp, check, sizeof (check)) > 0)
+    if (fd_tmp != -1)
     {
-      if (check[0] == 0x1f && check[1] == 0x8b && check[2] == 0x08)                     is_gzip = true;
-      if (check[0] == 0x50 && check[1] == 0x4b && check[2] == 0x03 && check[3] == 0x04) is_zip  = true;
-      if (memcmp (check, XZ_SIG, XZ_SIG_SIZE) == 0)                                     is_xz   = true;
+      lseek (fd_tmp, 0, SEEK_SET);
 
-      // compressed files with BOM will be undetected!
-
-      if (is_gzip == false && is_zip == false && is_xz == false)
+      if (read (fd_tmp, check, sizeof (check)) > 0)
       {
-        fp->bom_size = hc_string_bom_size (check);
-      }
-    }
+        if (check[0] == 0x1f && check[1] == 0x8b && check[2] == 0x08)                     is_gzip = true;
+        if (check[0] == 0x50 && check[1] == 0x4b && check[2] == 0x03 && check[3] == 0x04) is_zip  = true;
+        if (memcmp (check, XZ_SIG, XZ_SIG_SIZE) == 0)                                     is_xz   = true;
 
-    close (fd_tmp);
+        // compressed files with BOM will be undetected!
+
+        if (is_gzip == false && is_zip == false && is_xz == false)
+        {
+          fp->bom_size = hc_string_bom_size (check);
+        }
+      }
+
+      close (fd_tmp);
+    }
   }
 
   if (fmode == -1)
@@ -210,7 +214,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
     lookStream.buf = xfp->inBuf;
     lookStream.bufSize = HCFILE_BUFFER_SIZE;
     lookStream.realStream = &inStream->vt;
-    LookToRead2_Init (&lookStream);
+    LookToRead2_INIT (&lookStream);
     Xzs_Construct (&xfp->streams);
     Int64 offset = 0;
     SRes res = Xzs_ReadBackward (&xfp->streams, &lookStream.vt, &offset, NULL, alloc);
@@ -406,6 +410,17 @@ size_t hc_fread (void *ptr, size_t size, size_t nmemb, HCFILE *fp)
   else if (fp->gfp)
   {
     n = gzfread (ptr, size, nmemb, fp->gfp);
+
+    // Double check to make sure that it successfully read 0 bytes instead of erroring
+    if (n == 0)
+    {
+      int errnum;
+      gzerror (fp->gfp, &errnum);
+      if (errnum != Z_OK)
+      {
+        return (size_t) -1;
+      }
+    }
   }
   else if (fp->ufp)
   {
@@ -473,7 +488,7 @@ size_t hc_fread (void *ptr, size_t size, size_t nmemb, HCFILE *fp)
       if (inLeft == 0 && outLeft == 0)
       {
         /* partial read */
-        n = (size_t) (outPos / size);
+        n = (outPos / size);
         break;
       }
       outPos += outLeft;
@@ -575,7 +590,18 @@ int hc_fseek (HCFILE *fp, off_t offset, int whence)
   }
   else if (fp->xfp)
   {
-    /* TODO */
+    /* XZ files are compressed streams, seeking is limited */
+    if (offset == 0 && whence == SEEK_SET)
+    {
+      /* Rewind to beginning */
+      hc_rewind(fp);
+      r = 0;
+    }
+    else
+    {
+      /* Arbitrary seeking not supported for compressed XZ files */
+      r = -1;
+    }
   }
 
   return r;

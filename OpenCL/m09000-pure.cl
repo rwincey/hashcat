@@ -340,7 +340,7 @@ DECLSPEC void SET_KEY32 (LOCAL_AS u32 *S, const u64 key, const u32 val)
 
 #else
 
-// access pattern: linear access with S offset already set to right offset based on thread ID saving it from compuation
+// access pattern: linear access with S offset already set to right offset based on thread ID saving it from computation
 //                 makes sense if there are not thread ID's (for instance on CPU)
 
 DECLSPEC inline u32 GET_KEY32 (LOCAL_AS u32 *S, const u64 key)
@@ -406,7 +406,7 @@ DECLSPEC inline void SET_KEY32 (LOCAL_AS u32 *S, const u64 key, const u32 val)
 extern __shared__ u32 S[];
 #endif
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m09000_init (KERN_ATTR_TMPS (pwsafe2_tmp_t))
+KERNEL_FQ KERNEL_FA void m09000_init (KERN_ATTR_TMPS (pwsafe2_tmp_t))
 {
   /**
    * base
@@ -636,7 +636,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m09000_init (KERN_ATTR_TMPS 
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m09000_loop (KERN_ATTR_TMPS (pwsafe2_tmp_t))
+KERNEL_FQ KERNEL_FA void m09000_loop (KERN_ATTR_TMPS (pwsafe2_tmp_t))
 {
   /**
    * base
@@ -705,7 +705,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m09000_loop (KERN_ATTR_TMPS 
   tmps[gid].digest[1] = R0;
 }
 
-KERNEL_FQ void m09000_comp (KERN_ATTR_TMPS (pwsafe2_tmp_t))
+KERNEL_FQ KERNEL_FA void m09000_comp (KERN_ATTR_TMPS (pwsafe2_tmp_t))
 {
   /**
    * base

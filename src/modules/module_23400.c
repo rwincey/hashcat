@@ -9,6 +9,7 @@
 #include "bitops.h"
 #include "convert.h"
 #include "shared.h"
+#include "limits.h"
 
 static const u32   ATTACK_EXEC    = ATTACK_EXEC_OUTSIDE_KERNEL;
 static const u32   DGST_POS0      = 0;
@@ -20,6 +21,7 @@ static const u32   HASH_CATEGORY  = HASH_CATEGORY_PASSWORD_MANAGER;
 static const char *HASH_NAME      = "Bitwarden";
 static const u64   KERN_TYPE      = 23400;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
+                                  | OPTI_TYPE_REGISTER_LIMIT
                                   | OPTI_TYPE_SLOW_HASH_SIMD_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
@@ -110,6 +112,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   hc_token_t token;
 
+  memset (&token, 0, sizeof (hc_token_t));
+
   token.token_cnt  = 6;
 
   token.signatures_cnt    = 1;
@@ -120,20 +124,19 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
                    | TOKEN_ATTR_VERIFY_SIGNATURE;
 
   token.sep[1]     = '*';
-  token.len_min[1] = 1;
-  token.len_max[1] = 1;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[1]     = 1;
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
   token.sep[2]     = '*';
   token.len_min[2] = 1;
-  token.len_max[2] = 7;
+  token.len_max[2] = 10;
   token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
   token.sep[3]     = '*';
   token.len_min[3] = 1;
-  token.len_max[3] = 7;
+  token.len_max[3] = 10;
   token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
@@ -143,9 +146,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH;
 
   token.sep[5]     = '*';
-  token.len_min[5] = 44;
-  token.len_max[5] = 44;
-  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
+  token.len[5]     = 44;
+  token.attr[5]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_BASE64A;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
@@ -166,15 +168,14 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const u32 iter1 = hc_strtoul ((const char *) iter1_pos, NULL, 10);
 
-  if (iter1 <      1) return (PARSER_SALT_ITERATION);
-  if (iter1 > 999999) return (PARSER_SALT_ITERATION);
+  if (iter1 == 0) return (PARSER_SALT_ITERATION);
 
   salt->salt_iter = iter1 - 1;
 
   const u32 iter2 = hc_strtoul ((const char *) iter2_pos, NULL, 10);
 
-  if (iter2 <      1) return (PARSER_SALT_ITERATION);
-  if (iter2 > 999999) return (PARSER_SALT_ITERATION);
+  if (iter2 <     1) return (PARSER_SALT_ITERATION);
+  if (iter2 > UINT_MAX) return (PARSER_SALT_ITERATION);
 
   salt->salt_iter2 = iter2 - 1;
 
@@ -269,6 +270,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_mask           = MODULE_DEFAULT;
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
+  module_ctx->module_bridge_name              = MODULE_DEFAULT;
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

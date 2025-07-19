@@ -12,6 +12,7 @@
 #include "mpsp.h"
 #include "backend.h"
 #include "shared.h"
+#include "thread.h"
 #include "stdout.h"
 
 static void out_flush (out_t *out)
@@ -59,6 +60,10 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
   straight_ctx_t   *straight_ctx   = hashcat_ctx->straight_ctx;
   user_options_t   *user_options   = hashcat_ctx->user_options;
 
+  // prevent wrong candidates in output when backend_ctx->backend_devices_active > 1
+
+  hc_thread_mutex_lock (outfile_ctx->mux_outfile);
+
   char *filename = outfile_ctx->filename;
 
   out_t out;
@@ -69,6 +74,8 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
     {
       event_log_error (hashcat_ctx, "%s: %s", filename, strerror (errno));
 
+      hc_thread_mutex_unlock (outfile_ctx->mux_outfile);
+
       return -1;
     }
 
@@ -77,6 +84,8 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
       hc_fclose (&out.fp);
 
       event_log_error (hashcat_ctx, "%s: %s", filename, strerror (errno));
+
+      hc_thread_mutex_unlock (outfile_ctx->mux_outfile);
 
       return -1;
     }
@@ -96,9 +105,11 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
 
   out.len = 0;
 
-  u32 plain_buf[64] = { 0 };
+  #define BUF_SZ (PW_MAX / sizeof(u32))
 
-  u8 *plain_ptr = (u8 *) plain_buf;
+  u32 plain_buf[BUF_SZ] = { 0 };
+
+  u8 *const plain_ptr = (u8 *) plain_buf;
 
   u32 plain_len = 0;
 
@@ -197,57 +208,50 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
       {
         while (pw_idx <= pw_idx_last)
         {
-          u32 *pw     = pws_comp_blk + (pw_idx->off - off_blk);
-          u32  pw_len = pw_idx->len;
-
-          pw_idx++;
+          u32 *pw = pws_comp_blk + (pw_idx->off - off_blk);
 
           for (u32 il_pos = 0; il_pos < il_cnt; il_pos++)
           {
             const u32 off = device_param->innerloop_pos + il_pos;
 
+            for (u32 i = 0; i < pw_idx->cnt; i++)
+            {
+              plain_buf[i] = pw[i];
+            }
+
             if (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL)
             {
-              for (int i = 0; i < 8; i++)
-              {
-                plain_buf[i] = pw[i];
-              }
-
-              plain_len = apply_rules_optimized (straight_ctx->kernel_rules_buf[off].cmds, &plain_buf[0], &plain_buf[4], pw_len);
+              plain_len = apply_rules_optimized (straight_ctx->kernel_rules_buf[off].cmds, &plain_buf[0], &plain_buf[4], pw_idx->len);
             }
             else
             {
-              for (int i = 0; i < 64; i++)
-              {
-                plain_buf[i] = pw[i];
-              }
-
-              plain_len = apply_rules (straight_ctx->kernel_rules_buf[off].cmds, plain_buf, pw_len);
+              plain_len = apply_rules (straight_ctx->kernel_rules_buf[off].cmds, plain_buf, pw_idx->len);
             }
 
             if (plain_len > hashconfig->pw_max) plain_len = hashconfig->pw_max;
 
             out_push (&out, plain_ptr, plain_len);
+
+            memset (plain_ptr, 0, PW_MAX);
           }
+
+          pw_idx++;
         }
       }
       else if (user_options->attack_mode == ATTACK_MODE_COMBI)
       {
         while (pw_idx <= pw_idx_last)
         {
-          u32 *pw     = pws_comp_blk + (pw_idx->off - off_blk);
-          u32  pw_len = pw_idx->len;
-
-          pw_idx++;
+          u32 *pw = pws_comp_blk + (pw_idx->off - off_blk);
 
           for (u32 il_pos = 0; il_pos < il_cnt; il_pos++)
           {
-            for (int i = 0; i < 64; i++)
+            for (u32 i = 0; i < pw_idx->cnt; i++)
             {
               plain_buf[i] = pw[i];
             }
 
-            plain_len = pw_len;
+            plain_len = pw_idx->len;
 
             char *comb_buf = (char *) device_param->combs_buf[il_pos].i;
             u32   comb_len =          device_param->combs_buf[il_pos].pw_len;
@@ -269,25 +273,24 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
 
             out_push (&out, plain_ptr, plain_len);
           }
+
+          pw_idx++;
         }
       }
       else if (user_options->attack_mode == ATTACK_MODE_HYBRID1)
       {
         while (pw_idx <= pw_idx_last)
         {
-          u32 *pw     = pws_comp_blk + (pw_idx->off - off_blk);
-          u32  pw_len = pw_idx->len;
-
-          pw_idx++;
+          u32 *pw = pws_comp_blk + (pw_idx->off - off_blk);
 
           for (u32 il_pos = 0; il_pos < il_cnt; il_pos++)
           {
-            for (int i = 0; i < 64; i++)
+            for (u32 i = 0; i < pw_idx->cnt; i++)
             {
               plain_buf[i] = pw[i];
             }
 
-            plain_len = pw_len;
+            plain_len = pw_idx->len;
 
             u64 off = device_param->kernel_params_mp_buf64[3] + il_pos;
 
@@ -300,16 +303,15 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
 
             out_push (&out, plain_ptr, plain_len);
           }
+
+          pw_idx++;
         }
       }
       else if ((user_options->attack_mode == ATTACK_MODE_HYBRID2) && (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL))
       {
         while (pw_idx <= pw_idx_last)
         {
-          char *pw     = (char *) (pws_comp_blk + (pw_idx->off - off_blk));
-          u32   pw_len =          (pw_idx->len);
-
-          pw_idx++;
+          char *pw = (char *) (pws_comp_blk + (pw_idx->off - off_blk));
 
           for (u32 il_pos = 0; il_pos < il_cnt; il_pos++)
           {
@@ -322,14 +324,16 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
 
             plain_len = stop;
 
-            memcpy (plain_ptr + plain_len, pw, pw_len);
+            memcpy (plain_ptr + plain_len, pw, pw_idx->len);
 
-            plain_len += pw_len;
+            plain_len += pw_idx->len;
 
             if (plain_len > hashconfig->pw_max) plain_len = hashconfig->pw_max;
 
             out_push (&out, plain_ptr, plain_len);
           }
+
+          pw_idx++;
         }
       }
 
@@ -345,6 +349,8 @@ int process_stdout (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param,
 
     hc_fclose (&out.fp);
   }
+
+  hc_thread_mutex_unlock (outfile_ctx->mux_outfile);
 
   return rc;
 }

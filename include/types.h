@@ -3,8 +3,8 @@
  * License.....: MIT
  */
 
-#ifndef _TYPES_H
-#define _TYPES_H
+#ifndef HC_TYPES_H
+#define HC_TYPES_H
 
 #include "common.h"
 
@@ -17,11 +17,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <math.h>
-
-// workaround to get the rid of "redefinition of typedef 'Byte'" build warning
-#if !defined (__APPLE__)
-#include "zlib.h"
-#endif
+#include <zlib.h>
 
 #if !defined(__MACTYPES__)
 #define __MACTYPES__
@@ -107,10 +103,19 @@ typedef enum event_identifier
   EVENT_AUTODETECT_STARTING       = 0x00000101,
   EVENT_AUTOTUNE_FINISHED         = 0x00000000,
   EVENT_AUTOTUNE_STARTING         = 0x00000001,
+  EVENT_BACKEND_RUNTIMES_INIT_POST = 0x00000130,
+  EVENT_BACKEND_RUNTIMES_INIT_PRE  = 0x00000131,
+  EVENT_BACKEND_DEVICES_INIT_POST = 0x00000132,
+  EVENT_BACKEND_DEVICES_INIT_PRE  = 0x00000133,
   EVENT_BITMAP_INIT_POST          = 0x00000010,
   EVENT_BITMAP_INIT_PRE           = 0x00000011,
   EVENT_BITMAP_FINAL_OVERFLOW     = 0x00000012,
+  EVENT_BRIDGES_INIT_POST         = 0x00000120,
+  EVENT_BRIDGES_INIT_PRE          = 0x00000121,
+  EVENT_BRIDGES_SALT_POST         = 0x00000122,
+  EVENT_BRIDGES_SALT_PRE          = 0x00000123,
   EVENT_CALCULATED_WORDS_BASE     = 0x00000020,
+  EVENT_CALCULATED_WORDS_CNT      = 0x00000021,
   EVENT_CRACKER_FINISHED          = 0x00000030,
   EVENT_CRACKER_HASH_CRACKED      = 0x00000031,
   EVENT_CRACKER_STARTING          = 0x00000032,
@@ -156,11 +161,13 @@ typedef enum event_identifier
   EVENT_POTFILE_NUM_CRACKED       = 0x000000c3,
   EVENT_POTFILE_REMOVE_PARSE_POST = 0x000000c4,
   EVENT_POTFILE_REMOVE_PARSE_PRE  = 0x000000c5,
-  EVENT_SELFTEST_FINISHED         = 0x000000d0,
-  EVENT_SELFTEST_STARTING         = 0x000000d1,
-  EVENT_SET_KERNEL_POWER_FINAL    = 0x000000e0,
-  EVENT_WORDLIST_CACHE_GENERATE   = 0x000000f0,
-  EVENT_WORDLIST_CACHE_HIT        = 0x000000f1,
+  EVENT_RULESFILES_PARSE_POST     = 0x000000d4,
+  EVENT_RULESFILES_PARSE_PRE      = 0x000000d5,
+  EVENT_SELFTEST_FINISHED         = 0x000000e0,
+  EVENT_SELFTEST_STARTING         = 0x000000e1,
+  EVENT_SET_KERNEL_POWER_FINAL    = 0x000000f0,
+  EVENT_WORDLIST_CACHE_GENERATE   = 0x00000110,
+  EVENT_WORDLIST_CACHE_HIT        = 0x00000111,
 
   // there will be much more event types soon
 
@@ -185,6 +192,7 @@ typedef enum vendor_id
   VENDOR_ID_POCL          = (1U << 6),
   VENDOR_ID_AMD_USE_INTEL = (1U << 7),
   VENDOR_ID_AMD_USE_HIP   = (1U << 8),
+  VENDOR_ID_MICROSOFT     = (1U << 9),
   VENDOR_ID_GENERIC       = (1U << 31)
 
 } vendor_id_t;
@@ -405,75 +413,115 @@ typedef enum opti_type
   OPTI_TYPE_REGISTER_LIMIT        = (1 << 20), // We'll limit the register count to 128
   OPTI_TYPE_SLOW_HASH_SIMD_INIT2  = (1 << 21),
   OPTI_TYPE_SLOW_HASH_SIMD_LOOP2  = (1 << 22),
+  OPTI_TYPE_SLOW_HASH_DIMY_INIT   = (1 << 23),
+  OPTI_TYPE_SLOW_HASH_DIMY_LOOP   = (1 << 24),
+  OPTI_TYPE_SLOW_HASH_DIMY_COMP   = (1 << 25),
 
 } opti_type_t;
 
 typedef enum opts_type
 {
-  OPTS_TYPE_PT_UTF16LE        = (1ULL <<  0),
-  OPTS_TYPE_PT_UTF16BE        = (1ULL <<  1),
-  OPTS_TYPE_PT_UPPER          = (1ULL <<  2),
-  OPTS_TYPE_PT_LOWER          = (1ULL <<  3),
-  OPTS_TYPE_PT_ADD01          = (1ULL <<  4),
-  OPTS_TYPE_PT_ADD02          = (1ULL <<  5),
-  OPTS_TYPE_PT_ADD80          = (1ULL <<  6),
-  OPTS_TYPE_PT_ADDBITS14      = (1ULL <<  7),
-  OPTS_TYPE_PT_ADDBITS15      = (1ULL <<  8),
-  OPTS_TYPE_PT_GENERATE_LE    = (1ULL <<  9),
-  OPTS_TYPE_PT_GENERATE_BE    = (1ULL << 10),
-  OPTS_TYPE_PT_NEVERCRACK     = (1ULL << 11), // if we want all possible results
-  OPTS_TYPE_PT_ALWAYS_ASCII   = (1ULL << 12),
-  OPTS_TYPE_PT_ALWAYS_HEXIFY  = (1ULL << 13),
-  OPTS_TYPE_PT_LM             = (1ULL << 14), // special handling: all lower, 7 max, ...
-  OPTS_TYPE_PT_HEX            = (1ULL << 15), // input wordlist is always in hex
-  OPTS_TYPE_ST_UTF16LE        = (1ULL << 16),
-  OPTS_TYPE_ST_UTF16BE        = (1ULL << 17),
-  OPTS_TYPE_ST_UPPER          = (1ULL << 18),
-  OPTS_TYPE_ST_LOWER          = (1ULL << 19),
-  OPTS_TYPE_ST_ADD01          = (1ULL << 20),
-  OPTS_TYPE_ST_ADD02          = (1ULL << 21),
-  OPTS_TYPE_ST_ADD80          = (1ULL << 22),
-  OPTS_TYPE_ST_ADDBITS14      = (1ULL << 23),
-  OPTS_TYPE_ST_ADDBITS15      = (1ULL << 24),
-  OPTS_TYPE_ST_HEX            = (1ULL << 25),
-  OPTS_TYPE_ST_BASE64         = (1ULL << 26),
-  OPTS_TYPE_MT_HEX            = (1ULL << 27), // mask is always in hex
-  OPTS_TYPE_HASH_COPY         = (1ULL << 28),
-  OPTS_TYPE_HASH_SPLIT        = (1ULL << 29),
-  OPTS_TYPE_LOOP_PREPARE      = (1ULL << 30), // a kernel which is called each time before _loop kernel started.
-                                              // like a hook12 kernel but without extra buffers.
-  OPTS_TYPE_LOOP_EXTENDED     = (1ULL << 31), // a kernel which is called each time normal _loop kernel finished.
-                                              // but unlike a hook kernel this kernel is called for every _loop iteration offset
-  OPTS_TYPE_HOOK12            = (1ULL << 32),
-  OPTS_TYPE_HOOK23            = (1ULL << 33),
-  OPTS_TYPE_INIT2             = (1ULL << 34),
-  OPTS_TYPE_LOOP2_PREPARE     = (1ULL << 35), // same as OPTS_TYPE_LOOP_PREPARE but for loop2 kernel
-  OPTS_TYPE_LOOP2             = (1ULL << 36),
-  OPTS_TYPE_AUX1              = (1ULL << 37),
-  OPTS_TYPE_AUX2              = (1ULL << 38),
-  OPTS_TYPE_AUX3              = (1ULL << 39),
-  OPTS_TYPE_AUX4              = (1ULL << 40),
-  OPTS_TYPE_BINARY_HASHFILE   = (1ULL << 41),
-  OPTS_TYPE_BINARY_HASHFILE_OPTIONAL
-                              = (1ULL << 42), // this allows us to not enforce the use of a binary file. requires OPTS_TYPE_BINARY_HASHFILE set to be effective.
-  OPTS_TYPE_PT_ADD06          = (1ULL << 43),
-  OPTS_TYPE_KEYBOARD_MAPPING  = (1ULL << 44),
-  OPTS_TYPE_DEEP_COMP_KERNEL  = (1ULL << 45), // if we have to iterate through each hash inside the comp kernel, for example if each hash has to be decrypted separately
-  OPTS_TYPE_TM_KERNEL         = (1ULL << 46),
-  OPTS_TYPE_SUGGEST_KG        = (1ULL << 47), // suggest keep guessing for modules the user maybe wants to use --keep-guessing
-  OPTS_TYPE_COPY_TMPS         = (1ULL << 48), // if we want to use data from tmps buffer (for example get the PMK in WPA)
-  OPTS_TYPE_POTFILE_NOPASS    = (1ULL << 49), // sometimes the password should not be printed to potfile
-  OPTS_TYPE_DYNAMIC_SHARED    = (1ULL << 50), // use dynamic shared memory (note: needs special kernel changes)
-  OPTS_TYPE_SELF_TEST_DISABLE = (1ULL << 51), // some algos use JiT in combinations with a salt or create too much startup time
-  OPTS_TYPE_MP_MULTI_DISABLE  = (1ULL << 52), // do not multiply the kernel-accel with the multiprocessor count per device to allow more fine-tuned workload settings
-  OPTS_TYPE_NATIVE_THREADS    = (1ULL << 53), // forces "native" thread count: CPU=1, GPU-Intel=8, GPU-AMD=64 (wavefront), GPU-NV=32 (warps)
-  OPTS_TYPE_MAXIMUM_THREADS   = (1ULL << 54), // disable else branch in pre-compilation thread count optimization setting
-  OPTS_TYPE_POST_AMP_UTF16LE  = (1ULL << 55), // run the utf8 to utf16le conversion kernel after they have been processed from amplifiers
-  OPTS_TYPE_AUTODETECT_DISABLE
-                              = (1ULL << 56), // skip autodetect engine
-  OPTS_TYPE_STOCK_MODULE      = (1ULL << 57), // module included with hashcat default distribution
+  OPTS_TYPE_PT_UTF16LE               = (1ULL <<  0),
+  OPTS_TYPE_PT_UTF16BE               = (1ULL <<  1),
+  OPTS_TYPE_PT_UPPER                 = (1ULL <<  2),
+  OPTS_TYPE_PT_LOWER                 = (1ULL <<  3),
+  OPTS_TYPE_PT_ADD01                 = (1ULL <<  4),
+  OPTS_TYPE_PT_ADD02                 = (1ULL <<  5),
+  OPTS_TYPE_PT_ADD80                 = (1ULL <<  6),
+  OPTS_TYPE_PT_ADDBITS14             = (1ULL <<  7),
+  OPTS_TYPE_PT_ADDBITS15             = (1ULL <<  8),
+  OPTS_TYPE_PT_GENERATE_LE           = (1ULL <<  9),
+  OPTS_TYPE_PT_GENERATE_BE           = (1ULL << 10),
+  OPTS_TYPE_PT_NEVERCRACK            = (1ULL << 11), // if we want all possible results
+  OPTS_TYPE_PT_ALWAYS_ASCII          = (1ULL << 12),
+  OPTS_TYPE_PT_ALWAYS_HEXIFY         = (1ULL << 13),
+  OPTS_TYPE_PT_LM                    = (1ULL << 14), // special handling: all lower, 7 max, ...
+  OPTS_TYPE_PT_HEX                   = (1ULL << 15), // input wordlist is always in hex
+  OPTS_TYPE_PT_BASE58                = (1ULL << 16), // only informative
+  OPTS_TYPE_ST_UTF16LE               = (1ULL << 17),
+  OPTS_TYPE_ST_UTF16BE               = (1ULL << 18),
+  OPTS_TYPE_ST_UPPER                 = (1ULL << 19),
+  OPTS_TYPE_ST_LOWER                 = (1ULL << 20),
+  OPTS_TYPE_ST_ADD01                 = (1ULL << 21),
+  OPTS_TYPE_ST_ADD02                 = (1ULL << 22),
+  OPTS_TYPE_ST_ADD80                 = (1ULL << 23),
+  OPTS_TYPE_ST_ADDBITS14             = (1ULL << 24),
+  OPTS_TYPE_ST_ADDBITS15             = (1ULL << 25),
+  OPTS_TYPE_ST_HEX                   = (1ULL << 26),
+  OPTS_TYPE_ST_BASE64                = (1ULL << 27),
+  OPTS_TYPE_MT_HEX                   = (1ULL << 28), // mask is always in hex
+  OPTS_TYPE_HASH_COPY                = (1ULL << 29),
+  OPTS_TYPE_HASH_SPLIT               = (1ULL << 30),
+  OPTS_TYPE_INIT                     = (1ULL << 31), // Added v7, since bridge can fully replace these, but are set by default automatically
+  OPTS_TYPE_LOOP                     = (1ULL << 32), // Added v7, since bridge can fully replace these, but are set by default automatically
+  OPTS_TYPE_COMP                     = (1ULL << 33), // Added v7, since bridge can fully replace these, but are set by default automatically
+  OPTS_TYPE_LOOP_PREPARE             = (1ULL << 34), // a kernel which is called each time before _loop kernel started.
+                                                     // like a hook12 kernel but without extra buffers.
+  OPTS_TYPE_LOOP_EXTENDED            = (1ULL << 35), // a kernel which is called each time normal _loop kernel finished.
+                                                     // but unlike a hook kernel this kernel is called for every _loop iteration offset
+  OPTS_TYPE_HOOK12                   = (1ULL << 36),
+  OPTS_TYPE_HOOK23                   = (1ULL << 37),
+  OPTS_TYPE_INIT2                    = (1ULL << 38),
+  OPTS_TYPE_LOOP2_PREPARE            = (1ULL << 39), // same as OPTS_TYPE_LOOP_PREPARE but for loop2 kernel
+  OPTS_TYPE_LOOP2                    = (1ULL << 40),
+  OPTS_TYPE_AUX1                     = (1ULL << 41),
+  OPTS_TYPE_AUX2                     = (1ULL << 42),
+  OPTS_TYPE_AUX3                     = (1ULL << 43),
+  OPTS_TYPE_AUX4                     = (1ULL << 44),
+  OPTS_TYPE_BINARY_HASHFILE          = (1ULL << 45),
+  OPTS_TYPE_BINARY_HASHFILE_OPTIONAL = (1ULL << 46), // this allows us to not enforce the use of a binary file. requires OPTS_TYPE_BINARY_HASHFILE set to be effective.
+  OPTS_TYPE_PT_ADD06                 = (1ULL << 47),
+  OPTS_TYPE_KEYBOARD_MAPPING         = (1ULL << 48),
+  OPTS_TYPE_DEEP_COMP_KERNEL         = (1ULL << 49), // if we have to iterate through each hash inside the comp kernel, for example if each hash has to be decrypted separately
+  OPTS_TYPE_TM_KERNEL                = (1ULL << 50),
+  OPTS_TYPE_SUGGEST_KG               = (1ULL << 51), // suggest keep guessing for modules the user maybe wants to use --keep-guessing
+  OPTS_TYPE_COPY_TMPS                = (1ULL << 52), // if we want to use data from tmps buffer (for example get the PMK in WPA)
+  OPTS_TYPE_POTFILE_NOPASS           = (1ULL << 53), // sometimes the password should not be printed to potfile
+  OPTS_TYPE_DYNAMIC_SHARED           = (1ULL << 54), // use dynamic shared memory (note: needs special kernel changes)
+  OPTS_TYPE_SELF_TEST_DISABLE        = (1ULL << 55), // some algos use JiT in combinations with a salt or create too much startup time
+  OPTS_TYPE_MP_MULTI_DISABLE         = (1ULL << 56), // do not multiply the kernel-accel with the multiprocessor count per device to allow more fine-tuned workload settings
+  OPTS_TYPE_THREAD_MULTI_DISABLE     = (1ULL << 57), // do not multiply the kernel-power with the thread count per device for super slow algos
+  OPTS_TYPE_NATIVE_THREADS           = (1ULL << 58), // forces "native" thread count: CPU=1, GPU-Intel=8, GPU-AMD=64 (wavefront), GPU-NV=32 (warps)
+  OPTS_TYPE_MAXIMUM_THREADS          = (1ULL << 59), // disable else branch in pre-compilation thread count optimization setting
+  OPTS_TYPE_POST_AMP_UTF16LE         = (1ULL << 60), // run the utf8 to utf16le conversion kernel after they have been processed from amplifiers
+  OPTS_TYPE_AUTODETECT_DISABLE       = (1ULL << 61), // skip autodetect engine
+  OPTS_TYPE_STOCK_MODULE             = (1ULL << 62), // module included with hashcat default distribution
+  OPTS_TYPE_MULTIHASH_DESPITE_ESALT  = (1ULL << 63)  // overrule multihash cracking check same salt but not same esalt
+//OPTS_TYPE_MAXIMUM_ACCEL            = (1ULL << 64)  // try to maximize kernel-accel during autotune
 
 } opts_type_t;
+
+typedef enum bridge_type
+{
+  BRIDGE_TYPE_NONE                   = 0,            // no bridge support
+  BRIDGE_TYPE_MATCH_TUNINGS          = (1ULL <<  1), // Disables autotune and adjusts -n, -u and -T for the backend device according to match bridge dimensions
+  BRIDGE_TYPE_UPDATE_SELFTEST        = (1ULL <<  2), // updates the selftest configured in the module. Can be useful for generic hash modes such as the python one
+
+  BRIDGE_TYPE_LAUNCH_INIT            = (1ULL << 10), // attention! not yet implemented
+  BRIDGE_TYPE_LAUNCH_LOOP            = (1ULL << 11),
+  BRIDGE_TYPE_LAUNCH_LOOP2           = (1ULL << 12),
+  BRIDGE_TYPE_LAUNCH_COMP            = (1ULL << 13), // attention! not yet implemented
+
+  // BRIDGE_TYPE_REPLACE_* is like
+  // BRIDGE_TYPE_LAUNCH_*, but
+  // deactivates KERN_RUN INIT/LOOP/COMP
+
+  BRIDGE_TYPE_REPLACE_INIT           = (1ULL << 20), // attention! not yet implemented
+  BRIDGE_TYPE_REPLACE_LOOP           = (1ULL << 21),
+  BRIDGE_TYPE_REPLACE_LOOP2          = (1ULL << 22),
+  BRIDGE_TYPE_REPLACE_COMP           = (1ULL << 23), // attention! not yet implemented
+
+  BRIDGE_TYPE_FORCE_WORKITEMS_001    = (1ULL << 30), // This override the workitem counts reported from the bridge device
+  BRIDGE_TYPE_FORCE_WORKITEMS_002    = (1ULL << 31), // Can be useful if this is not a physical hardware
+  BRIDGE_TYPE_FORCE_WORKITEMS_004    = (1ULL << 32),
+  BRIDGE_TYPE_FORCE_WORKITEMS_008    = (1ULL << 33),
+  BRIDGE_TYPE_FORCE_WORKITEMS_016    = (1ULL << 34),
+  BRIDGE_TYPE_FORCE_WORKITEMS_032    = (1ULL << 35),
+  BRIDGE_TYPE_FORCE_WORKITEMS_064    = (1ULL << 36),
+  BRIDGE_TYPE_FORCE_WORKITEMS_128    = (1ULL << 37),
+  BRIDGE_TYPE_FORCE_WORKITEMS_256    = (1ULL << 36),
+
+} bridge_type_t;
 
 typedef enum dgst_size
 {
@@ -483,6 +531,7 @@ typedef enum dgst_size
   DGST_SIZE_4_6  = (6  * sizeof (u32)), // 24
   DGST_SIZE_4_7  = (7  * sizeof (u32)), // 28
   DGST_SIZE_4_8  = (8  * sizeof (u32)), // 32
+  DGST_SIZE_4_10 = (10 * sizeof (u32)), // 40
   DGST_SIZE_4_16 = (16 * sizeof (u32)), // 64 !!!
   DGST_SIZE_4_32 = (32 * sizeof (u32)), // 128 !!!
   DGST_SIZE_4_64 = (64 * sizeof (u32)), // 256
@@ -586,8 +635,10 @@ typedef enum parser_rc
   PARSER_FILE_SIZE            = -41,
   PARSER_IV_LENGTH            = -42,
   PARSER_CT_LENGTH            = -43,
-  PARSER_CRYPTOAPI_KERNELTYPE = -44,
-  PARSER_CRYPTOAPI_KEYSIZE    = -45,
+  PARSER_PT_LENGTH            = -44,
+  PARSER_PT_OFFSET            = -45,
+  PARSER_CRYPTOAPI_KERNELTYPE = -46,
+  PARSER_CRYPTOAPI_KEYSIZE    = -47,
   PARSER_HAVE_ERRNO           = -100,
   PARSER_UNKNOWN_ERROR        = -255
 
@@ -621,12 +672,23 @@ typedef enum progress_mode
 
 } progress_mode_t;
 
+typedef enum increment {
+  INCREMENT_NONE      = 0,
+  INCREMENT_NORMAL    = 1,
+  INCREMENT_INVERSED  = 2,
+} increment_t;
+
 typedef enum user_options_defaults
 {
-  ADVICE_DISABLE           = false,
+  ADVICE                   = true,
   ATTACK_MODE              = ATTACK_MODE_STRAIGHT,
   AUTODETECT               = false,
+  BACKEND_DEVICES_VIRTMULTI = 1,
+  BACKEND_DEVICES_VIRTHOST = 1,
+  BACKEND_DEVICES_KEEPFREE = 0,
   BENCHMARK_ALL            = false,
+  BENCHMARK_MAX            = 99999,
+  BENCHMARK_MIN            = 0,
   BENCHMARK                = false,
   BITMAP_MAX               = 18,
   BITMAP_MIN               = 16,
@@ -637,16 +699,18 @@ typedef enum user_options_defaults
   BRAIN_SERVER             = false,
   BRAIN_SESSION            = 0,
   #endif
+  COLOR_CRACKED            = false,
   DEBUG_MODE               = 0,
-  DEPRECATED_CHECK_DISABLE = false,
+  DEPRECATED_CHECK         = true,
+  DYNAMIC_X                = false,
   FORCE                    = false,
-  HWMON_DISABLE            = false,
+  HWMON                    = true,
   #if defined (__APPLE__)
   HWMON_TEMP_ABORT         = 100,
   #else
   HWMON_TEMP_ABORT         = 90,
   #endif
-  HASH_INFO                = false,
+  HASH_INFO                = 0,
   HASH_MODE                = 0,
   HCCAPX_MESSAGE_PAIR      = 0,
   HEX_CHARSET              = false,
@@ -654,7 +718,8 @@ typedef enum user_options_defaults
   HEX_WORDLIST             = false,
   HOOK_THREADS             = 0,
   IDENTIFY                 = false,
-  INCREMENT                = false,
+  INCREMENT                = INCREMENT_NONE,
+  INCREMENT_INVERSE        = false,
   INCREMENT_MAX            = PW_MAX,
   INCREMENT_MIN            = 1,
   KEEP_GUESSING            = false,
@@ -662,15 +727,17 @@ typedef enum user_options_defaults
   KERNEL_LOOPS             = 0,
   KERNEL_THREADS           = 0,
   KEYSPACE                 = false,
+  TOTAL_CANDIDATES         = false,
   LEFT                     = false,
   LIMIT                    = 0,
-  LOGFILE_DISABLE          = false,
+  LOGFILE                  = true,
   LOOPBACK                 = false,
   MACHINE_READABLE         = false,
   MARKOV_CLASSIC           = false,
-  MARKOV_DISABLE           = false,
+  MARKOV                   = true,
   MARKOV_INVERSE           = false,
   MARKOV_THRESHOLD         = 0,
+  METAL_COMPILER_RUNTIME   = 120,
   NONCE_ERROR_CORRECTIONS  = 8,
   BACKEND_IGNORE_CUDA      = false,
   BACKEND_IGNORE_HIP       = false,
@@ -680,17 +747,18 @@ typedef enum user_options_defaults
   BACKEND_IGNORE_OPENCL    = false,
   BACKEND_INFO             = 0,
   BACKEND_VECTOR_WIDTH     = 0,
-  OPTIMIZED_KERNEL_ENABLE  = false,
-  MULTIPLY_ACCEL_DISABLE   = false,
+  OPTIMIZED_KERNEL         = false,
+  MULTIPLY_ACCEL           = true,
   OUTFILE_AUTOHEX          = true,
   OUTFILE_CHECK_TIMER      = 5,
   OUTFILE_FORMAT           = 3,
-  POTFILE_DISABLE          = false,
+  OUTFILE_JSON             = false,
+  POTFILE                  = true,
   PROGRESS_ONLY            = false,
   QUIET                    = false,
   REMOVE                   = false,
   REMOVE_TIMER             = 60,
-  RESTORE_DISABLE          = false,
+  RESTORE_ENABLE           = true,
   RESTORE                  = false,
   RESTORE_TIMER            = 1,
   RP_GEN                   = 0,
@@ -700,7 +768,7 @@ typedef enum user_options_defaults
   RUNTIME                  = 0,
   SCRYPT_TMTO              = 0,
   SEGMENT_SIZE             = 33554432,
-  SELF_TEST_DISABLE        = false,
+  SELF_TEST                = true,
   SHOW                     = false,
   SKIP                     = 0,
   SLOW_CANDIDATES          = false,
@@ -711,12 +779,12 @@ typedef enum user_options_defaults
   STATUS_TIMER             = 10,
   STDIN_TIMEOUT_ABORT      = 120,
   STDOUT_FLAG              = false,
-  USAGE                    = false,
+  USAGE                    = 0,
   USERNAME                 = false,
   VERSION                  = false,
   VERACRYPT_PIM_START      = 485,
   VERACRYPT_PIM_STOP       = 485,
-  WORDLIST_AUTOHEX_DISABLE = false,
+  WORDLIST_AUTOHEX         = true,
   WORKLOAD_PROFILE         = 2,
 
 } user_options_defaults_t;
@@ -726,6 +794,9 @@ typedef enum user_options_map
   IDX_ADVICE_DISABLE            = 0xff00,
   IDX_ATTACK_MODE               = 'a',
   IDX_BACKEND_DEVICES           = 'd',
+  IDX_BACKEND_DEVICES_VIRTMULTI = 'Y',
+  IDX_BACKEND_DEVICES_VIRTHOST  = 'R',
+  IDX_BACKEND_DEVICES_KEEPFREE  = 0xff60,
   IDX_BACKEND_IGNORE_CUDA       = 0xff01,
   IDX_BACKEND_IGNORE_HIP        = 0xff02,
   IDX_BACKEND_IGNORE_METAL      = 0xff03,
@@ -733,6 +804,8 @@ typedef enum user_options_map
   IDX_BACKEND_INFO              = 'I',
   IDX_BACKEND_VECTOR_WIDTH      = 0xff05,
   IDX_BENCHMARK_ALL             = 0xff06,
+  IDX_BENCHMARK_MAX             = 0xff56,
+  IDX_BENCHMARK_MIN             = 0xff57,
   IDX_BENCHMARK                 = 'b',
   IDX_BITMAP_MAX                = 0xff07,
   IDX_BITMAP_MIN                = 0xff08,
@@ -747,17 +820,27 @@ typedef enum user_options_map
   IDX_BRAIN_SESSION             = 0xff0f,
   IDX_BRAIN_SESSION_WHITELIST   = 0xff10,
   #endif
+  IDX_COLOR_CRACKED             = 0xff59,
+  IDX_BRIDGE_PARAMETER1         = 0xff80,
+  IDX_BRIDGE_PARAMETER2         = 0xff81,
+  IDX_BRIDGE_PARAMETER3         = 0xff82,
+  IDX_BRIDGE_PARAMETER4         = 0xff83,
   IDX_CPU_AFFINITY              = 0xff11,
   IDX_CUSTOM_CHARSET_1          = '1',
   IDX_CUSTOM_CHARSET_2          = '2',
   IDX_CUSTOM_CHARSET_3          = '3',
   IDX_CUSTOM_CHARSET_4          = '4',
+  IDX_CUSTOM_CHARSET_5          = '5',
+  IDX_CUSTOM_CHARSET_6          = '6',
+  IDX_CUSTOM_CHARSET_7          = '7',
+  IDX_CUSTOM_CHARSET_8          = '8',
   IDX_DEBUG_FILE                = 0xff12,
   IDX_DEBUG_MODE                = 0xff13,
   IDX_DEPRECATED_CHECK_DISABLE  = 0xff14,
+  IDX_DYNAMIC_X                 = 0xff55,
   IDX_ENCODING_FROM             = 0xff15,
   IDX_ENCODING_TO               = 0xff16,
-  IDX_HASH_INFO                 = 0xff17,
+  IDX_HASH_INFO                 = 'H', // 0xff17
   IDX_FORCE                     = 0xff18,
   IDX_HWMON_DISABLE             = 0xff19,
   IDX_HWMON_TEMP_ABORT          = 0xff1a,
@@ -770,6 +853,7 @@ typedef enum user_options_map
   IDX_HOOK_THREADS              = 0xff1f,
   IDX_IDENTIFY                  = 0xff20,
   IDX_INCREMENT                 = 'i',
+  IDX_INCREMENT_INVERSE         = 0xff61,
   IDX_INCREMENT_MAX             = 0xff21,
   IDX_INCREMENT_MIN             = 0xff22,
   IDX_INDUCTION_DIR             = 0xff23,
@@ -789,56 +873,59 @@ typedef enum user_options_map
   IDX_MARKOV_HCSTAT2            = 0xff2d,
   IDX_MARKOV_INVERSE            = 0xff2e,
   IDX_MARKOV_THRESHOLD          = 't',
-  IDX_NONCE_ERROR_CORRECTIONS   = 0xff2f,
+  IDX_METAL_COMPILER_RUNTIME    = 0xff2f,
+  IDX_NONCE_ERROR_CORRECTIONS   = 0xff30,
   IDX_OPENCL_DEVICE_TYPES       = 'D',
   IDX_OPTIMIZED_KERNEL_ENABLE   = 'O',
   IDX_MULTIPLY_ACCEL_DISABLE    = 'M',
-  IDX_OUTFILE_AUTOHEX_DISABLE   = 0xff30,
-  IDX_OUTFILE_CHECK_DIR         = 0xff31,
-  IDX_OUTFILE_CHECK_TIMER       = 0xff32,
-  IDX_OUTFILE_FORMAT            = 0xff33,
+  IDX_OUTFILE_AUTOHEX_DISABLE   = 0xff31,
+  IDX_OUTFILE_CHECK_DIR         = 0xff32,
+  IDX_OUTFILE_CHECK_TIMER       = 0xff33,
+  IDX_OUTFILE_FORMAT            = 0xff34,
+  IDX_OUTFILE_JSON              = 0xff35,
   IDX_OUTFILE                   = 'o',
-  IDX_POTFILE_DISABLE           = 0xff34,
-  IDX_POTFILE_PATH              = 0xff35,
-  IDX_PROGRESS_ONLY             = 0xff36,
-  IDX_QUIET                     = 0xff37,
-  IDX_REMOVE                    = 0xff38,
-  IDX_REMOVE_TIMER              = 0xff39,
-  IDX_RESTORE                   = 0xff3a,
-  IDX_RESTORE_DISABLE           = 0xff3b,
-  IDX_RESTORE_FILE_PATH         = 0xff3c,
+  IDX_POTFILE_DISABLE           = 0xff36,
+  IDX_POTFILE_PATH              = 0xff37,
+  IDX_PROGRESS_ONLY             = 0xff38,
+  IDX_QUIET                     = 0xff39,
+  IDX_REMOVE                    = 0xff3a,
+  IDX_REMOVE_TIMER              = 0xff3b,
+  IDX_RESTORE                   = 0xff3c,
+  IDX_RESTORE_DISABLE           = 0xff3d,
+  IDX_RESTORE_FILE_PATH         = 0xff3e,
   IDX_RP_FILE                   = 'r',
-  IDX_RP_GEN_FUNC_MAX           = 0xff3d,
-  IDX_RP_GEN_FUNC_MIN           = 0xff3e,
-  IDX_RP_GEN_FUNC_SEL           = 0xff3f,
+  IDX_RP_GEN_FUNC_MAX           = 0xff3f,
+  IDX_RP_GEN_FUNC_MIN           = 0xff40,
+  IDX_RP_GEN_FUNC_SEL           = 0xff41,
   IDX_RP_GEN                    = 'g',
-  IDX_RP_GEN_SEED               = 0xff40,
+  IDX_RP_GEN_SEED               = 0xff42,
   IDX_RULE_BUF_L                = 'j',
   IDX_RULE_BUF_R                = 'k',
-  IDX_RUNTIME                   = 0xff41,
-  IDX_SCRYPT_TMTO               = 0xff42,
+  IDX_RUNTIME                   = 0xff43,
+  IDX_SCRYPT_TMTO               = 0xff44,
   IDX_SEGMENT_SIZE              = 'c',
-  IDX_SELF_TEST_DISABLE         = 0xff43,
+  IDX_SELF_TEST_DISABLE         = 0xff45,
   IDX_SEPARATOR                 = 'p',
-  IDX_SESSION                   = 0xff44,
-  IDX_SHOW                      = 0xff45,
+  IDX_SESSION                   = 0xff46,
+  IDX_SHOW                      = 0xff47,
   IDX_SKIP                      = 's',
   IDX_SLOW_CANDIDATES           = 'S',
-  IDX_SPEED_ONLY                = 0xff46,
-  IDX_SPIN_DAMP                 = 0xff47,
-  IDX_STATUS                    = 0xff48,
-  IDX_STATUS_JSON               = 0xff49,
-  IDX_STATUS_TIMER              = 0xff4a,
-  IDX_STDOUT_FLAG               = 0xff4b,
-  IDX_STDIN_TIMEOUT_ABORT       = 0xff4c,
-  IDX_TRUECRYPT_KEYFILES        = 0xff4d,
-  IDX_USERNAME                  = 0xff4e,
-  IDX_VERACRYPT_KEYFILES        = 0xff4f,
-  IDX_VERACRYPT_PIM_START       = 0xff50,
-  IDX_VERACRYPT_PIM_STOP        = 0xff51,
+  IDX_SPEED_ONLY                = 0xff48,
+  IDX_SPIN_DAMP                 = 0xff49,
+  IDX_STATUS                    = 0xff4a,
+  IDX_STATUS_JSON               = 0xff4b,
+  IDX_STATUS_TIMER              = 0xff4c,
+  IDX_STDOUT_FLAG               = 0xff4d,
+  IDX_STDIN_TIMEOUT_ABORT       = 0xff4e,
+  IDX_TOTAL_CANDIDATES          = 0xff58,
+  IDX_TRUECRYPT_KEYFILES        = 0xff4f,
+  IDX_USERNAME                  = 0xff50,
+  IDX_VERACRYPT_KEYFILES        = 0xff51,
+  IDX_VERACRYPT_PIM_START       = 0xff52,
+  IDX_VERACRYPT_PIM_STOP        = 0xff53,
   IDX_VERSION_LOWER             = 'v',
   IDX_VERSION                   = 'V',
-  IDX_WORDLIST_AUTOHEX_DISABLE  = 0xff52,
+  IDX_WORDLIST_AUTOHEX_DISABLE  = 0xff54,
   IDX_WORKLOAD_PROFILE          = 'w',
 
 } user_options_map_t;
@@ -883,6 +970,13 @@ typedef void * hc_dynfunc_t;
  * structs
  */
 
+typedef struct dynamicx
+{
+  char *dynamicx_buf;
+  u32   dynamicx_len;
+
+} dynamicx_t;
+
 typedef struct user
 {
   char *user_name;
@@ -910,9 +1004,10 @@ typedef struct split
 
 typedef struct hashinfo
 {
-  user_t  *user;
-  char    *orighash;
-  split_t *split;
+  dynamicx_t *dynamicx;
+  user_t     *user;
+  char       *orighash;
+  split_t    *split;
 
 } hashinfo_t;
 
@@ -1071,6 +1166,12 @@ typedef struct hashconfig
   bool forced_jit_compile;
 
   u32 pwdump_column;
+
+  // bridge
+
+  u64         bridge_type;
+  const char *bridge_name;
+
 } hashconfig_t;
 
 typedef struct pw_pre
@@ -1159,9 +1260,14 @@ typedef struct hc_device_param
 
   int     sm_major;
   int     sm_minor;
+  char   *gcnArchName;
+  int     regsPerBlock;
+  int     regsPerMultiprocessor;
   u32     kernel_exec_timeout;
 
   u32     kernel_preferred_wgs_multiple;
+
+  int     bridge_link_device;
 
   st_status_t st_status;        // selftest status
 
@@ -1290,6 +1396,8 @@ typedef struct hc_device_param
   u32     kernel_threads_min;
   u32     kernel_threads_max;
 
+  bool    overtune_unfriendly;  // whatever sets this decide we operate in a mode that is not allowing to overtune threads_max or accel_max in autotuner
+
   u64     kernel_power;
   u64     hardware_power;
 
@@ -1352,6 +1460,8 @@ typedef struct hc_device_param
 
   pw_pre_t *pws_base_buf; // for debug mode
   u64       pws_base_cnt;
+
+  void    *h_tmps; // we need this only for bridges
 
   u64     words_off;
   u64     words_done;
@@ -1420,6 +1530,7 @@ typedef struct hc_device_param
   bool    has_lop3;
   bool    has_mov64;
   bool    has_prmt;
+  bool    has_shfw;
 
   double  spin_damp;
 
@@ -1874,6 +1985,9 @@ typedef struct backend_ctx
   int                 backend_device_from_opencl_platform[CL_PLATFORMS_MAX][DEVICES_MAX]; // from opencl device index to backend device index (by platform)
 
   int                 backend_devices_cnt;
+  int                 backend_devices_virtmulti;
+  int                 backend_devices_virthost;
+  int                 backend_devices_keepfree;
   int                 backend_devices_active;
 
   int                 cuda_devices_cnt;
@@ -1885,7 +1999,7 @@ typedef struct backend_ctx
   int                 opencl_devices_cnt;
   int                 opencl_devices_active;
 
-  u64                 backend_devices_filter;
+  int                 backend_devices_filter[DEVICES_MAX];
 
   hc_device_param_t  *devices_param;
 
@@ -1984,6 +2098,7 @@ typedef struct hm_attrs
   bool threshold_slowdown_get_supported;
   bool throttle_get_supported;
   bool utilization_get_supported;
+  bool memoryused_get_supported;
 
 } hm_attrs_t;
 
@@ -2101,8 +2216,12 @@ typedef struct outfile_ctx
 
   u32     outfile_format;
   bool    outfile_autohex;
+  bool    outfile_json;
+  bool    is_fifo;
 
   char   *filename;
+
+  hc_thread_mutex_t mux_outfile;
 
 } outfile_ctx_t;
 
@@ -2239,6 +2358,7 @@ typedef struct tuning_db_entry
   int         vector_width;
   int         kernel_accel;
   int         kernel_loops;
+  int         source; // 1 = dbfile, 2 = module
 
 } tuning_db_entry_t;
 
@@ -2300,55 +2420,63 @@ typedef struct user_options
   bool         nonce_error_corrections_chgd;
   bool         spin_damp_chgd;
   bool         backend_vector_width_chgd;
+  bool         outfile_chgd;
   bool         outfile_format_chgd;
   bool         remove_timer_chgd;
   bool         rp_gen_seed_chgd;
   bool         runtime_chgd;
+  bool         metal_compiler_runtime_chgd;
   bool         segment_size_chgd;
   bool         workload_profile_chgd;
   bool         skip_chgd;
   bool         limit_chgd;
   bool         scrypt_tmto_chgd;
   bool         separator_chgd;
+  bool         rule_buf_l_chgd;
+  bool         rule_buf_r_chgd;
+  bool         session_chgd;
 
-  bool         advice_disable;
+  bool         advice;
   bool         benchmark;
   bool         benchmark_all;
   #ifdef WITH_BRAIN
   bool         brain_client;
   bool         brain_server;
   #endif
+  bool         color_cracked;
   bool         force;
-  bool         deprecated_check_disable;
-  bool         hwmon_disable;
-  bool         hash_info;
+  bool         deprecated_check;
+  bool         dynamic_x;
+  bool         hwmon;
   bool         hex_charset;
   bool         hex_salt;
   bool         hex_wordlist;
-  bool         increment;
+  increment_t  increment;
   bool         keep_guessing;
   bool         keyspace;
+  bool         total_candidates;
   bool         left;
-  bool         logfile_disable;
+  bool         logfile;
   bool         loopback;
   bool         machine_readable;
   bool         markov_classic;
-  bool         markov_disable;
+  bool         markov;
   bool         markov_inverse;
   bool         backend_ignore_cuda;
   bool         backend_ignore_hip;
   bool         backend_ignore_metal;
   bool         backend_ignore_opencl;
-  bool         optimized_kernel_enable;
-  bool         multiply_accel_disable;
+  bool         optimized_kernel;
+  bool         multiply_accel;
   bool         outfile_autohex;
-  bool         potfile_disable;
+  bool         outfile_json;
+  bool         potfile;
   bool         progress_only;
   bool         quiet;
   bool         remove;
   bool         restore;
-  bool         restore_disable;
-  bool         self_test_disable;
+  bool         restore_enable;
+  bool         self_test;
   bool         show;
   bool         slow_candidates;
   bool         speed_only;
@@ -2356,19 +2484,21 @@ typedef struct user_options
   bool         status_json;
   bool         stdout_flag;
   bool         stdin_timeout_abort_chgd;
-  bool         usage;
   bool         username;
   bool         veracrypt_pim_start_chgd;
   bool         veracrypt_pim_stop_chgd;
   bool         version;
-  bool         wordlist_autohex_disable;
+  bool         wordlist_autohex;
   #ifdef WITH_BRAIN
   char        *brain_host;
   char        *brain_password;
   char        *brain_session_whitelist;
   #endif
+  char        *bridge_parameter1;
+  char        *bridge_parameter2;
+  char        *bridge_parameter3;
+  char        *bridge_parameter4;
   char        *cpu_affinity;
-  char        *custom_charset_4;
   char        *debug_file;
   char        *induction_dir;
   char        *keyboard_layout_mapping;
@@ -2387,13 +2517,23 @@ typedef struct user_options
   const char  *custom_charset_1;
   const char  *custom_charset_2;
   const char  *custom_charset_3;
+  const char  *custom_charset_4;
+  const char  *custom_charset_5;
+  const char  *custom_charset_6;
+  const char  *custom_charset_7;
+  const char  *custom_charset_8;
   const char  *encoding_from;
   const char  *encoding_to;
   const char  *rule_buf_l;
   const char  *rule_buf_r;
   const char  *session;
   u32          attack_mode;
+  u32          backend_devices_virtmulti;
+  u32          backend_devices_virthost;
+  u32          backend_devices_keepfree;
   u32          backend_info;
+  u32          benchmark_max;
+  u32          benchmark_min;
   u32          bitmap_max;
   u32          bitmap_min;
   #ifdef WITH_BRAIN
@@ -2405,6 +2545,7 @@ typedef struct user_options
   #endif
   u32          debug_mode;
   u32          hwmon_temp_abort;
+  u32          hash_info;
   int          hash_mode;
   u32          hccapx_message_pair;
   u32          hook_threads;
@@ -2427,10 +2568,12 @@ typedef struct user_options
   u32          rp_gen_func_min;
   u32          rp_gen_seed;
   u32          runtime;
+  u32          metal_compiler_runtime;
   u32          scrypt_tmto;
   u32          segment_size;
   u32          status_timer;
   u32          stdin_timeout_abort;
+  u32          usage;
   u32          veracrypt_pim_start;
   u32          veracrypt_pim_stop;
   u32          workload_profile;
@@ -2838,6 +2981,50 @@ typedef struct event_ctx
 
 } event_ctx_t;
 
+#define BRIDGE_DEFAULT (void *) -1
+
+typedef void (*BRIDGE_INIT) (void *);
+
+typedef struct bridge_ctx
+{
+  // local variables
+
+  size_t      bridge_context_size;
+  int         bridge_interface_version;
+
+  hc_dynlib_t bridge_handle;
+
+  BRIDGE_INIT bridge_init;
+
+  bool        enabled;
+
+  void       *platform_context;
+
+  void       *pws_buf; // transfer buffer for tmps[]
+
+  // functions
+
+  void     *(*platform_init)      (user_options_t *);
+  void      (*platform_term)      (void *);
+
+  int       (*get_unit_count)     (void *);
+  char     *(*get_unit_info)      (void *, const int);
+  int       (*get_workitem_count) (void *, const int);
+
+  bool      (*salt_prepare)       (void *, hashconfig_t *, hashes_t *);
+  void      (*salt_destroy)       (void *, hashconfig_t *, hashes_t *);
+
+  bool      (*thread_init)        (void *, hc_device_param_t *, hashconfig_t *, hashes_t *);
+  void      (*thread_term)        (void *, hc_device_param_t *, hashconfig_t *, hashes_t *);
+
+  bool      (*launch_loop)        (void *, hc_device_param_t *, hashconfig_t *, hashes_t *, const u32, const u64);
+  bool      (*launch_loop2)       (void *, hc_device_param_t *, hashconfig_t *, hashes_t *, const u32, const u64);
+
+  const char *(*st_update_pass)  (void *);
+  const char *(*st_update_hash)  (void *);
+
+} bridge_ctx_t;
+
 #define MODULE_DEFAULT (void *) -1
 
 typedef void (*MODULE_INIT) (void *);
@@ -2867,7 +3054,7 @@ typedef struct module_ctx
   u32         (*module_dgst_size)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   bool        (*module_dictstat_disable)        (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u64         (*module_esalt_size)              (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
-  const char *(*module_extra_tuningdb_block)    (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
+  const char *(*module_extra_tuningdb_block)    (const hashconfig_t *, const user_options_t *, const user_options_extra_t *, const backend_ctx_t *, const hashes_t *, const u32, const u32);
   u32         (*module_forced_outfile_format)   (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   u32         (*module_hash_category)           (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
   const char *(*module_hash_name)               (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
@@ -2935,12 +3122,16 @@ typedef struct module_ctx
 
   bool        (*module_potfile_custom_check)    (const hashconfig_t *, const hash_t *, const hash_t *, const void *);
 
+  u64         (*module_bridge_type)             (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
+  const char *(*module_bridge_name)             (const hashconfig_t *, const user_options_t *, const user_options_extra_t *);
+
 } module_ctx_t;
 
 typedef struct hashcat_ctx
 {
   brain_ctx_t           *brain_ctx;
   bitmap_ctx_t          *bitmap_ctx;
+  bridge_ctx_t          *bridge_ctx;
   combinator_ctx_t      *combinator_ctx;
   cpt_ctx_t             *cpt_ctx;
   debugfile_ctx_t       *debugfile_ctx;
@@ -2986,6 +3177,7 @@ typedef struct hook_thread_param
   int tid;
   int tsz;
 
+  bridge_ctx_t *bridge_ctx;
   module_ctx_t *module_ctx;
   status_ctx_t *status_ctx;
 
@@ -3053,11 +3245,12 @@ typedef enum hash_category
   HASH_CATEGORY_PRIVATE_KEY             = 20,
   HASH_CATEGORY_IMS                     = 21,
   HASH_CATEGORY_CRYPTOCURRENCY_WALLET   = 22,
-  HASH_CATEGORY_FBE                     = 23
+  HASH_CATEGORY_FBE                     = 23,
+  HASH_CATEGORY_APPLICATION_DATABASE    = 24
 } hash_category_t;
 
 // hash specific
 
 typedef aes_ctx AES_KEY;
 
-#endif // _TYPES_H
+#endif // HC_TYPES_H

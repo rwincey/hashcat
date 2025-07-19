@@ -66,3 +66,30 @@ void hcfree (void *ptr)
 
   free (ptr);
 }
+
+void *hcmalloc_aligned (const size_t sz, const int align)
+{
+  uintptr_t align_mask = (uintptr_t) (align - 1);
+
+  void *raw = malloc (sz + align + sizeof (void *));
+
+  if (raw == NULL) return NULL;
+
+  uintptr_t raw_addr = (uintptr_t) raw + sizeof (void *);
+
+  uintptr_t aligned_addr = (raw_addr + align_mask) & ~align_mask;
+
+  void **aligned_ptr = (void **) aligned_addr;
+
+  aligned_ptr[-1] = raw;
+
+  return aligned_ptr;
+}
+
+void hcfree_aligned(void *ptr)
+{
+  if (ptr != NULL)
+  {
+    free (((void **) ptr)[-1]);
+  }
+}

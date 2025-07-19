@@ -527,7 +527,7 @@ DECLSPEC int check_inflate_code1 (u8 *next, int left)
   }
 }
 
-KERNEL_FQ void m17220_sxx (KERN_ATTR_RULES_ESALT (pkzip_t))
+KERNEL_FQ KERNEL_FA void m17220_sxx (KERN_ATTR_RULES_ESALT (pkzip_t))
 {
   /**
    * modifier
@@ -676,7 +676,7 @@ KERNEL_FQ void m17220_sxx (KERN_ATTR_RULES_ESALT (pkzip_t))
 
       update_key3 (key2, key3);
       plain = unpack_v8a_from_v32_S (next) ^ key3;
-      if ((plain & 6) == 0 || (plain & 6) == 6) break;
+      if ((plain & 6) == 6) break;
       tmp[0] = plain;
       update_key012 (key0, key1, key2, plain, l_crc32tab);
 
@@ -792,7 +792,7 @@ KERNEL_FQ void m17220_sxx (KERN_ATTR_RULES_ESALT (pkzip_t))
   }
 }
 
-KERNEL_FQ void m17220_mxx (KERN_ATTR_RULES_ESALT (pkzip_t))
+KERNEL_FQ KERNEL_FA void m17220_mxx (KERN_ATTR_RULES_ESALT (pkzip_t))
 {
   /**
    * modifier
@@ -941,7 +941,7 @@ KERNEL_FQ void m17220_mxx (KERN_ATTR_RULES_ESALT (pkzip_t))
 
       update_key3 (key2, key3);
       plain = unpack_v8a_from_v32_S (next) ^ key3;
-      if ((plain & 6) == 0 || (plain & 6) == 6) break;
+      if ((plain & 6) == 6) break;
       tmp[0] = plain;
       update_key012 (key0, key1, key2, plain, l_crc32tab);
 

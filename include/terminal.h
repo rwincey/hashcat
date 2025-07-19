@@ -3,8 +3,8 @@
  * License.....: MIT
  */
 
-#ifndef _TERMINAL_H
-#define _TERMINAL_H
+#ifndef HC_TERMINAL_H
+#define HC_TERMINAL_H
 
 #include <stdio.h>
 #include <string.h>
@@ -18,15 +18,16 @@
 #include <termios.h>
 #if defined (__APPLE__)
 #include <sys/ioctl.h>
+#include <sys/sysctl.h>
 #endif // __APPLE__
 #endif // _WIN
 
-#if !defined (_WIN) && !defined (__CYGWIN__) && !defined (__MSYS__)
+#if defined (_POSIX)
 #include <sys/utsname.h>
-#if !defined (__linux__)
-#include <sys/sysctl.h>
-#endif // ! __linux__
-#endif // ! _WIN && | __CYGWIN__ && ! __MSYS__
+#if !defined (__APPLE__)
+#include <sys/sysinfo.h>
+#endif // ! __APPLE__
+#endif // _POSIX
 
 void welcome_screen (hashcat_ctx_t *hashcat_ctx, const char *version_tag);
 void goodbye_screen (hashcat_ctx_t *hashcat_ctx, const time_t proc_start, const time_t proc_stop);
@@ -64,4 +65,4 @@ void status_display                     (hashcat_ctx_t *hashcat_ctx);
 void status_benchmark_machine_readable  (hashcat_ctx_t *hashcat_ctx);
 void status_benchmark                   (hashcat_ctx_t *hashcat_ctx);
 
-#endif // _TERMINAL_H
+#endif // HC_TERMINAL_H

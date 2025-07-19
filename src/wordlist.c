@@ -37,7 +37,7 @@ size_t convert_from_hex (hashcat_ctx_t *hashcat_ctx, char *line_buf, const size_
     return (i);
   }
 
-  if (user_options->wordlist_autohex_disable == false)
+  if (user_options->wordlist_autohex == true)
   {
     if (is_hexify ((const u8 *) line_buf, line_len) == true)
     {
@@ -59,6 +59,11 @@ int load_segment (hashcat_ctx_t *hashcat_ctx, HCFILE *fp)
   wl_data->pos = 0;
 
   wl_data->cnt = hc_fread (wl_data->buf, 1, wl_data->incr - 1000, fp);
+
+  if (wl_data->cnt == (size_t) -1)
+  {
+    return -1;
+  }
 
   wl_data->buf[wl_data->cnt] = 0;
 
@@ -339,7 +344,12 @@ void get_next_word (hashcat_ctx_t *hashcat_ctx, HCFILE *fp, char **out_buf, u32 
     return;
   }
 
-  load_segment (hashcat_ctx, fp);
+  if (load_segment (hashcat_ctx, fp) == -1)
+  {
+    event_log_error (hashcat_ctx, "Error reading file!\n");
+
+    return;
+  }
 
   get_next_word (hashcat_ctx, fp, out_buf, out_len);
 }
@@ -559,9 +569,12 @@ int count_words (hashcat_ctx_t *hashcat_ctx, HCFILE *fp, const char *dictfile, u
   u64 cnt2 = 0;
 
   while (!hc_feof (fp))
-  {
-    load_segment (hashcat_ctx, fp);
-
+  {   
+    if (load_segment (hashcat_ctx, fp) == -1)
+    {
+      return -2;
+    }
+    
     comp += wl_data->cnt;
 
     u64 i = 0;
@@ -695,20 +708,21 @@ int wl_data_init (hashcat_ctx_t *hashcat_ctx)
 
   wl_data->enabled = false;
 
-  if (user_options->benchmark    == true) return 0;
-  if (user_options->hash_info    == true) return 0;
-  if (user_options->left         == true) return 0;
-  if (user_options->usage        == true) return 0;
-  if (user_options->version      == true) return 0;
+  if (user_options->usage         > 0)    return 0;
   if (user_options->backend_info  > 0)    return 0;
+  if (user_options->hash_info     > 0)    return 0;
+
+  if (user_options->benchmark    == true) return 0;
+  if (user_options->left         == true) return 0;
+  if (user_options->version      == true) return 0;
 
   wl_data->enabled = true;
 
-  wl_data->buf   = (char *) hcmalloc (user_options->segment_size);
-  wl_data->avail = user_options->segment_size;
-  wl_data->incr  = user_options->segment_size;
-  wl_data->cnt   = 0;
-  wl_data->pos   = 0;
+  wl_data->buf     = (char *) hcmalloc (user_options->segment_size);
+  wl_data->avail   = user_options->segment_size;
+  wl_data->incr    = user_options->segment_size;
+  wl_data->cnt     = 0;
+  wl_data->pos     = 0;
 
   /**
    * choose dictionary parser
@@ -729,7 +743,7 @@ int wl_data_init (hashcat_ctx_t *hashcat_ctx)
     }
     else
     {
-      if (user_options->wordlist_autohex_disable == false)
+      if (user_options->wordlist_autohex == true)
       {
         wl_data->func = get_next_word_lm_hex_or_text; // might be $HEX[] notation
       }

@@ -349,7 +349,7 @@ DECLSPEC void SET_KEY32 (LOCAL_AS u32 *S, const u64 key, const u32 val, const u6
 
 #else
 
-// access pattern: linear access with S offset already set to right offset based on thread ID saving it from compuation
+// access pattern: linear access with S offset already set to right offset based on thread ID saving it from computation
 //                 makes sense if there are not thread ID's (for instance on CPU)
 
 DECLSPEC inline u32 GET_KEY32 (LOCAL_AS u32 *S, const u64 key, MAYBE_UNUSED const u64 lid)
@@ -444,7 +444,7 @@ DECLSPEC u32 u16_bin_to_u32_hex (const u32 v)
        | ((v1 < 10) ? '0' + v1 : 'a' - 10 + v1) << 0;
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30600_init (KERN_ATTR_TMPS (bcrypt_tmp_t))
+KERNEL_FQ KERNEL_FA void m30600_init (KERN_ATTR_TMPS (bcrypt_tmp_t))
 {
   /**
    * base
@@ -695,7 +695,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30600_init (KERN_ATTR_TMPS 
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30600_loop (KERN_ATTR_TMPS (bcrypt_tmp_t))
+KERNEL_FQ KERNEL_FA void m30600_loop (KERN_ATTR_TMPS (bcrypt_tmp_t))
 {
   /**
    * base
@@ -898,7 +898,7 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30600_loop (KERN_ATTR_TMPS 
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m30600_comp (KERN_ATTR_TMPS (bcrypt_tmp_t))
+KERNEL_FQ KERNEL_FA void m30600_comp (KERN_ATTR_TMPS (bcrypt_tmp_t))
 {
   /**
    * base

@@ -3,8 +3,8 @@
  * License.....: MIT
  */
 
-#ifndef _INC_AMP_H
-#define _INC_AMP_H
+#ifndef INC_AMP_H
+#define INC_AMP_H
 
 #if defined IS_METAL
 
@@ -16,7 +16,7 @@
   GLOBAL_AS   const bf_t          *bfs_buf,    \
   CONSTANT_AS const u32           &combs_mode, \
   CONSTANT_AS const u64           &gid_max,    \
-                    uint           hc_gid [[ thread_position_in_grid ]]
+                    uint3          hc_gid [[ thread_position_in_grid ]]
 
 #else // CUDA, HIP, OpenCL
 
@@ -31,4 +31,4 @@
 
 #endif // IS_METAL
 
-#endif // _INC_AMP_H
+#endif // INC_AMP_H

@@ -81,7 +81,7 @@ DECLSPEC void hmac_sha256_run_V (PRIVATE_AS u32x *w0, PRIVATE_AS u32x *w1, PRIVA
   sha256_transform_vector (w0, w1, w2, w3, digest);
 }
 
-KERNEL_FQ void m26600_init (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sha256_aes_gcm_t))
+KERNEL_FQ KERNEL_FA void m26600_init (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sha256_aes_gcm_t))
 {
   /**
    * base
@@ -165,7 +165,7 @@ KERNEL_FQ void m26600_init (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sh
   }
 }
 
-KERNEL_FQ void m26600_loop (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sha256_aes_gcm_t))
+KERNEL_FQ KERNEL_FA void m26600_loop (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sha256_aes_gcm_t))
 {
   const u64 gid = get_global_id (0);
 
@@ -271,7 +271,7 @@ KERNEL_FQ void m26600_loop (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sh
   }
 }
 
-KERNEL_FQ void m26600_comp (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sha256_aes_gcm_t))
+KERNEL_FQ KERNEL_FA void m26600_comp (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sha256_aes_gcm_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);
@@ -334,12 +334,12 @@ KERNEL_FQ void m26600_comp (KERN_ATTR_TMPS_ESALT (pbkdf2_sha256_tmp_t, pbkdf2_sh
 
   // iv
 
-  const u32 iv[4] = {
-    esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[0],
-    esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[1],
-    esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[2],
-    esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[3]
-  };
+  u32 iv[4];
+
+  iv[0] = esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[0];
+  iv[1] = esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[1];
+  iv[2] = esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[2];
+  iv[3] = esalt_bufs[DIGESTS_OFFSET_HOST].iv_buf[3];
 
   const u32 iv_len = esalt_bufs[DIGESTS_OFFSET_HOST].iv_len;
 

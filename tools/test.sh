@@ -42,7 +42,7 @@ SLOW_ALGOS=$(   grep -l ATTACK_EXEC_OUTSIDE_KERNEL "${TDIR}"/../src/modules/modu
 # fake slow algos, due to specific password pattern (e.g. ?d from "mask_3" is invalid):
 # ("only" drawback is that just -a 0 is tested with this workaround)
 
-SLOW_ALGOS="${SLOW_ALGOS} 28501 28502 28503 28504 28505 28506"
+SLOW_ALGOS="${SLOW_ALGOS} 28501 28502 28503 28504 28505 28506 30901 30902 30903 30904 30905 30906"
 
 OUTD="test_$(date +%s)"
 
@@ -218,7 +218,7 @@ function init()
       echo "They will be fetched from ${luks_tests_url}"
       echo "Note: this needs to be done only once and could take a little bit to download/extract."
       echo "These luks test files are not shipped directly with hashcat because the file sizes are"
-      echo "particularily large and therefore a bandwidth burner for users who do not run these tests."
+      echo "particularly large and therefore a bandwidth burner for users who do not run these tests."
       echo ""
 
       # download:
@@ -256,8 +256,8 @@ function init()
   grep " ${hash_type} '" "${OUTD}/all.sh" > "${cmd_file}" 2>/dev/null
 
   # create separate list of password and hashes
-  sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                  > "${OUTD}/${hash_type}_passwords.txt"
-  sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{print $10}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes.txt"
+  sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                                                                    > "${OUTD}/${hash_type}_passwords.txt"
+  sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{t="";for(i=10;i<=NF;i++){if(t){t=t" "$i}else{t=$i}};print t}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes.txt"
 
   if [ "${hash_type}" -eq 10300 ]; then
     #cat ${OUTD}/${hash_type}.sh | cut -d' ' -f11- | cut -d"'" -f2 > ${OUTD}/${hash_type}_hashes.txt
@@ -336,6 +336,7 @@ function init()
   done 9< "${OUTD}/${hash_type}_passwords.txt"
 
   min_len=0
+  fixed_len=0
 
   if   [ "${hash_type}" -eq  2500 ]; then
     min_len=7 # means length 8, since we start with 0
@@ -351,6 +352,14 @@ function init()
     min_len=7 # means length 8, since we start with 0
   elif [ "${hash_type}" -eq 22000 ]; then
     min_len=7 # means length 8, since we start with 0
+  elif [ "${hash_type}" -eq 33500 ]; then
+    fixed_len=5
+  elif [ "${hash_type}" -eq 33501 ]; then
+    min_len=5
+    fixed_len=9
+  elif [ "${hash_type}" -eq 33502 ]; then
+    min_len=5
+    fixed_len=13
   fi
 
   # generate multiple pass/hash foreach len (2 to 8)
@@ -366,10 +375,18 @@ function init()
       rm -rf "${OUTD}/${hash_type}_dict1_multi_${i}" "${OUTD}/${hash_type}_dict2_multi_${i}"
       touch "${OUTD}/${hash_type}_dict1_multi_${i}" "${OUTD}/${hash_type}_dict2_multi_${i}"
 
-      perl tools/test.pl single "${hash_type}" ${i} > "${cmd_file}"
+      if [ "${fixed_len}" -ne 0 ]; then
+        if [ "${fixed_len}" -eq "${i}" ]; then
+          perl tools/test.pl single "${hash_type}" ${i} > "${cmd_file}"
+        else
+          perl tools/test.pl single "${hash_type}" ${fixed_len} > "${cmd_file}"
+        fi
+      else
+        perl tools/test.pl single "${hash_type}" ${i} > "${cmd_file}"
+      fi
 
-      sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                  > "${OUTD}/${hash_type}_passwords_multi_${i}.txt"
-      sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{print $10}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes_multi_${i}.txt"
+      sed 's/^echo *|.*$//'       "${cmd_file}" | awk '{print $2}'                                                                    > "${OUTD}/${hash_type}_passwords_multi_${i}.txt"
+      sed 's/^echo *|/echo "" |/' "${cmd_file}" | awk '{t="";for(i=10;i<=NF;i++){if(t){t=t" "$i}else{t=$i}};print t}' | cut -d"'" -f2 > "${OUTD}/${hash_type}_hashes_multi_${i}.txt"
 
       if [ "${hash_type}" -eq 10300 ]; then
         #cat ${OUTD}/${hash_type}_multi_${i}.txt | cut -d' ' -f11- | cut -d"'" -f2 > ${OUTD}/${hash_type}_hashes_multi_${i}.txt
@@ -591,7 +608,7 @@ function attack_0()
 
           # out-of-memory, workaround
 
-          echo "${output}" | head -1 > tmp_file_out
+          echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out
           echo "${search}" > tmp_file_search
 
           out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
@@ -768,6 +785,7 @@ function attack_1()
     fi
 
     echo "> Testing hash type $hash_type with attack mode 1, markov ${MARKOV}, single hash, Device-Type ${DEVICE_TYPE}, Kernel-Type ${KERNEL_TYPE}, Vector-Width ${VECTOR}." >> "${OUTD}/logfull.txt" 2>> "${OUTD}/logfull.txt"
+
     i=1
     while read -r -u 9 hash; do
 
@@ -874,7 +892,7 @@ function attack_1()
 
             # out-of-memory, workaround
 
-            echo "${output}" | head -1 > tmp_file_out
+            echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out
             echo "${search}" > tmp_file_search
 
             out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
@@ -1180,7 +1198,7 @@ function attack_3()
 
           # out-of-memory, workaround
 
-          echo "${output}" | head -1 > tmp_file_out
+          echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out
           echo "${search}" > tmp_file_search
 
           out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
@@ -1840,9 +1858,10 @@ function attack_6()
           newRet=$?
 
           if [ "${newRet}" -eq 2 ]; then
+
             # out-of-memory, workaround
 
-            echo "${output}" | head -1 > tmp_file_out
+            echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out
             echo "${search}" > tmp_file_search
 
             out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
@@ -1914,6 +1933,7 @@ function attack_6()
     e_nm=0
     cnt=0
 
+    min=1
     max=9
 
     if   [ "${hash_type}" -eq  2500 ]; then
@@ -1928,6 +1948,12 @@ function attack_6()
       max=5
     elif [ "${hash_type}" -eq 22000 ]; then
       max=5
+    elif [ "${hash_type}" -eq 33500 ]; then
+      min=5
+    elif [ "${hash_type}" -eq 33501 ]; then
+      min=8
+    elif [ "${hash_type}" -eq 33502 ]; then
+      min=8
     fi
 
     if is_in_array "${hash_type}" ${TIMEOUT_ALGOS}; then
@@ -1939,6 +1965,11 @@ function attack_6()
 
     i=2
     while [ "$i" -lt "$max" ]; do
+
+      if [ "$i" -lt "$min" ]; then
+        i=$((i + 1))
+        continue
+      fi
 
       hash_file=${OUTD}/${hash_type}_hashes_multi_${i}.txt
 
@@ -2273,7 +2304,7 @@ function attack_7()
 
             # out-of-memory, workaround
 
-            echo "${output}" | head -1 > tmp_file_out
+            echo "${output}" | grep -v "^Unsupported\|^$" | head -1 > tmp_file_out
             echo "${search}" > tmp_file_search
 
             out_md5=$(md5sum tmp_file_out | cut -d' ' -f1)
@@ -2287,7 +2318,6 @@ function attack_7()
           fi
 
           if [ "${newRet}" -ne 0 ]; then
-
             if [ "${newRet}" -eq 2 ]; then
               ret=20
             else
@@ -2368,6 +2398,12 @@ function attack_7()
       max=5
     elif [ "${hash_type}" -eq 22000 ]; then
       max=5
+    elif [ "${hash_type}" -eq 33500 ]; then
+      min=5
+    elif [ "${hash_type}" -eq 33501 ]; then
+      max=3
+    elif [ "${hash_type}" -eq 33502 ]; then
+      max=3
     fi
 
     if is_in_array "${hash_type}" ${TIMEOUT_ALGOS}; then
@@ -2383,7 +2419,13 @@ function attack_7()
       hash_file=${OUTD}/${hash_type}_hashes_multi_${i}.txt
       dict_file=${OUTD}/${hash_type}_dict2_multi_${i}
 
-      mask=${mask_7[$i]}
+      if [ "${hash_type}" -eq 40001 ]; then
+        mask=${mask_7[((i+10))]}
+      elif [ "${hash_type}" -eq 40002 ]; then
+        mask=${mask_7[((i+10))]}
+      else
+        mask=${mask_7[$i]}
+      fi
 
       # if file_only -> decode all base64 "hashes" and put them in the temporary file
 

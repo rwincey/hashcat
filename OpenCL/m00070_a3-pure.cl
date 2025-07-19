@@ -14,7 +14,7 @@
 #include M2S(INCLUDE_PATH/inc_hash_md5.cl)
 #endif
 
-KERNEL_FQ void m00070_mxx (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m00070_mxx (KERN_ATTR_VECTOR ())
 {
   /**
    * modifier
@@ -52,6 +52,18 @@ KERNEL_FQ void m00070_mxx (KERN_ATTR_VECTOR ())
 
     w[0] = w0;
 
+    #if VECT_SIZE == 1
+
+    md5_ctx_t ctx;
+
+    md5_init (&ctx);
+
+    md5_update_utf16le (&ctx, w, pw_len);
+
+    md5_final (&ctx);
+
+    #else
+
     md5_ctx_vector_t ctx;
 
     md5_init_vector (&ctx);
@@ -59,6 +71,8 @@ KERNEL_FQ void m00070_mxx (KERN_ATTR_VECTOR ())
     md5_update_vector_utf16le (&ctx, w, pw_len);
 
     md5_final_vector (&ctx);
+
+    #endif
 
     const u32x r0 = ctx.h[DGST_R0];
     const u32x r1 = ctx.h[DGST_R1];
@@ -69,7 +83,7 @@ KERNEL_FQ void m00070_mxx (KERN_ATTR_VECTOR ())
   }
 }
 
-KERNEL_FQ void m00070_sxx (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m00070_sxx (KERN_ATTR_VECTOR ())
 {
   /**
    * modifier
@@ -119,6 +133,18 @@ KERNEL_FQ void m00070_sxx (KERN_ATTR_VECTOR ())
 
     w[0] = w0;
 
+    #if VECT_SIZE == 1
+
+    md5_ctx_t ctx;
+
+    md5_init (&ctx);
+
+    md5_update_utf16le (&ctx, w, pw_len);
+
+    md5_final (&ctx);
+
+    #else
+
     md5_ctx_vector_t ctx;
 
     md5_init_vector (&ctx);
@@ -126,6 +152,8 @@ KERNEL_FQ void m00070_sxx (KERN_ATTR_VECTOR ())
     md5_update_vector_utf16le (&ctx, w, pw_len);
 
     md5_final_vector (&ctx);
+
+    #endif
 
     const u32x r0 = ctx.h[DGST_R0];
     const u32x r1 = ctx.h[DGST_R1];

@@ -3,8 +3,8 @@
  * License.....: MIT
  */
 
-#ifndef _HASHES_H
-#define _HASHES_H
+#ifndef HC_HASHES_H
+#define HC_HASHES_H
 
 int sort_by_digest_p0p1  (const void *v1, const void *v2, void *v3);
 int sort_by_salt         (const void *v1, const void *v2);
@@ -25,6 +25,7 @@ int hashes_init_stage1    (hashcat_ctx_t *hashcat_ctx);
 int hashes_init_stage2    (hashcat_ctx_t *hashcat_ctx);
 int hashes_init_stage3    (hashcat_ctx_t *hashcat_ctx);
 int hashes_init_stage4    (hashcat_ctx_t *hashcat_ctx);
+int hashes_init_stage5    (hashcat_ctx_t *hashcat_ctx);
 int hashes_init_selftest  (hashcat_ctx_t *hashcat_ctx);
 int hashes_init_benchmark (hashcat_ctx_t *hashcat_ctx);
 int hashes_init_zerohash  (hashcat_ctx_t *hashcat_ctx);
@@ -33,4 +34,4 @@ void hashes_destroy (hashcat_ctx_t *hashcat_ctx);
 
 void hashes_logger (hashcat_ctx_t *hashcat_ctx);
 
-#endif // _HASHES_H
+#endif // HC_HASHES_H

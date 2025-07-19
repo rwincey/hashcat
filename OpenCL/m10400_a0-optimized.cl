@@ -20,26 +20,28 @@
 
 typedef struct pdf
 {
-  int  V;
-  int  R;
-  int  P;
+  int V;
+  int R;
+  int P;
 
-  int  enc_md;
+  int enc_md;
 
-  u32  id_buf[8];
-  u32  u_buf[32];
-  u32  o_buf[32];
+  u32 id_buf[8];
+  u32 u_buf[32];
+  u32 o_buf[32];
 
-  int  id_len;
-  int  o_len;
-  int  u_len;
+  int id_len;
+  int o_len;
+  int u_len;
 
-  u32  rc4key[2];
-  u32  rc4data[2];
+  u32 rc4key[2];
+  u32 rc4data[2];
+
+  int P_minus;
 
 } pdf_t;
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_m04 (KERN_ATTR_RULES_ESALT (pdf_t))
+KERNEL_FQ KERNEL_FA void m10400_m04 (KERN_ATTR_RULES_ESALT (pdf_t))
 {
   /**
    * modifier
@@ -221,15 +223,15 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_m04 (KERN_ATTR_RULES_
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_m08 (KERN_ATTR_RULES_ESALT (pdf_t))
+KERNEL_FQ KERNEL_FA void m10400_m08 (KERN_ATTR_RULES_ESALT (pdf_t))
 {
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_m16 (KERN_ATTR_RULES_ESALT (pdf_t))
+KERNEL_FQ KERNEL_FA void m10400_m16 (KERN_ATTR_RULES_ESALT (pdf_t))
 {
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_s04 (KERN_ATTR_RULES_ESALT (pdf_t))
+KERNEL_FQ KERNEL_FA void m10400_s04 (KERN_ATTR_RULES_ESALT (pdf_t))
 {
   /**
    * modifier
@@ -423,10 +425,10 @@ KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_s04 (KERN_ATTR_RULES_
   }
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_s08 (KERN_ATTR_RULES_ESALT (pdf_t))
+KERNEL_FQ KERNEL_FA void m10400_s08 (KERN_ATTR_RULES_ESALT (pdf_t))
 {
 }
 
-KERNEL_FQ void FIXED_THREAD_COUNT(FIXED_LOCAL_SIZE) m10400_s16 (KERN_ATTR_RULES_ESALT (pdf_t))
+KERNEL_FQ KERNEL_FA void m10400_s16 (KERN_ATTR_RULES_ESALT (pdf_t))
 {
 }

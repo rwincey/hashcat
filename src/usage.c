@@ -29,7 +29,7 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   " -m, --hash-type                | Num  | Hash-type, references below (otherwise autodetect)   | -m 1000",
   " -a, --attack-mode              | Num  | Attack-mode, see references below                    | -a 3",
   " -V, --version                  |      | Print version                                        |",
-  " -h, --help                     |      | Print help                                           |",
+  " -h, --help                     |      | Print help. Use -hh to show all supported hash-modes | -h or -hh",
   "     --quiet                    |      | Suppress output                                      |",
   "     --hex-charset              |      | Assume charset is given in hex                       |",
   "     --hex-salt                 |      | Assume salt is given in hex                          |",
@@ -49,6 +49,7 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   "     --markov-classic           |      | Enables classic markov-chains, no per-position       |",
   "     --markov-inverse           |      | Enables inverse markov-chains, no per-position       |",
   " -t, --markov-threshold         | Num  | Threshold X when to stop accepting new markov-chains | -t 50",
+  "     --metal-compiler-runtime   | Num  | Abort Metal kernel build after X seconds of runtime  | --metal-compiler-runtime=180",
   "     --runtime                  | Num  | Abort session after X seconds of runtime             | --runtime=10",
   "     --session                  | Str  | Define specific session name                         | --session=mysession",
   "     --restore                  |      | Restore session from --session                       |",
@@ -56,6 +57,7 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   "     --restore-file-path        | File | Specific path to restore file                        | --restore-file-path=x.restore",
   " -o, --outfile                  | File | Define outfile for recovered hash                    | -o outfile.txt",
   "     --outfile-format           | Str  | Outfile format to use, separated with commas         | --outfile-format=1,3",
+  "     --outfile-json             |      | Force JSON format in outfile format                  |",
   "     --outfile-autohex-disable  |      | Disable the use of $HEX[] in output plains           |",
   "     --outfile-check-timer      | Num  | Sets seconds between outfile checks to X             | --outfile-check-timer=30",
   "     --wordlist-autohex-disable |      | Disable the conversion of $HEX[] from the wordlist   |",
@@ -64,6 +66,7 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   "     --show                     |      | Compare hashlist with potfile; show cracked hashes   |",
   "     --left                     |      | Compare hashlist with potfile; show uncracked hashes |",
   "     --username                 |      | Enable ignoring of usernames in hashfile             |",
+  "     --dynamic-x                |      | Ignore $dynamic_X$ prefix in hashes                  |",
   "     --remove                   |      | Enable removal of hashes once they are cracked       |",
   "     --remove-timer             | Num  | Update input hash file each X seconds                | --remove-timer=30",
   "     --potfile-disable          |      | Do not write potfile                                 |",
@@ -84,21 +87,30 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   "     --veracrypt-pim-stop       | Num  | VeraCrypt personal iterations multiplier stop        | --veracrypt-pim-stop=500",
   " -b, --benchmark                |      | Run benchmark of selected hash-modes                 |",
   "     --benchmark-all            |      | Run benchmark of all hash-modes (requires -b)        |",
+  "     --benchmark-min            |      | Set benchmark min hash-mode (requires -b)            | --benchmark-min=100",
+  "     --benchmark-max            |      | Set benchmark max hash-mode (requires -b)            | --benchmark-max=1000",
   "     --speed-only               |      | Return expected speed of the attack, then quit       |",
   "     --progress-only            |      | Return ideal progress step size and time to process  |",
   " -c, --segment-size             | Num  | Sets size in MB to cache from the wordfile to X      | -c 32",
   "     --bitmap-min               | Num  | Sets minimum bits allowed for bitmaps to X           | --bitmap-min=24",
   "     --bitmap-max               | Num  | Sets maximum bits allowed for bitmaps to X           | --bitmap-max=24",
+  "     --bridge-parameter1        | Str  | Sets the generic parameter 1 for a Bridge            |",
+  "     --bridge-parameter2        | Str  | Sets the generic parameter 2 for a Bridge            |",
+  "     --bridge-parameter3        | Str  | Sets the generic parameter 3 for a Bridge            |",
+  "     --bridge-parameter4        | Str  | Sets the generic parameter 4 for a Bridge            |",
   "     --cpu-affinity             | Str  | Locks to CPU devices, separated with commas          | --cpu-affinity=1,2,3",
   "     --hook-threads             | Num  | Sets number of threads for a hook (per compute unit) | --hook-threads=8",
-  "     --hash-info                |      | Show information for each hash-mode                  |",
+  " -H, --hash-info                |      | Show information for each hash-mode                  | -H or -HH",
   "     --example-hashes           |      | Alias of --hash-info                                 |",
   "     --backend-ignore-cuda      |      | Do not try to open CUDA interface on startup         |",
   "     --backend-ignore-hip       |      | Do not try to open HIP interface on startup          |",
   "     --backend-ignore-metal     |      | Do not try to open Metal interface on startup        |",
   "     --backend-ignore-opencl    |      | Do not try to open OpenCL interface on startup       |",
-  " -I, --backend-info             |      | Show system/evironment/backend API info              | -I or -II",
+  " -I, --backend-info             |      | Show system/environment/backend API info             | -I or -II",
   " -d, --backend-devices          | Str  | Backend devices to use, separated with commas        | -d 1",
+  " -Y, --backend-devices-virtmulti| Num  | Spawn X virtual instances on a real device           | -Y 8",
+  " -R, --backend-devices-virthost | Num  | Sets the real device to create virtual instances     | -R 1",    
+  "     --backend-devices-keepfree | Num  | Keep specified percentage of device memory free      | --backend-devices-keepfree=5",
   " -D, --opencl-device-types      | Str  | OpenCL device-types to use, separated with commas    | -D 1",
   " -O, --optimized-kernel-enable  |      | Enable optimized kernels (limits password length)    |",
   " -M, --multiply-accel-disable   |      | Disable multiply kernel-accel with processor count   |",
@@ -106,7 +118,7 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   " -n, --kernel-accel             | Num  | Manual workload tuning, set outerloop step size to X | -n 64",
   " -u, --kernel-loops             | Num  | Manual workload tuning, set innerloop step size to X | -u 256",
   " -T, --kernel-threads           | Num  | Manual workload tuning, set thread count to X        | -T 64",
-  "     --backend-vector-width     | Num  | Manually override backend vector-width to X          | --backend-vector=4",
+  "     --backend-vector-width     | Num  | Manually override backend vector-width to X          | --backend-vector-width=4",
   "     --spin-damp                | Num  | Use CPU for device synchronization, in percent       | --spin-damp=10",
   "     --hwmon-disable            |      | Disable temperature and fanspeed reads and triggers  |",
   "     --hwmon-temp-abort         | Num  | Abort if temperature reaches X degrees Celsius       | --hwmon-temp-abort=100",
@@ -114,6 +126,7 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   " -s, --skip                     | Num  | Skip X words from the start                          | -s 1000000",
   " -l, --limit                    | Num  | Limit X words from the start + skipped words         | -l 1000000",
   "     --keyspace                 |      | Show keyspace base:mod values and quit               |",
+  "     --total-candidates         |      | Show total candidate count (base*mod) and quit       |",
   " -j, --rule-left                | Rule | Single rule applied to each word from left wordlist  | -j 'c'",
   " -k, --rule-right               | Rule | Single rule applied to each word from right wordlist | -k '^-'",
   " -r, --rules-file               | File | Multiple rules applied to each word from wordlists   | -r rules/best64.rule",
@@ -126,8 +139,13 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   " -2, --custom-charset2          | CS   | User-defined charset ?2                              | -2 ?l?d?s",
   " -3, --custom-charset3          | CS   | User-defined charset ?3                              |",
   " -4, --custom-charset4          | CS   | User-defined charset ?4                              |",
+  " -5, --custom-charset5          | CS   | User-defined charset ?5                              |",
+  " -6, --custom-charset6          | CS   | User-defined charset ?6                              |",
+  " -7, --custom-charset7          | CS   | User-defined charset ?7                              |",
+  " -8, --custom-charset8          | CS   | User-defined charset ?8                              |",
   "     --identify                 |      | Shows all supported algorithms for input hashes      | --identify my.hash",
   " -i, --increment                |      | Enable mask increment mode                           |",
+  " -ii,--increment-inverse        |      | Increment from right-to-left                         |",
   "     --increment-min            | Num  | Start mask incrementing at X                         | --increment-min=4",
   "     --increment-max            | Num  | Stop mask incrementing at X                          | --increment-max=8",
   " -S, --slow-candidates          |      | Enable slower (but advanced) candidate generators    |",
@@ -142,11 +160,27 @@ static const char *const USAGE_BIG_PRE_HASHMODES[] =
   "     --brain-session            | Hex  | Overrides automatically calculated brain session     | --brain-session=0x2ae611db",
   "     --brain-session-whitelist  | Hex  | Allow given sessions only, separated with commas     | --brain-session-whitelist=0x2ae611db",
   #endif
+  "     --color-cracked            |      | Enables color output for cracked hashes              |",
   "",
-  "- [ Hash modes ] -",
+  NULL
+};
+
+static const char *const USAGE_BIG_HEADER_HASHMODES[] =
+{
+  "- [ Hash Modes ] -",
   "",
   "      # | Name                                                       | Category",
   "  ======+============================================================+======================================",
+  NULL
+};
+
+static const char *const USAGE_BIG_NO_HASHMODES[] =
+{
+  "- [ Hash Modes ] -",
+  "",
+  "  please use -hh to show all supported Hash Modes"
+  "",
+  "",
   NULL
 };
 
@@ -290,6 +324,8 @@ void usage_mini_print (const char *progname)
 
   #if defined (_WIN)
   printf ("\n");
+  printf ("For more info, see https://hashcat.net/faq/ubernoobs\n");
+  printf ("\n");
   printf ("Press any key to exit\n");
 
   getch ();
@@ -302,37 +338,42 @@ void usage_big_print (hashcat_ctx_t *hashcat_ctx)
   const hashconfig_t    *hashconfig    = hashcat_ctx->hashconfig;
         user_options_t  *user_options  = hashcat_ctx->user_options;
 
-  char *modulefile = (char *) hcmalloc (HCBUFSIZ_TINY);
-
-  usage_sort_t *usage_sort_buf = (usage_sort_t *) hccalloc (MODULE_HASH_MODES_MAXIMUM, sizeof (usage_sort_t));
-
   int usage_sort_cnt = 0;
 
-  for (int i = 0; i < MODULE_HASH_MODES_MAXIMUM; i++)
+  usage_sort_t *usage_sort_buf = NULL;
+
+  if (user_options->usage > 1)
   {
-    user_options->hash_mode = i;
+    char *modulefile = (char *) hcmalloc (HCBUFSIZ_TINY);
 
-    module_filename (folder_config, i, modulefile, HCBUFSIZ_TINY);
+    usage_sort_buf = (usage_sort_t *) hccalloc (MODULE_HASH_MODES_MAXIMUM, sizeof (usage_sort_t));
 
-    if (hc_path_exist (modulefile) == false) continue;
-
-    const int rc = hashconfig_init (hashcat_ctx);
-
-    if (rc == 0)
+    for (int i = 0; i < MODULE_HASH_MODES_MAXIMUM; i++)
     {
-      usage_sort_buf[usage_sort_cnt].hash_mode     = hashconfig->hash_mode;
-      usage_sort_buf[usage_sort_cnt].hash_name     = hcstrdup (hashconfig->hash_name);
-      usage_sort_buf[usage_sort_cnt].hash_category = hashconfig->hash_category;
+      user_options->hash_mode = i;
 
-      usage_sort_cnt++;
+      module_filename (folder_config, i, modulefile, HCBUFSIZ_TINY);
+
+      if (hc_path_exist (modulefile) == false) continue;
+
+      const int rc = hashconfig_init (hashcat_ctx);
+
+      if (rc == 0)
+      {
+        usage_sort_buf[usage_sort_cnt].hash_mode     = hashconfig->hash_mode;
+        usage_sort_buf[usage_sort_cnt].hash_name     = hcstrdup (hashconfig->hash_name);
+        usage_sort_buf[usage_sort_cnt].hash_category = hashconfig->hash_category;
+
+        usage_sort_cnt++;
+      }
+
+      hashconfig_destroy (hashcat_ctx);
     }
 
-    hashconfig_destroy (hashcat_ctx);
+    hcfree (modulefile);
+
+    qsort (usage_sort_buf, usage_sort_cnt, sizeof (usage_sort_t), sort_by_usage);
   }
-
-  hcfree (modulefile);
-
-  qsort (usage_sort_buf, usage_sort_cnt, sizeof (usage_sort_t), sort_by_usage);
 
   for (int i = 0; USAGE_BIG_PRE_HASHMODES[i] != NULL; i++)
   {
@@ -343,21 +384,40 @@ void usage_big_print (hashcat_ctx_t *hashcat_ctx)
 
   //hc_fwrite (EOL, strlen (EOL), 1, stdout);
 
-  for (int i = 0; i < usage_sort_cnt; i++)
+  if (user_options->usage > 1)
   {
-    printf ("%7u | %-58s | %s", usage_sort_buf[i].hash_mode, usage_sort_buf[i].hash_name, strhashcategory (usage_sort_buf[i].hash_category));
+    for (int i = 0; USAGE_BIG_HEADER_HASHMODES[i] != NULL; i++)
+    {
+      printf ("%s", USAGE_BIG_HEADER_HASHMODES[i]);
+
+      fwrite (EOL, strlen (EOL), 1, stdout);
+    }
+
+    for (int i = 0; i < usage_sort_cnt; i++)
+    {
+      printf ("%7u | %-58s | %s", usage_sort_buf[i].hash_mode, usage_sort_buf[i].hash_name, strhashcategory (usage_sort_buf[i].hash_category));
+
+      fwrite (EOL, strlen (EOL), 1, stdout);
+    }
 
     fwrite (EOL, strlen (EOL), 1, stdout);
+
+    for (int i = 0; i < usage_sort_cnt; i++)
+    {
+      hcfree (usage_sort_buf[i].hash_name);
+    }
+
+    hcfree (usage_sort_buf);
   }
-
-  fwrite (EOL, strlen (EOL), 1, stdout);
-
-  for (int i = 0; i < usage_sort_cnt; i++)
+  else
   {
-    hcfree (usage_sort_buf[i].hash_name);
-  }
+    for (int i = 0; USAGE_BIG_NO_HASHMODES[i] != NULL; i++)
+    {
+      printf ("%s", USAGE_BIG_NO_HASHMODES[i]);
 
-  hcfree (usage_sort_buf);
+      fwrite (EOL, strlen (EOL), 1, stdout);
+    }
+  }
 
   for (int i = 0; USAGE_BIG_POST_HASHMODES[i] != NULL; i++)
   {

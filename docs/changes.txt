@@ -172,6 +172,7 @@
 - Unit tests: Updated install_modules.sh, test.pl and some test modules (1000, 16000, 31300, 31500, 31600) by removing Text:Iconv and using Encode instead
 - Unit tests: Updated install_modules.sh with Crypt::Argon2
 - Unit tests: Updated install_modules.sh with Crypt::Passwd::XS, to test suite works also on Apple (ex: 1800)
+- Unit tests: Updated install_modules.sh to use an external module for Crypt::OpenSSL::EC, due to maintenance being discontinued
 - Unit tests: Updated install_modules.sh to use an external module for Digest::BLAKE2, due to maintenance being discontinued
 - Unit tests: Updated install_modules.sh to use an external module for Digest::GOST, due to maintenance being discontinued
 - Unit tests: Updated install_modules.sh to use an external package for pygost, due to not available anymore

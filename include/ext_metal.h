@@ -98,9 +98,9 @@ int  hc_mtlMemcpyHtoD                       (void *hashcat_ctx, mtl_command_queu
 // read
 int  hc_mtlMemcpyDtoH                       (void *hashcat_ctx, mtl_command_queue command_queue, void *buf_dst, mtl_mem buf_src, size_t buf_src_off, size_t buf_size);
 
-int  hc_mtlReleaseMemObject                 (void *hashcat_ctx, mtl_mem metal_buffer);
-int  hc_mtlReleaseFunction                  (void *hashcat_ctx, mtl_function metal_function);
-int  hc_mtlReleaseLibrary                   (void *hashcat_ctx, mtl_function metal_library);
+int  hc_mtlReleaseMemObject                 (void *hashcat_ctx, mtl_mem *metal_buffer);
+int  hc_mtlReleaseFunction                  (void *hashcat_ctx, mtl_function *metal_function);
+int  hc_mtlReleaseLibrary                   (void *hashcat_ctx, mtl_function *metal_library);
 int  hc_mtlReleaseCommandQueue              (void *hashcat_ctx, mtl_command_queue command_queue);
 int  hc_mtlReleaseDevice                    (void *hashcat_ctx, mtl_device_id metal_device);
 

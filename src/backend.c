@@ -119,6 +119,32 @@ static const int kern_run_all[] =
   KERN_RUN_AUX4,
 };
 
+#if defined (__APPLE__)
+static mtl_pipeline metal_pipeline_with_id (hc_device_param_t *device_param, const int kern_run)
+{
+  switch (kern_run)
+  {
+    case KERN_RUN_1:      return device_param->metal_pipeline1;       break;
+    case KERN_RUN_12:     return device_param->metal_pipeline12;      break;
+    case KERN_RUN_2P:     return device_param->metal_pipeline2p;      break;
+    case KERN_RUN_2:      return device_param->metal_pipeline2;       break;
+    case KERN_RUN_2E:     return device_param->metal_pipeline2e;      break;
+    case KERN_RUN_23:     return device_param->metal_pipeline23;      break;
+    case KERN_RUN_3:      return device_param->metal_pipeline3;       break;
+    case KERN_RUN_4:      return device_param->metal_pipeline4;       break;
+    case KERN_RUN_INIT2:  return device_param->metal_pipeline_init2;  break;
+    case KERN_RUN_LOOP2P: return device_param->metal_pipeline_loop2p; break;
+    case KERN_RUN_LOOP2:  return device_param->metal_pipeline_loop2;  break;
+    case KERN_RUN_AUX1:   return device_param->metal_pipeline_aux1;   break;
+    case KERN_RUN_AUX2:   return device_param->metal_pipeline_aux1;   break;
+    case KERN_RUN_AUX3:   return device_param->metal_pipeline_aux1;   break;
+    case KERN_RUN_AUX4:   return device_param->metal_pipeline_aux1;   break;
+  }
+
+  return NULL;
+}
+#endif
+
 static cl_kernel opencl_kernel_with_id (hc_device_param_t *device_param, const int kern_run)
 {
   switch (kern_run)
@@ -190,6 +216,30 @@ static CUfunction cuda_function_with_id (hc_device_param_t *device_param, const 
 
   return NULL;
 }
+
+#if defined (__APPLE__)
+int metal_query_max_local_size_bytes (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param)
+{
+  size_t max_local_size_bytes = 0;
+
+  for (int kern_run_idx = 0; kern_run_idx < kern_run_cnt; kern_run_idx++)
+  {
+    mtl_pipeline pipeline = metal_pipeline_with_id (device_param, kern_run_all[kern_run_idx]);
+
+    if (pipeline == NULL) continue;
+
+    size_t local_size_bytes = 0;
+
+    if (hc_mtlGetStaticThreadgroupMemoryLength (hashcat_ctx, pipeline, (unsigned int *) &local_size_bytes) == -1) return -1;
+
+    if (local_size_bytes == 0) continue;
+
+    max_local_size_bytes = MAX (max_local_size_bytes, local_size_bytes);
+  }
+
+  return (int) max_local_size_bytes;
+}
+#endif
 
 int opencl_query_threads_per_block (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, cl_kernel kernel)
 {
@@ -305,6 +355,7 @@ int cuda_query_max_local_size_bytes (hashcat_ctx_t *hashcat_ctx, hc_device_param
 static int backend_ctx_find_alias_devices (hashcat_ctx_t *hashcat_ctx)
 {
   backend_ctx_t *backend_ctx = hashcat_ctx->backend_ctx;
+  user_options_t *user_options = hashcat_ctx->user_options;
 
   // first identify all aliases
 
@@ -372,7 +423,7 @@ static int backend_ctx_find_alias_devices (hashcat_ctx_t *hashcat_ctx)
 
       // show a warning for specifically listed devices if they are an alias
 
-      if (backend_ctx->backend_devices_filter[alias_device->device_id] == 1)
+      if (backend_ctx->backend_devices_filter[alias_device->device_id] == 1 && user_options->quiet == false)
       {
         event_log_warning (hashcat_ctx, "The device #%d specifically listed was skipped because it is an alias of device #%d", alias_device->device_id + 1, backend_device->device_id + 1);
         event_log_warning (hashcat_ctx, NULL);
@@ -6106,16 +6157,17 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
 
       device_param->device_processors = device_processors;
 
-      if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
-      {
+      // We have 32 threads now
+      //if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
+      //{
         // APUs return some weird numbers. These values seem more appropriate (from rocminfo)
         //Compute Unit:            2
         //SIMDs per CU:            2
         //Wavefront Size:          32(0x20)
         //Max Waves Per CU:        32(0x20)
 
-        device_param->device_processors = 2 * 32;
-      }
+      //  device_param->device_processors = 2 * 32;
+      //}
 
       // device_global_mem, device_maxmem_alloc, device_available_mem
 
@@ -6589,31 +6641,6 @@ static void backend_ctx_devices_init_metal (hashcat_ctx_t *hashcat_ctx, MAYBE_UN
       device_param->opencl_device_vendor     = strdup ("Apple");
       device_param->opencl_device_c_version  = "";
 
-      /* unused and deprecated
-
-      // sm_minor, sm_major
-
-      int mtl_major = 0;
-      int mtl_minor = 0;
-
-      if (hc_mtlDeviceGetAttribute (hashcat_ctx, &mtl_major, MTL_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, metal_device) == -1)
-      {
-        device_param->skipped = true;
-
-        continue;
-      }
-
-      if (hc_mtlDeviceGetAttribute (hashcat_ctx, &mtl_minor, MTL_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, metal_device) == -1)
-      {
-        device_param->skipped = true;
-
-        continue;
-      }
-
-      device_param->mtl_major = mtl_major;
-      device_param->mtl_minor = mtl_minor;
-      */
-
       // device_name
 
       char *device_name = (char *) hcmalloc (HCBUFSIZ_TINY);
@@ -6811,23 +6838,7 @@ static void backend_ctx_devices_init_metal (hashcat_ctx_t *hashcat_ctx, MAYBE_UN
 
       device_param->device_local_mem_size = max_shared_memory_per_block;
 
-      // device_max_constant_buffer_size
-
-      int device_max_constant_buffer_size = 0;
-
-      if (hc_mtlDeviceGetAttribute (hashcat_ctx, &device_max_constant_buffer_size, MTL_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY, metal_device) == -1)
-      {
-        device_param->skipped = true;
-
-        continue;
-      }
-
-      if (device_max_constant_buffer_size < 65536)
-      {
-        event_log_error (hashcat_ctx, "* Device #%u: This device's local mem size is too small.", device_id + 1);
-
-        device_param->skipped = true;
-      }
+      // no device_max_constant_buffer_size on Metal
 
       // gpu properties
 
@@ -7277,16 +7288,29 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
         device_param->device_processors = device_processors;
 
-        if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
+        // Intel iGPU need to be "corrected".
+        // From clinfo:
+        // Max compute units: 32
+        // Preferred work group size multiple (device): 64
+        // Preferred work group size multiple (kernel): 64
+        // This is misleading.
+
+        if ((device_param->opencl_device_type & CL_DEVICE_TYPE_GPU) && (device_param->device_host_unified_memory == 1) && (device_param->opencl_device_vendor_id == VENDOR_ID_INTEL_SDK))
         {
+          device_param->device_processors = 1;
+        }
+
+        // We have 32 threads now
+        //if ((device_param->device_processors == 1) && (device_param->device_host_unified_memory == 1))
+        //{
           // APUs return some weird numbers. These values seem more appropriate (from rocminfo)
           //Compute Unit:            2
           //SIMDs per CU:            2
           //Wavefront Size:          32(0x20)
           //Max Waves Per CU:        32(0x20)
 
-          device_param->device_processors = 2 * 32;
-        }
+        //  device_param->device_processors = 2 * 32;
+        //}
 
         #if defined (__APPLE__)
         if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)
@@ -7488,10 +7512,23 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
         // kernel_preferred_wgs_multiple
 
-        // There is global query for this attribute on OpenCL that is not linked to a specific kernel, so we set it to a fixed value
-        // Later in the code, we add vendor specific extensions to query it
+        // There is no global query for this attribute on OpenCL that is not linked to a specific kernel, so we set it to a fixed value
+        // and later in the code we add vendor specific extensions to query it
 
-        device_param->kernel_preferred_wgs_multiple = 8;
+        if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)
+        {
+          device_param->kernel_preferred_wgs_multiple = 32;
+        }
+        else if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
+        {
+          device_param->kernel_preferred_wgs_multiple = 1;
+        }
+        else
+        {
+          // redundant for readability
+
+          device_param->kernel_preferred_wgs_multiple = 1;
+        }
 
         // device_local_mem_type
 
@@ -7841,15 +7878,17 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
           #endif
         }
 
-        if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
-        {
-          // they like this
-
-          device_param->kernel_preferred_wgs_multiple = 1;
-        }
-
         if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)
         {
+          if (device_param->opencl_platform_vendor_id == VENDOR_ID_INTEL_SDK)
+          {
+            // This is as invalid as it can be, most of them are either 8 and some are 64, but this is just an initial value
+            // The problem is that on opencl we can find out the preferred value only in combination with a kernel, so we have
+            // to wait for an early chance to re-query it when we start loading the kernels and update it.
+
+            device_param->kernel_preferred_wgs_multiple = 32;
+          }
+
           if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_vendor_id == VENDOR_ID_AMD))
           {
             // from https://www.khronos.org/registry/OpenCL/extensions/amd/cl_amd_device_attribute_query.txt
@@ -9212,6 +9251,7 @@ void backend_ctx_devices_update_power (hashcat_ctx_t *hashcat_ctx)
 
         event_log_advice (hashcat_ctx, "The wordlist or mask that you are using is too small.");
         event_log_advice (hashcat_ctx, "This means that hashcat cannot use the full parallel power of your device(s).");
+        event_log_advice (hashcat_ctx, "Hashcat is expecting at least %" PRIu64 " base words but only got %.1f%% of that.", backend_ctx->kernel_power_all, (100.f * status_ctx->words_base) / backend_ctx->kernel_power_all);
         event_log_advice (hashcat_ctx, "Unless you supply more work, your cracking speed will drop.");
         event_log_advice (hashcat_ctx, "For tips on supplying more work, see: https://hashcat.net/faq/morework");
         event_log_advice (hashcat_ctx, NULL);
@@ -9318,8 +9358,27 @@ static int get_hip_kernel_local_mem_size (hashcat_ctx_t *hashcat_ctx, hipFunctio
   return 0;
 }
 
+#if defined (__APPLE__)
+static int get_metal_kernel_wgs (hashcat_ctx_t *hashcat_ctx, mtl_pipeline pipeline, u32 *result)
+{
+  return hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, pipeline, result);
+}
+
+static int get_metal_kernel_preferred_wgs_multiple (hashcat_ctx_t *hashcat_ctx, mtl_pipeline pipeline, u32 *result)
+{
+  return hc_mtlGetThreadExecutionWidth (hashcat_ctx, pipeline, result);
+}
+
+static int get_metal_kernel_local_mem_size (hashcat_ctx_t *hashcat_ctx, mtl_pipeline pipeline, u64 *result)
+{
+  return hc_mtlGetStaticThreadgroupMemoryLength (hashcat_ctx, pipeline, (unsigned int *) result);
+}
+#endif
+
 static int get_opencl_kernel_wgs (hashcat_ctx_t *hashcat_ctx, hc_device_param_t *device_param, cl_kernel kernel, u32 *result)
 {
+  user_options_t *user_options = hashcat_ctx->user_options;
+
   size_t work_group_size = 0;
 
   if (hc_clGetKernelWorkGroupInfo (hashcat_ctx, kernel, device_param->opencl_device, CL_KERNEL_WORK_GROUP_SIZE, sizeof (work_group_size), &work_group_size, NULL) == -1) return -1;
@@ -9337,8 +9396,10 @@ static int get_opencl_kernel_wgs (hashcat_ctx_t *hashcat_ctx, hc_device_param_t 
     if (kernel_threads < cwgs_total)
     {
       // Very likely some bug, because the runtime was unable to follow our requirement to run N threads guaranteed on this kernel
-
-      event_log_warning (hashcat_ctx, "* Device #%u: Runtime returned CL_KERNEL_WORK_GROUP_SIZE=%d, but CL_KERNEL_COMPILE_WORK_GROUP_SIZE=%d. Use -T%d if you run into problems.", device_param->device_id + 1, (int) kernel_threads, (int) cwgs_total, (int) kernel_threads);
+      if (user_options->machine_readable == false)
+      {
+        event_log_warning (hashcat_ctx, "* Device #%u: Runtime returned CL_KERNEL_WORK_GROUP_SIZE=%d, but CL_KERNEL_COMPILE_WORK_GROUP_SIZE=%d. Use -T%d if you run into problems.", device_param->device_id + 1, (int) kernel_threads, (int) cwgs_total, (int) kernel_threads);
+      }
     }
 
     kernel_threads = cwgs_total;
@@ -10697,19 +10758,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       }
       else if (device_param->is_metal == true)
       {
-        // metal: todo - remove this section after below section is implemented
-
-        const u32 native_threads = device_param->kernel_preferred_wgs_multiple;
-
-        if ((native_threads >= device_param->kernel_threads_min) && (native_threads <= device_param->kernel_threads_max))
-        {
-          device_param->kernel_threads_min = native_threads;
-          device_param->kernel_threads_max = native_threads;
-        }
-        else
-        {
-          // abort?
-        }
+        // we will find this after loading the kernel with suppport of runtime api
       }
     }
 
@@ -11002,7 +11051,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     char *build_options_buf = (char *) hcmalloc (build_options_sz);
 
-    int build_options_len = snprintf (build_options_buf, build_options_sz, "-D KERNEL_STATIC ");
+    #if !defined (__APPLE__) && defined (DEBUG) && (DEBUG >= 1)
+    int build_options_len = snprintf(build_options_buf, build_options_sz, "-g -D KERNEL_STATIC ");
+    #else
+    int build_options_len = snprintf(build_options_buf, build_options_sz, "-D KERNEL_STATIC ");
+    #endif
 
     if ((device_param->is_cuda == true) || (device_param->is_hip == true))
     {
@@ -11408,11 +11461,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_memset, &device_param->kernel_wgs_memset) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_memset, &device_param->kernel_wgs_memset) == -1) return -1;
 
-        device_param->kernel_local_mem_size_memset = 0;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_memset, &device_param->kernel_local_mem_size_memset) == -1) return -1;
+
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_memset, &device_param->kernel_preferred_wgs_multiple_memset) == -1) return -1;
+
         device_param->kernel_dynamic_local_mem_size_memset = 0;
-        device_param->kernel_preferred_wgs_multiple_memset = device_param->metal_warp_size;
 
         // GPU bzero
 
@@ -11426,11 +11481,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_bzero, &device_param->kernel_wgs_bzero) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_bzero, &device_param->kernel_wgs_bzero) == -1) return -1;
 
-        device_param->kernel_local_mem_size_bzero = 0;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_bzero, &device_param->kernel_local_mem_size_bzero) == -1) return -1;
+
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_bzero, &device_param->kernel_preferred_wgs_multiple_bzero) == -1) return -1;
+
         device_param->kernel_dynamic_local_mem_size_bzero = 0;
-        device_param->kernel_preferred_wgs_multiple_bzero = device_param->metal_warp_size;
 
         // GPU autotune init
 
@@ -11444,11 +11501,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_atinit, &device_param->kernel_wgs_atinit) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_atinit, &device_param->kernel_wgs_atinit) == -1) return -1;
 
-        device_param->kernel_local_mem_size_atinit = 0;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_atinit, &device_param->kernel_local_mem_size_atinit) == -1) return -1;
+
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_atinit, &device_param->kernel_preferred_wgs_multiple_atinit) == -1) return -1;
+
         device_param->kernel_dynamic_local_mem_size_atinit = 0;
-        device_param->kernel_preferred_wgs_multiple_atinit = device_param->metal_warp_size;
 
         // GPU decompress
 
@@ -11462,11 +11521,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_decompress, &device_param->kernel_wgs_decompress) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_decompress, &device_param->kernel_wgs_decompress) == -1) return -1;
 
-        device_param->kernel_local_mem_size_decompress = 0;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_decompress, &device_param->kernel_local_mem_size_decompress) == -1) return -1;
+
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_decompress, &device_param->kernel_preferred_wgs_multiple_decompress) == -1) return -1;
+
         device_param->kernel_dynamic_local_mem_size_decompress = 0;
-        device_param->kernel_preferred_wgs_multiple_decompress = device_param->metal_warp_size;
 
         // GPU utf8 to utf16le conversion
 
@@ -11480,11 +11541,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_utf8toutf16le, &device_param->kernel_wgs_utf8toutf16le) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_utf8toutf16le, &device_param->kernel_wgs_utf8toutf16le) == -1) return -1;
 
-        device_param->kernel_local_mem_size_utf8toutf16le = 0;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_utf8toutf16le, &device_param->kernel_local_mem_size_utf8toutf16le) == -1) return -1;
+
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_utf8toutf16le, &device_param->kernel_preferred_wgs_multiple_utf8toutf16le) == -1) return -1;
+
         device_param->kernel_dynamic_local_mem_size_utf8toutf16le = 0;
-        device_param->kernel_preferred_wgs_multiple_utf8toutf16le = device_param->metal_warp_size;
       }
       #endif
 
@@ -14472,11 +14535,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_wgs1) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_wgs1) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_preferred_wgs_multiple1) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_local_mem_size1) == -1) return -1;
 
-            device_param->kernel_local_mem_size1 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_preferred_wgs_multiple1) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size1 = 0;
 
@@ -14494,11 +14557,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_wgs2) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_wgs2) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_preferred_wgs_multiple2) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_local_mem_size2) == -1) return -1;
 
-            device_param->kernel_local_mem_size2 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_preferred_wgs_multiple2) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size2 = 0;
 
@@ -14516,11 +14579,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_wgs3) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_wgs3) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_preferred_wgs_multiple3) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_local_mem_size3) == -1) return -1;
 
-            device_param->kernel_local_mem_size3 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_preferred_wgs_multiple3) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size3 = 0;
           }
@@ -14540,11 +14603,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_wgs4) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_wgs4) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_preferred_wgs_multiple4) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_local_mem_size4) == -1) return -1;
 
-            device_param->kernel_local_mem_size4 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_preferred_wgs_multiple4) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size4 = 0;
           }
@@ -14567,11 +14630,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_wgs1) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_wgs1) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_preferred_wgs_multiple1) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_local_mem_size1) == -1) return -1;
 
-            device_param->kernel_local_mem_size1 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_preferred_wgs_multiple1) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size1 = 0;
 
@@ -14589,11 +14652,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_wgs2) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_wgs2) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_preferred_wgs_multiple2) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_local_mem_size2) == -1) return -1;
 
-            device_param->kernel_local_mem_size2 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_preferred_wgs_multiple2) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size2 = 0;
 
@@ -14611,11 +14674,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_wgs3) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_wgs3) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_preferred_wgs_multiple3) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_local_mem_size3) == -1) return -1;
 
-            device_param->kernel_local_mem_size3 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_preferred_wgs_multiple3) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size3 = 0;
           }
@@ -14635,11 +14698,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
               continue;
             }
 
-            if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_wgs4) == -1) return -1;
+            if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_wgs4) == -1) return -1;
 
-            if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_preferred_wgs_multiple4) == -1) return -1;
+            if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_local_mem_size4) == -1) return -1;
 
-            device_param->kernel_local_mem_size4 = 0;
+            if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline4, &device_param->kernel_preferred_wgs_multiple4) == -1) return -1;
 
             device_param->kernel_dynamic_local_mem_size4 = 0;
           }
@@ -14666,11 +14729,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
                 continue;
               }
 
-              if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_tm, &device_param->kernel_wgs_tm) == -1) return -1;
+              if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_tm, &device_param->kernel_wgs_tm) == -1) return -1;
 
-              if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_tm, &device_param->kernel_preferred_wgs_multiple_tm) == -1) return -1;
+              if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_tm, &device_param->kernel_local_mem_size_tm) == -1) return -1;
 
-              device_param->kernel_local_mem_size_tm = 0;
+              if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_tm, &device_param->kernel_preferred_wgs_multiple_tm) == -1) return -1;
 
               device_param->kernel_dynamic_local_mem_size_tm = 0;
             }
@@ -14693,11 +14756,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_wgs1) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_wgs1) == -1) return -1;
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_preferred_wgs_multiple1) == -1) return -1;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_local_mem_size1) == -1) return -1;
 
-        device_param->kernel_local_mem_size1 = 0;
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline1, &device_param->kernel_preferred_wgs_multiple1) == -1) return -1;
 
         device_param->kernel_dynamic_local_mem_size1 = 0;
 
@@ -14715,11 +14778,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_wgs2) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_wgs2) == -1) return -1;
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_preferred_wgs_multiple2) == -1) return -1;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_local_mem_size2) == -1) return -1;
 
-        device_param->kernel_local_mem_size2 = 0;
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline2, &device_param->kernel_preferred_wgs_multiple2) == -1) return -1;
 
         device_param->kernel_dynamic_local_mem_size2 = 0;
 
@@ -14737,11 +14800,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
           continue;
         }
 
-        if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_wgs3) == -1) return -1;
+        if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_wgs3) == -1) return -1;
 
-        if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_preferred_wgs_multiple3) == -1) return -1;
+        if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_local_mem_size3) == -1) return -1;
 
-        device_param->kernel_local_mem_size3 = 0;
+        if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline3, &device_param->kernel_preferred_wgs_multiple3) == -1) return -1;
 
         device_param->kernel_dynamic_local_mem_size3 = 0;
 
@@ -14761,11 +14824,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline2p, &device_param->kernel_wgs2p) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline2p, &device_param->kernel_wgs2p) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline2p, &device_param->kernel_preferred_wgs_multiple2p) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline2p, &device_param->kernel_local_mem_size2p) == -1) return -1;
 
-          device_param->kernel_local_mem_size2p = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline2p, &device_param->kernel_preferred_wgs_multiple2p) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size2p = 0;
         }
@@ -14786,11 +14849,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline2e, &device_param->kernel_wgs2e) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline2e, &device_param->kernel_wgs2e) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline2e, &device_param->kernel_preferred_wgs_multiple2e) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline2e, &device_param->kernel_local_mem_size2e) == -1) return -1;
 
-          device_param->kernel_local_mem_size2e = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline2e, &device_param->kernel_preferred_wgs_multiple2e) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size2e = 0;
         }
@@ -14811,11 +14874,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline12, &device_param->kernel_wgs12) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline12, &device_param->kernel_wgs12) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline12, &device_param->kernel_preferred_wgs_multiple12) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline12, &device_param->kernel_local_mem_size12) == -1) return -1;
 
-          device_param->kernel_local_mem_size12 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline12, &device_param->kernel_preferred_wgs_multiple12) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size12 = 0;
         }
@@ -14836,11 +14899,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline23, &device_param->kernel_wgs23) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline23, &device_param->kernel_wgs23) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline23, &device_param->kernel_preferred_wgs_multiple23) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline23, &device_param->kernel_local_mem_size23) == -1) return -1;
 
-          device_param->kernel_local_mem_size23 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline23, &device_param->kernel_preferred_wgs_multiple23) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size23 = 0;
         }
@@ -14861,11 +14924,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_init2, &device_param->kernel_wgs_init2) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_init2, &device_param->kernel_wgs_init2) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_init2, &device_param->kernel_preferred_wgs_multiple_init2) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_init2, &device_param->kernel_local_mem_size_init2) == -1) return -1;
 
-          device_param->kernel_local_mem_size_init2 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_init2, &device_param->kernel_preferred_wgs_multiple_init2) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_init2 = 0;
         }
@@ -14886,11 +14949,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_loop2p, &device_param->kernel_wgs_loop2p) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_loop2p, &device_param->kernel_wgs_loop2p) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_loop2p, &device_param->kernel_preferred_wgs_multiple_loop2p) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_loop2p, &device_param->kernel_local_mem_size_loop2p) == -1) return -1;
 
-          device_param->kernel_local_mem_size_loop2p = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_loop2p, &device_param->kernel_preferred_wgs_multiple_loop2p) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_loop2p = 0;
         }
@@ -14911,11 +14974,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_loop2, &device_param->kernel_wgs_loop2) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_loop2, &device_param->kernel_wgs_loop2) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_loop2, &device_param->kernel_preferred_wgs_multiple_loop2) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_loop2, &device_param->kernel_local_mem_size_loop2) == -1) return -1;
 
-          device_param->kernel_local_mem_size_loop2 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_loop2, &device_param->kernel_preferred_wgs_multiple_loop2) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_loop2 = 0;
         }
@@ -14936,11 +14999,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_aux1, &device_param->kernel_wgs_aux1) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_aux1, &device_param->kernel_wgs_aux1) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_aux1, &device_param->kernel_preferred_wgs_multiple_aux1) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_aux1, &device_param->kernel_local_mem_size_aux1) == -1) return -1;
 
-          device_param->kernel_local_mem_size_aux1 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_aux1, &device_param->kernel_preferred_wgs_multiple_aux1) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_aux1 = 0;
         }
@@ -14961,11 +15024,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_aux2, &device_param->kernel_wgs_aux2) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_aux2, &device_param->kernel_wgs_aux2) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_aux2, &device_param->kernel_preferred_wgs_multiple_aux2) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_aux2, &device_param->kernel_local_mem_size_aux2) == -1) return -1;
 
-          device_param->kernel_local_mem_size_aux2 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_aux2, &device_param->kernel_preferred_wgs_multiple_aux2) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_aux2 = 0;
         }
@@ -14986,11 +15049,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_aux3, &device_param->kernel_wgs_aux3) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_aux3, &device_param->kernel_wgs_aux3) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_aux3, &device_param->kernel_preferred_wgs_multiple_aux3) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_aux3, &device_param->kernel_local_mem_size_aux3) == -1) return -1;
 
-          device_param->kernel_local_mem_size_aux3 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_aux3, &device_param->kernel_preferred_wgs_multiple_aux3) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_aux3 = 0;
         }
@@ -15011,11 +15074,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_aux4, &device_param->kernel_wgs_aux4) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_aux4, &device_param->kernel_wgs_aux4) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_aux4, &device_param->kernel_preferred_wgs_multiple_aux4) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_aux4, &device_param->kernel_local_mem_size_aux4) == -1) return -1;
 
-          device_param->kernel_local_mem_size_aux4 = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_aux4, &device_param->kernel_preferred_wgs_multiple_aux4) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_aux4 = 0;
         }
@@ -15042,11 +15105,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_mp_l, &device_param->kernel_wgs_mp_l) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_mp_l, &device_param->kernel_wgs_mp_l) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_mp_l, &device_param->kernel_preferred_wgs_multiple_mp_l) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_mp_l, &device_param->kernel_local_mem_size_mp_l) == -1) return -1;
 
-          device_param->kernel_local_mem_size_mp_l = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_mp_l, &device_param->kernel_preferred_wgs_multiple_mp_l) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_mp_l = 0;
 
@@ -15062,11 +15125,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_mp_r, &device_param->kernel_wgs_mp_r) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_mp_r, &device_param->kernel_wgs_mp_r) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_mp_r, &device_param->kernel_preferred_wgs_multiple_mp_r) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_mp_r, &device_param->kernel_local_mem_size_mp_r) == -1) return -1;
 
-          device_param->kernel_local_mem_size_mp_r = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_mp_r, &device_param->kernel_preferred_wgs_multiple_mp_r) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_mp_r = 0;
         }
@@ -15084,11 +15147,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_wgs_mp) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_wgs_mp) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_preferred_wgs_multiple_mp) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_local_mem_size_mp) == -1) return -1;
 
-          device_param->kernel_local_mem_size_mp = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_preferred_wgs_multiple_mp) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_mp = 0;
         }
@@ -15106,11 +15169,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_wgs_mp) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_wgs_mp) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_preferred_wgs_multiple_mp) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_local_mem_size_mp) == -1) return -1;
 
-          device_param->kernel_local_mem_size_mp = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_mp, &device_param->kernel_preferred_wgs_multiple_mp) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_mp = 0;
         }
@@ -15139,11 +15202,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             continue;
           }
 
-          if (hc_mtlGetMaxTotalThreadsPerThreadgroup (hashcat_ctx, device_param->metal_pipeline_amp, &device_param->kernel_wgs_amp) == -1) return -1;
+          if (get_metal_kernel_wgs (hashcat_ctx, device_param->metal_pipeline_amp, &device_param->kernel_wgs_amp) == -1) return -1;
 
-          if (hc_mtlGetThreadExecutionWidth (hashcat_ctx, device_param->metal_pipeline_amp, &device_param->kernel_preferred_wgs_multiple_amp) == -1) return -1;
+          if (get_metal_kernel_local_mem_size (hashcat_ctx, device_param->metal_pipeline_amp, &device_param->kernel_local_mem_size_amp) == -1) return -1;
 
-          device_param->kernel_local_mem_size_amp = 0;
+          if (get_metal_kernel_preferred_wgs_multiple (hashcat_ctx, device_param->metal_pipeline_amp, &device_param->kernel_preferred_wgs_multiple_amp) == -1) return -1;
 
           device_param->kernel_dynamic_local_mem_size_amp = 0;
         }
@@ -16260,7 +16323,9 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       if (device_param->is_cuda   == true) local_size_bytes = cuda_query_max_local_size_bytes   (hashcat_ctx, device_param);
       if (device_param->is_hip    == true) local_size_bytes = hip_query_max_local_size_bytes    (hashcat_ctx, device_param);
       if (device_param->is_opencl == true) local_size_bytes = opencl_query_max_local_size_bytes (hashcat_ctx, device_param);
-      // metal todo
+      #if defined(__APPLE__)
+      if (device_param->is_metal  == true) local_size_bytes = metal_query_max_local_size_bytes  (hashcat_ctx, device_param);
+      #endif
     }
 
     const u64 size_device_extra1234 = size_extra_buffer1 + size_extra_buffer2 + size_extra_buffer3 + size_extra_buffer4;
@@ -16420,7 +16485,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
       if (size_total > device_param->device_available_mem) memory_limit_hit = 1;
 
-      const u64 size_host_extra = (512 * 1024 * 1024);
+      const u64 size_host_extra = (512 * 1024 * 1024) / backend_ctx->backend_devices_active;
 
       const u64 size_total_host
         = size_pws_comp

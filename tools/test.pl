@@ -12,7 +12,6 @@ use Data::Types qw (is_count is_whole);
 use File::Basename;
 use FindBin;
 use List::Util 'shuffle';
-use Text::Iconv;
 use Digest::MD4 qw (md4_hex);
 
 # allows require by filename
@@ -93,6 +92,11 @@ sub edge_format
   {
     $word = random_numeric_string ($word_len) // "";
     $salt = random_numeric_string ($salt_len) // "";
+
+    if (exists &{module_get_random_password}) # if hash mode requires special format of passwords
+    {
+      $word = module_get_random_password ($word);
+    }
 
     $hash = module_generate_hash ($word, $salt);
 
@@ -470,9 +474,9 @@ sub single
     {
       if ($MODE == 31600 || $MODE == 31500)
       {
-        my $converter = Text::Iconv->new('utf8', 'UTF-16LE');
+        my $utf16le = encode("UTF-16LE", decode("utf-8", $word));
 
-        $word = md4_hex ($converter->convert ($word));
+        $word = md4_hex ($utf16le);
       }
 
       my $hash = module_generate_hash ($word, $salt);

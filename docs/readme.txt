@@ -100,6 +100,7 @@ NVIDIA GPUs require "NVIDIA Driver" (440.64 or later) and "CUDA Toolkit" (9.0 or
 - md5(md5(md5($pass.$salt1)).$salt2)
 - md5(sha1($pass))
 - md5(sha1($pass).$salt)
+- md5(sha1(md5($pass)))
 - md5(sha1($pass).md5($pass).sha1($pass))
 - md5(sha1($pass.$salt))
 - md5(sha1($salt).md5($pass))
@@ -488,6 +489,7 @@ NVIDIA GPUs require "NVIDIA Driver" (440.64 or later) and "CUDA Toolkit" (9.0 or
 - ENCsecurity Datavault (MD5/no keychain)
 - ENCsecurity Datavault (MD5/keychain)
 - SecureCRT MasterPassphrase v2
+- mega.nz password-protected link (PBKDF2-HMAC-SHA512)
 - RC4 40-bit DropN
 - RC4 72-bit DropN
 - RC4 104-bit DropN

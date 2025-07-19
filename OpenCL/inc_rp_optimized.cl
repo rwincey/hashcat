@@ -1074,7 +1074,7 @@ DECLSPEC HC_INLINE_RP u32 rule_op_mangle_toggle_at_sep (MAYBE_UNUSED const u32 p
       {
         ro = 1 << i;
 
-        #if defined(IS_METAL) && !defined(IS_APPLE_SILICON)
+        #ifdef IS_METAL
 
         i = 32;
 
@@ -1082,7 +1082,7 @@ DECLSPEC HC_INLINE_RP u32 rule_op_mangle_toggle_at_sep (MAYBE_UNUSED const u32 p
 
         #else
 
-        break; // bug on Apple Intel with Metal
+        break; // bug on Apple Intel/Silicon with Metal
 
         #endif
       }

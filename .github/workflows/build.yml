@@ -111,18 +111,18 @@ jobs:
           echo '|:-----------|:-----------|:---------------|' >> docs/hashcat-example_hashes.md
           ./hashcat --example-hashes --machine-readable --quiet | jq -r 'to_entries[] | "| `" + .key + "` | `" + .value.name + "` | `" + .value.example_hash + "` |"' >> docs/hashcat-example_hashes.md
           # Replace LUKS v1 hashes, they're too big: Github no longer shows the .md "(Sorry about that, but we can’t show files that are this big right now.)"
-          sed -i '/^| 29511 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_aes_cbc-essiv_128.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29512 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_serpent_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29513 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_twofish_xts-plain64_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29521 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha256_aes_cbc-plain64_128.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29522 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha256_serpent_xts-plain64_512.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29523 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha256_twofish_cbc-essiv_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29531 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha512_aes_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29532 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha512_serpent_cbc-essiv_128.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29533 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha512_twofish_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29541 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_aes_cbc-essiv_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29542 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_serpent_xts-plain64_256.txt \||' docs/hashcat-example_hashes.md
-          sed -i '/^| 29543 |/s|\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_twofish_cbc-plain64_128.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29511 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_aes_cbc-essiv_128.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29512 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_serpent_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29513 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_twofish_xts-plain64_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29521 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha256_aes_cbc-plain64_128.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29522 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha256_serpent_xts-plain64_512.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29523 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha256_twofish_cbc-essiv_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29531 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha512_aes_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29532 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha512_serpent_cbc-essiv_128.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29533 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha512_twofish_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29541 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_aes_cbc-essiv_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29542 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_serpent_xts-plain64_256.txt \||' docs/hashcat-example_hashes.md
+          sed -i '/^| 29543 |/s|\`\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_twofish_cbc-plain64_128.txt \||' docs/hashcat-example_hashes.md
 
       - name: Commit changes to docs
         if: matrix.os_name_lowercase == 'linux' && matrix.shared == 0

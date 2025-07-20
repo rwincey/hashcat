@@ -134,7 +134,7 @@ jobs:
           git add docs/hashcat-help.md
           git add docs/hashcat-example_hashes.md
           if ! git diff --cached --quiet; then
-            git commit -m "Updated docs/hashcat-help.md or docs/hashcat-example_hashes.md"
+            git commit -m "Automatically udated docs/hashcat-help.md or docs/hashcat-example_hashes.md (by Github action)"
             git push origin HEAD:${{ github.head_ref }}
           else
             echo "No need to update docs/hashcat-help.md or docs/hashcat-example_hashes.md"

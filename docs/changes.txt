@@ -75,8 +75,10 @@
 
 - Added display of password length mininum and maximum in the Kernel.Feature status line
 - Added new feature (-Y) that creates N virtual instances for each device in your system at the cost of N times the device memory consumption
-- Added option --backend-devices-keepfree to configure X percentage of device memory available to keep free
+- Added new feature (--bypass-delay / --bypass-threshold) that skips an attack if it does not produce enough cracks per $timeframe
+- Added options --benchmark-min and --benchmark-max to set a hash-mode range to be used during the benchmark
 - Added option --total-candidates to provide the total candidate count for an attack instead of the internal "--keyspace" value
+- Added option --backend-devices-keepfree to configure X percentage of device memory available to keep free
 - Added options --benchmark-min and --benchmark-max to set a hash-mode range to be used during the benchmark
 - Added the 'edge' test type to test.pl and the corresponding tool test_edge.sh
 

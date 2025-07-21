@@ -9,25 +9,27 @@
 #include "inc_common.h"
 #include "inc_hash_sha256.h"
 
-// CONSTANT_VK u32a k_sha256[64] =
-// {
-//   SHA256C00, SHA256C01, SHA256C02, SHA256C03,
-//   SHA256C04, SHA256C05, SHA256C06, SHA256C07,
-//   SHA256C08, SHA256C09, SHA256C0a, SHA256C0b,
-//   SHA256C0c, SHA256C0d, SHA256C0e, SHA256C0f,
-//   SHA256C10, SHA256C11, SHA256C12, SHA256C13,
-//   SHA256C14, SHA256C15, SHA256C16, SHA256C17,
-//   SHA256C18, SHA256C19, SHA256C1a, SHA256C1b,
-//   SHA256C1c, SHA256C1d, SHA256C1e, SHA256C1f,
-//   SHA256C20, SHA256C21, SHA256C22, SHA256C23,
-//   SHA256C24, SHA256C25, SHA256C26, SHA256C27,
-//   SHA256C28, SHA256C29, SHA256C2a, SHA256C2b,
-//   SHA256C2c, SHA256C2d, SHA256C2e, SHA256C2f,
-//   SHA256C30, SHA256C31, SHA256C32, SHA256C33,
-//   SHA256C34, SHA256C35, SHA256C36, SHA256C37,
-//   SHA256C38, SHA256C39, SHA256C3a, SHA256C3b,
-//   SHA256C3c, SHA256C3d, SHA256C3e, SHA256C3f,
-// };
+/* v7: outdated
+CONSTANT_VK u32a k_sha256[64] =
+{
+  SHA256C00, SHA256C01, SHA256C02, SHA256C03,
+  SHA256C04, SHA256C05, SHA256C06, SHA256C07,
+  SHA256C08, SHA256C09, SHA256C0a, SHA256C0b,
+  SHA256C0c, SHA256C0d, SHA256C0e, SHA256C0f,
+  SHA256C10, SHA256C11, SHA256C12, SHA256C13,
+  SHA256C14, SHA256C15, SHA256C16, SHA256C17,
+  SHA256C18, SHA256C19, SHA256C1a, SHA256C1b,
+  SHA256C1c, SHA256C1d, SHA256C1e, SHA256C1f,
+  SHA256C20, SHA256C21, SHA256C22, SHA256C23,
+  SHA256C24, SHA256C25, SHA256C26, SHA256C27,
+  SHA256C28, SHA256C29, SHA256C2a, SHA256C2b,
+  SHA256C2c, SHA256C2d, SHA256C2e, SHA256C2f,
+  SHA256C30, SHA256C31, SHA256C32, SHA256C33,
+  SHA256C34, SHA256C35, SHA256C36, SHA256C37,
+  SHA256C38, SHA256C39, SHA256C3a, SHA256C3b,
+  SHA256C3c, SHA256C3d, SHA256C3e, SHA256C3f,
+};
+*/
 
 // important notes on this:
 // input buf unused bytes needs to be set to zero
@@ -62,58 +64,60 @@ DECLSPEC void sha256_transform (PRIVATE_AS const u32 *w0, PRIVATE_AS const u32 *
   u32 we_t = w3[2];
   u32 wf_t = w3[3];
 
-  // #define ROUND_EXPAND_S()                            \
-  // {                                                   \
-  //   w0_t = SHA256_EXPAND_S (we_t, w9_t, w1_t, w0_t);  \
-  //   w1_t = SHA256_EXPAND_S (wf_t, wa_t, w2_t, w1_t);  \
-  //   w2_t = SHA256_EXPAND_S (w0_t, wb_t, w3_t, w2_t);  \
-  //   w3_t = SHA256_EXPAND_S (w1_t, wc_t, w4_t, w3_t);  \
-  //   w4_t = SHA256_EXPAND_S (w2_t, wd_t, w5_t, w4_t);  \
-  //   w5_t = SHA256_EXPAND_S (w3_t, we_t, w6_t, w5_t);  \
-  //   w6_t = SHA256_EXPAND_S (w4_t, wf_t, w7_t, w6_t);  \
-  //   w7_t = SHA256_EXPAND_S (w5_t, w0_t, w8_t, w7_t);  \
-  //   w8_t = SHA256_EXPAND_S (w6_t, w1_t, w9_t, w8_t);  \
-  //   w9_t = SHA256_EXPAND_S (w7_t, w2_t, wa_t, w9_t);  \
-  //   wa_t = SHA256_EXPAND_S (w8_t, w3_t, wb_t, wa_t);  \
-  //   wb_t = SHA256_EXPAND_S (w9_t, w4_t, wc_t, wb_t);  \
-  //   wc_t = SHA256_EXPAND_S (wa_t, w5_t, wd_t, wc_t);  \
-  //   wd_t = SHA256_EXPAND_S (wb_t, w6_t, we_t, wd_t);  \
-  //   we_t = SHA256_EXPAND_S (wc_t, w7_t, wf_t, we_t);  \
-  //   wf_t = SHA256_EXPAND_S (wd_t, w8_t, w0_t, wf_t);  \
-  // }
+  /* v7: outdated
+  #define ROUND_EXPAND_S()                            \
+  {                                                   \
+    w0_t = SHA256_EXPAND_S (we_t, w9_t, w1_t, w0_t);  \
+    w1_t = SHA256_EXPAND_S (wf_t, wa_t, w2_t, w1_t);  \
+    w2_t = SHA256_EXPAND_S (w0_t, wb_t, w3_t, w2_t);  \
+    w3_t = SHA256_EXPAND_S (w1_t, wc_t, w4_t, w3_t);  \
+    w4_t = SHA256_EXPAND_S (w2_t, wd_t, w5_t, w4_t);  \
+    w5_t = SHA256_EXPAND_S (w3_t, we_t, w6_t, w5_t);  \
+    w6_t = SHA256_EXPAND_S (w4_t, wf_t, w7_t, w6_t);  \
+    w7_t = SHA256_EXPAND_S (w5_t, w0_t, w8_t, w7_t);  \
+    w8_t = SHA256_EXPAND_S (w6_t, w1_t, w9_t, w8_t);  \
+    w9_t = SHA256_EXPAND_S (w7_t, w2_t, wa_t, w9_t);  \
+    wa_t = SHA256_EXPAND_S (w8_t, w3_t, wb_t, wa_t);  \
+    wb_t = SHA256_EXPAND_S (w9_t, w4_t, wc_t, wb_t);  \
+    wc_t = SHA256_EXPAND_S (wa_t, w5_t, wd_t, wc_t);  \
+    wd_t = SHA256_EXPAND_S (wb_t, w6_t, we_t, wd_t);  \
+    we_t = SHA256_EXPAND_S (wc_t, w7_t, wf_t, we_t);  \
+    wf_t = SHA256_EXPAND_S (wd_t, w8_t, w0_t, wf_t);  \
+  }
 
-  // #define ROUND_STEP_S(i)                                                                   \
-  // {                                                                                         \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, a, b, c, d, e, f, g, h, w0_t, k_sha256[i +  0]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, h, a, b, c, d, e, f, g, w1_t, k_sha256[i +  1]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, g, h, a, b, c, d, e, f, w2_t, k_sha256[i +  2]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, f, g, h, a, b, c, d, e, w3_t, k_sha256[i +  3]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, e, f, g, h, a, b, c, d, w4_t, k_sha256[i +  4]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, d, e, f, g, h, a, b, c, w5_t, k_sha256[i +  5]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, c, d, e, f, g, h, a, b, w6_t, k_sha256[i +  6]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, b, c, d, e, f, g, h, a, w7_t, k_sha256[i +  7]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, a, b, c, d, e, f, g, h, w8_t, k_sha256[i +  8]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, h, a, b, c, d, e, f, g, w9_t, k_sha256[i +  9]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, g, h, a, b, c, d, e, f, wa_t, k_sha256[i + 10]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, f, g, h, a, b, c, d, e, wb_t, k_sha256[i + 11]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, e, f, g, h, a, b, c, d, wc_t, k_sha256[i + 12]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, d, e, f, g, h, a, b, c, wd_t, k_sha256[i + 13]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, c, d, e, f, g, h, a, b, we_t, k_sha256[i + 14]); \
-  //   SHA256_STEP_S (SHA256_F0o, SHA256_F1o, b, c, d, e, f, g, h, a, wf_t, k_sha256[i + 15]); \
-  // }
+  #define ROUND_STEP_S(i)                                                                   \
+  {                                                                                         \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, a, b, c, d, e, f, g, h, w0_t, k_sha256[i +  0]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, h, a, b, c, d, e, f, g, w1_t, k_sha256[i +  1]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, g, h, a, b, c, d, e, f, w2_t, k_sha256[i +  2]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, f, g, h, a, b, c, d, e, w3_t, k_sha256[i +  3]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, e, f, g, h, a, b, c, d, w4_t, k_sha256[i +  4]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, d, e, f, g, h, a, b, c, w5_t, k_sha256[i +  5]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, c, d, e, f, g, h, a, b, w6_t, k_sha256[i +  6]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, b, c, d, e, f, g, h, a, w7_t, k_sha256[i +  7]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, a, b, c, d, e, f, g, h, w8_t, k_sha256[i +  8]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, h, a, b, c, d, e, f, g, w9_t, k_sha256[i +  9]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, g, h, a, b, c, d, e, f, wa_t, k_sha256[i + 10]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, f, g, h, a, b, c, d, e, wb_t, k_sha256[i + 11]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, e, f, g, h, a, b, c, d, wc_t, k_sha256[i + 12]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, d, e, f, g, h, a, b, c, wd_t, k_sha256[i + 13]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, c, d, e, f, g, h, a, b, we_t, k_sha256[i + 14]); \
+    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, b, c, d, e, f, g, h, a, wf_t, k_sha256[i + 15]); \
+  }
 
-  // ROUND_STEP_S (0);
+  ROUND_STEP_S (0);
 
-  // #ifdef _unroll
-  // #pragma unroll
-  // #endif
-  // for (int i = 16; i < 64; i += 16)
-  // {
-  //   ROUND_EXPAND_S (); ROUND_STEP_S (i);
-  // }
+  #ifdef _unroll
+  #pragma unroll
+  #endif
+  for (int i = 16; i < 64; i += 16)
+  {
+    ROUND_EXPAND_S (); ROUND_STEP_S (i);
+  }
 
-  // #undef ROUND_EXPAND_S
-  // #undef ROUND_STEP_S
+  #undef ROUND_EXPAND_S
+  #undef ROUND_STEP_S
+  */
 
                                                    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, a, b, c, d, e, f, g, h, w0_t, SHA256C00);
                                                    SHA256_STEP_S (SHA256_F0o, SHA256_F1o, h, a, b, c, d, e, f, g, w1_t, SHA256C01);

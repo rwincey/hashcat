@@ -130,6 +130,8 @@ Usage: hashcat [options]... hash|hashfile|hccapxfile [dictionary|mask|directory]
      --increment-min            | Num  | Start mask incrementing at X                         | --increment-min=4
      --increment-max            | Num  | Stop mask incrementing at X                          | --increment-max=8
  -S, --slow-candidates          |      | Enable slower (but advanced) candidate generators    |
+     --bypass-delay             | Num  | Seconds delay between checking bypass threshold      | --bypass-delay=5
+     --bypass-threshold         | Num  | Minimum amount of founds to avoid being bypassed     | --bypass-threshold=5
      --brain-server             |      | Enable brain server                                  |
      --brain-server-timer       | Num  | Update the brain server dump each X seconds (min:60) | --brain-server-timer=300
  -z, --brain-client             |      | Enable brain client, activates -S                    |

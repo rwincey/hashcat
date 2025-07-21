@@ -222,7 +222,6 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   memcpy (salt->salt_buf_pc, tmp_buf, token.len_max[1]);
 
-
   // header (save to racf_kdfaes->mem_fac and racf_kdfaes->rep_fac)
 
   const u8 *header_pos = token.buf[2];
@@ -262,7 +261,6 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   tmp_len = hex_decode(salt_pos, salt_len, tmp_buf);
 
-
   if (tmp_len != 16) return (PARSER_SALT_LENGTH);
 
   memcpy (racf_kdfaes->salt_buf, tmp_buf, tmp_len);
@@ -292,7 +290,6 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 {
   return snprintf (line_buf, line_size, "%s", hash_info->orighash);
 }
-
 
 void module_init (module_ctx_t *module_ctx)
 {

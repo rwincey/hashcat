@@ -257,67 +257,67 @@ GeForce_RTX_4070_Ti                             ALIAS_nv_sm50_or_higher
 GeForce_RTX_4080                                ALIAS_nv_sm50_or_higher
 GeForce_RTX_4090                                ALIAS_nv_sm50_or_higher
 
-
-
 ##
 ## Unmapped GPU
 ##
 
-Radeon_RX_460                                   ALIAS_AMD_GCN4
-Radeon_RX_470                                   ALIAS_AMD_GCN4
-Radeon_RX_480                                   ALIAS_AMD_GCN4
-Radeon_RX_550                                   ALIAS_AMD_GCN4
-Radeon_RX_560                                   ALIAS_AMD_GCN4
-Radeon_RX_570                                   ALIAS_AMD_GCN4
-Radeon_RX_580                                   ALIAS_AMD_GCN4
-Radeon_RX_590                                   ALIAS_AMD_GCN4
-Radeon_RX_590_GME                               ALIAS_AMD_GCN4
+Radeon_RX_480                                   ALIAS_AMD
+Radeon_RX_470                                   ALIAS_AMD
+Radeon_RX_460                                   ALIAS_AMD
+Radeon_RX_570                                   ALIAS_AMD
+Radeon_RX_580                                   ALIAS_AMD
+Radeon_RX_560                                   ALIAS_AMD
+Radeon_RX_Vega_56                               ALIAS_AMD
+Radeon_RX_Vega_64                               ALIAS_AMD
+Radeon_RX_5700_XT                               ALIAS_AMD
+Radeon_RX_5700                                  ALIAS_AMD
+Radeon_RX_5300M                                 ALIAS_AMD
+Radeon_RX_5500                                  ALIAS_AMD
+Radeon_RX_5500M                                 ALIAS_AMD
+Radeon_RX_5500_XT                               ALIAS_AMD
+Radeon_RX_5600                                  ALIAS_AMD
+Radeon_RX_5600_XT                               ALIAS_AMD
+Radeon_RX_5300                                  ALIAS_AMD
+Radeon_RX_6800                                  ALIAS_AMD
+Radeon_RX_6800_XT                               ALIAS_AMD
+Radeon_RX_6900_XT                               ALIAS_AMD
+Radeon_RX_6700_XT                               ALIAS_AMD
+Radeon_RX_6600_XT                               ALIAS_AMD
+Radeon_RX_6600                                  ALIAS_AMD
+Radeon_RX_6400                                  ALIAS_AMD
+Radeon_RX_6500_XT                               ALIAS_AMD
+Radeon_RX_6400_XT                               ALIAS_AMD
+Radeon_RX_6950_XT                               ALIAS_AMD
+Radeon_RX_6700                                  ALIAS_AMD
+Radeon_RX_7900_XT                               ALIAS_AMD
+Radeon_RX_7900_XTX                              ALIAS_AMD
+Radeon_RX_7600                                  ALIAS_AMD
+Radeon_RX_7900_GRE                              ALIAS_AMD
+Radeon_RX_7700_XT                               ALIAS_AMD
+Radeon_RX_7800_XT                               ALIAS_AMD
+Radeon_RX_7600_XT                               ALIAS_AMD
 
-Radeon_RX_5500                                  ALIAS_AMD_RDNA
-Radeon_RX_5500_XT                               ALIAS_AMD_RDNA
-Radeon_RX_5600                                  ALIAS_AMD_RDNA
-Radeon_RX_5600_XT                               ALIAS_AMD_RDNA
-Radeon_RX_5700                                  ALIAS_AMD_RDNA
-Radeon_RX_5700_XT                               ALIAS_AMD_RDNA
+Radeon_Pro_W7800                                ALIAS_AMD
+Radeon_Pro_W7900                                ALIAS_AMD
+Radeon_Pro_W7500                                ALIAS_AMD
+Radeon_Pro_W7600                                ALIAS_AMD
+Radeon_Pro_W7700                                ALIAS_AMD
 
-Radeon_RX_6500_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6600                                  ALIAS_AMD_RDNA2
-Radeon_RX_6600_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6650_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6700                                  ALIAS_AMD_RDNA2
-Radeon_RX_6700_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6750_GRE                              ALIAS_AMD_RDNA2
-Radeon_RX_6750_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6800                                  ALIAS_AMD_RDNA2
-Radeon_RX_6800_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6900_XT                               ALIAS_AMD_RDNA2
-Radeon_RX_6950_XT                               ALIAS_AMD_RDNA2
+FirePro_W7100                                   ALIAS_AMD
+FirePro_W5100                                   ALIAS_AMD
+FirePro_W4300                                   ALIAS_AMD
 
-Radeon_RX_7600                                  ALIAS_AMD_RDNA3
-Radeon_RX_7700_XT                               ALIAS_AMD_RDNA3
-Radeon_RX_7800_XT                               ALIAS_AMD_RDNA3
-Radeon_RX_7900_XT                               ALIAS_AMD_RDNA3
-Radeon_RX_7900_XTX                              ALIAS_AMD_RDNA3
-Radeon_RX_7900_GRE                              ALIAS_AMD_RDNA3
-
-Radeon_(TM)_RX_480_Graphics                     ALIAS_AMD_RX480
-
-gfx900                                          ALIAS_AMD_Vega64
-gfx900:xnack-                                   ALIAS_AMD_Vega64
-Vega_10_XL/XT_[Radeon_RX_Vega_56/64]            ALIAS_AMD_Vega64
-Radeon_Vega_64                                  ALIAS_AMD_Vega64
-Radeon_RX_Vega                                  ALIAS_AMD_Vega64
-
-Device_738c                                     ALIAS_AMD_MI100
-gfx908                                          ALIAS_AMD_MI100
-gfx908:sramecc+:xnack-                          ALIAS_AMD_MI100
-
-Device_73bf                                     ALIAS_AMD_RX6900XT
-gfx1030                                         ALIAS_AMD_RX6900XT
-Radeon_RX_6900_XT                               ALIAS_AMD_RX6900XT
-
-gfx1100                                         ALIAS_AMD_RX7900XTX
-Radeon_RX_7900_XTX                              ALIAS_AMD_RX7900XTX
-
-Radeon_Pro_W5700X                               ALIAS_AMD_W5700X
-Radeon_Pro_W5700X_Compute_Engine                ALIAS_AMD_W5700X
+AMD_Instinct_MI6                                ALIAS_AMD
+AMD_Instinct_MI8                                ALIAS_AMD
+AMD_Instinct_MI25                               ALIAS_AMD
+AMD_Instinct_MI60                               ALIAS_AMD
+AMD_Instinct_MI50                               ALIAS_AMD
+AMD_Instinct_MI100                              ALIAS_AMD
+AMD_Instinct_MI250X                             ALIAS_AMD
+AMD_Instinct_MI250                              ALIAS_AMD
+AMD_Instinct_MI210                              ALIAS_AMD
+AMD_Instinct_MI300A                             ALIAS_AMD
+AMD_Instinct_MI300X                             ALIAS_AMD
+AMD_Instinct_MI325X                             ALIAS_AMD
+AMD_Instinct_MI350X                             ALIAS_AMD
+AMD_Instinct_MI355X                             ALIAS_AMD

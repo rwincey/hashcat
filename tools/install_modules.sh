@@ -60,7 +60,6 @@ cpanm Authen::Passphrase::LANManager   \
       Crypt::Mode::ECB                 \
       Crypt::MySQL                     \
       Crypt::OpenSSH::ChachaPoly       \
-      Crypt::OpenSSL::EC               \
       Crypt::OpenSSL::Bignum::CTX      \
       Crypt::Passwd::XS                \
       Crypt::PBKDF2                    \
@@ -102,6 +101,9 @@ cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
 ERRORS=$((ERRORS+$?))
 
 cpanm https://github.com/matrix/digest-gost.git
+ERRORS=$((ERRORS+$?))
+
+cpanm https://github.com/matrix/perl-Crypt-OpenSSL-EC.git
 ERRORS=$((ERRORS+$?))
 
 # checks for pyenv

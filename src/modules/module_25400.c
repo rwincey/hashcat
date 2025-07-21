@@ -368,7 +368,6 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   //  however we could use it in the comparison of the decrypted o-value,
   //  yet it may make this attack a bit more fragile, as now we just check for ASCII
 
-
   // validate data
 
   pdf->P_minus = 0;
@@ -577,7 +576,6 @@ int module_build_plain_postprocess (MAYBE_UNUSED const hashconfig_t *hashconfig,
   // we recovered both the user-password and the owner-password
   return snprintf ((char *) dst_buf, dst_sz, "%s    (user password=%s)", (const char *) src_buf, (const char *) pdf_tmp->out);
 }
-
 
 // TODO how to add the recovered user-password to the hash?
 // module_hash_encode() is called before module_build_plain_postprocess() is

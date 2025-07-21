@@ -81,7 +81,6 @@ const char *argon2_module_extra_tuningdb_block (MAYBE_UNUSED const hashconfig_t 
     }
   }
 
-
   char *new_device_name = hcstrdup (device_param->device_name);
 
   for (size_t i = 0; i < strlen (new_device_name); i++)

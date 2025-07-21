@@ -9,25 +9,25 @@
 #include "inc_common.h"
 #include "inc_hash_sha224.h"
 
-CONSTANT_VK u32a k_sha224[64] =
-{
-  SHA224C00, SHA224C01, SHA224C02, SHA224C03,
-  SHA224C04, SHA224C05, SHA224C06, SHA224C07,
-  SHA224C08, SHA224C09, SHA224C0a, SHA224C0b,
-  SHA224C0c, SHA224C0d, SHA224C0e, SHA224C0f,
-  SHA224C10, SHA224C11, SHA224C12, SHA224C13,
-  SHA224C14, SHA224C15, SHA224C16, SHA224C17,
-  SHA224C18, SHA224C19, SHA224C1a, SHA224C1b,
-  SHA224C1c, SHA224C1d, SHA224C1e, SHA224C1f,
-  SHA224C20, SHA224C21, SHA224C22, SHA224C23,
-  SHA224C24, SHA224C25, SHA224C26, SHA224C27,
-  SHA224C28, SHA224C29, SHA224C2a, SHA224C2b,
-  SHA224C2c, SHA224C2d, SHA224C2e, SHA224C2f,
-  SHA224C30, SHA224C31, SHA224C32, SHA224C33,
-  SHA224C34, SHA224C35, SHA224C36, SHA224C37,
-  SHA224C38, SHA224C39, SHA224C3a, SHA224C3b,
-  SHA224C3c, SHA224C3d, SHA224C3e, SHA224C3f,
-};
+// CONSTANT_VK u32a k_sha224[64] =
+// {
+//   SHA224C00, SHA224C01, SHA224C02, SHA224C03,
+//   SHA224C04, SHA224C05, SHA224C06, SHA224C07,
+//   SHA224C08, SHA224C09, SHA224C0a, SHA224C0b,
+//   SHA224C0c, SHA224C0d, SHA224C0e, SHA224C0f,
+//   SHA224C10, SHA224C11, SHA224C12, SHA224C13,
+//   SHA224C14, SHA224C15, SHA224C16, SHA224C17,
+//   SHA224C18, SHA224C19, SHA224C1a, SHA224C1b,
+//   SHA224C1c, SHA224C1d, SHA224C1e, SHA224C1f,
+//   SHA224C20, SHA224C21, SHA224C22, SHA224C23,
+//   SHA224C24, SHA224C25, SHA224C26, SHA224C27,
+//   SHA224C28, SHA224C29, SHA224C2a, SHA224C2b,
+//   SHA224C2c, SHA224C2d, SHA224C2e, SHA224C2f,
+//   SHA224C30, SHA224C31, SHA224C32, SHA224C33,
+//   SHA224C34, SHA224C35, SHA224C36, SHA224C37,
+//   SHA224C38, SHA224C39, SHA224C3a, SHA224C3b,
+//   SHA224C3c, SHA224C3d, SHA224C3e, SHA224C3f,
+// };
 
 // important notes on this:
 // input buf unused bytes needs to be set to zero
@@ -62,58 +62,123 @@ DECLSPEC void sha224_transform (PRIVATE_AS const u32 *w0, PRIVATE_AS const u32 *
   u32 we_t = w3[2];
   u32 wf_t = w3[3];
 
-  #define ROUND_EXPAND_S()                            \
-  {                                                   \
-    w0_t = SHA224_EXPAND_S (we_t, w9_t, w1_t, w0_t);  \
-    w1_t = SHA224_EXPAND_S (wf_t, wa_t, w2_t, w1_t);  \
-    w2_t = SHA224_EXPAND_S (w0_t, wb_t, w3_t, w2_t);  \
-    w3_t = SHA224_EXPAND_S (w1_t, wc_t, w4_t, w3_t);  \
-    w4_t = SHA224_EXPAND_S (w2_t, wd_t, w5_t, w4_t);  \
-    w5_t = SHA224_EXPAND_S (w3_t, we_t, w6_t, w5_t);  \
-    w6_t = SHA224_EXPAND_S (w4_t, wf_t, w7_t, w6_t);  \
-    w7_t = SHA224_EXPAND_S (w5_t, w0_t, w8_t, w7_t);  \
-    w8_t = SHA224_EXPAND_S (w6_t, w1_t, w9_t, w8_t);  \
-    w9_t = SHA224_EXPAND_S (w7_t, w2_t, wa_t, w9_t);  \
-    wa_t = SHA224_EXPAND_S (w8_t, w3_t, wb_t, wa_t);  \
-    wb_t = SHA224_EXPAND_S (w9_t, w4_t, wc_t, wb_t);  \
-    wc_t = SHA224_EXPAND_S (wa_t, w5_t, wd_t, wc_t);  \
-    wd_t = SHA224_EXPAND_S (wb_t, w6_t, we_t, wd_t);  \
-    we_t = SHA224_EXPAND_S (wc_t, w7_t, wf_t, we_t);  \
-    wf_t = SHA224_EXPAND_S (wd_t, w8_t, w0_t, wf_t);  \
-  }
+  // #define ROUND_EXPAND_S()                            \
+  // {                                                   \
+  //   w0_t = SHA224_EXPAND_S (we_t, w9_t, w1_t, w0_t);  \
+  //   w1_t = SHA224_EXPAND_S (wf_t, wa_t, w2_t, w1_t);  \
+  //   w2_t = SHA224_EXPAND_S (w0_t, wb_t, w3_t, w2_t);  \
+  //   w3_t = SHA224_EXPAND_S (w1_t, wc_t, w4_t, w3_t);  \
+  //   w4_t = SHA224_EXPAND_S (w2_t, wd_t, w5_t, w4_t);  \
+  //   w5_t = SHA224_EXPAND_S (w3_t, we_t, w6_t, w5_t);  \
+  //   w6_t = SHA224_EXPAND_S (w4_t, wf_t, w7_t, w6_t);  \
+  //   w7_t = SHA224_EXPAND_S (w5_t, w0_t, w8_t, w7_t);  \
+  //   w8_t = SHA224_EXPAND_S (w6_t, w1_t, w9_t, w8_t);  \
+  //   w9_t = SHA224_EXPAND_S (w7_t, w2_t, wa_t, w9_t);  \
+  //   wa_t = SHA224_EXPAND_S (w8_t, w3_t, wb_t, wa_t);  \
+  //   wb_t = SHA224_EXPAND_S (w9_t, w4_t, wc_t, wb_t);  \
+  //   wc_t = SHA224_EXPAND_S (wa_t, w5_t, wd_t, wc_t);  \
+  //   wd_t = SHA224_EXPAND_S (wb_t, w6_t, we_t, wd_t);  \
+  //   we_t = SHA224_EXPAND_S (wc_t, w7_t, wf_t, we_t);  \
+  //   wf_t = SHA224_EXPAND_S (wd_t, w8_t, w0_t, wf_t);  \
+  // }
 
-  #define ROUND_STEP_S(i)                                                                   \
-  {                                                                                         \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, k_sha224[i +  0]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, k_sha224[i +  1]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, k_sha224[i +  2]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, k_sha224[i +  3]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, k_sha224[i +  4]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, k_sha224[i +  5]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, k_sha224[i +  6]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, k_sha224[i +  7]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, k_sha224[i +  8]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, k_sha224[i +  9]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, k_sha224[i + 10]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, k_sha224[i + 11]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, k_sha224[i + 12]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, k_sha224[i + 13]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, k_sha224[i + 14]); \
-    SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, k_sha224[i + 15]); \
-  }
+  // #define ROUND_STEP_S(i)                                                                   \
+  // {                                                                                         \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, k_sha224[i +  0]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, k_sha224[i +  1]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, k_sha224[i +  2]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, k_sha224[i +  3]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, k_sha224[i +  4]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, k_sha224[i +  5]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, k_sha224[i +  6]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, k_sha224[i +  7]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, k_sha224[i +  8]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, k_sha224[i +  9]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, k_sha224[i + 10]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, k_sha224[i + 11]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, k_sha224[i + 12]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, k_sha224[i + 13]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, k_sha224[i + 14]); \
+  //   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, k_sha224[i + 15]); \
+  // }
 
-  ROUND_STEP_S (0);
+  // ROUND_STEP_S (0);
 
-  #ifdef _unroll
-  #pragma unroll
-  #endif
-  for (int i = 16; i < 64; i += 16)
-  {
-    ROUND_EXPAND_S (); ROUND_STEP_S (i);
-  }
+  // #ifdef _unroll
+  // #pragma unroll
+  // #endif
+  // for (int i = 16; i < 64; i += 16)
+  // {
+  //   ROUND_EXPAND_S (); ROUND_STEP_S (i);
+  // }
 
-  #undef ROUND_EXPAND_S
-  #undef ROUND_STEP_S
+  // #undef ROUND_EXPAND_S
+  // #undef ROUND_STEP_S
+
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C00);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C01);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C02);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C03);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C04);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C05);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C06);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C07);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C08);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C09);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C0a);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C0b);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C0c);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C0d);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C0e);
+                                                   SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C0f);
+  w0_t = SHA224_EXPAND_S (we_t, w9_t, w1_t, w0_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C10);
+  w1_t = SHA224_EXPAND_S (wf_t, wa_t, w2_t, w1_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C11);
+  w2_t = SHA224_EXPAND_S (w0_t, wb_t, w3_t, w2_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C12);
+  w3_t = SHA224_EXPAND_S (w1_t, wc_t, w4_t, w3_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C13);
+  w4_t = SHA224_EXPAND_S (w2_t, wd_t, w5_t, w4_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C14);
+  w5_t = SHA224_EXPAND_S (w3_t, we_t, w6_t, w5_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C15);
+  w6_t = SHA224_EXPAND_S (w4_t, wf_t, w7_t, w6_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C16);
+  w7_t = SHA224_EXPAND_S (w5_t, w0_t, w8_t, w7_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C17);
+  w8_t = SHA224_EXPAND_S (w6_t, w1_t, w9_t, w8_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C18);
+  w9_t = SHA224_EXPAND_S (w7_t, w2_t, wa_t, w9_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C19);
+  wa_t = SHA224_EXPAND_S (w8_t, w3_t, wb_t, wa_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C1a);
+  wb_t = SHA224_EXPAND_S (w9_t, w4_t, wc_t, wb_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C1b);
+  wc_t = SHA224_EXPAND_S (wa_t, w5_t, wd_t, wc_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C1c);
+  wd_t = SHA224_EXPAND_S (wb_t, w6_t, we_t, wd_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C1d);
+  we_t = SHA224_EXPAND_S (wc_t, w7_t, wf_t, we_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C1e);
+  wf_t = SHA224_EXPAND_S (wd_t, w8_t, w0_t, wf_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C1f);
+  w0_t = SHA224_EXPAND_S (we_t, w9_t, w1_t, w0_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C20);
+  w1_t = SHA224_EXPAND_S (wf_t, wa_t, w2_t, w1_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C21);
+  w2_t = SHA224_EXPAND_S (w0_t, wb_t, w3_t, w2_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C22);
+  w3_t = SHA224_EXPAND_S (w1_t, wc_t, w4_t, w3_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C23);
+  w4_t = SHA224_EXPAND_S (w2_t, wd_t, w5_t, w4_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C24);
+  w5_t = SHA224_EXPAND_S (w3_t, we_t, w6_t, w5_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C25);
+  w6_t = SHA224_EXPAND_S (w4_t, wf_t, w7_t, w6_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C26);
+  w7_t = SHA224_EXPAND_S (w5_t, w0_t, w8_t, w7_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C27);
+  w8_t = SHA224_EXPAND_S (w6_t, w1_t, w9_t, w8_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C28);
+  w9_t = SHA224_EXPAND_S (w7_t, w2_t, wa_t, w9_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C29);
+  wa_t = SHA224_EXPAND_S (w8_t, w3_t, wb_t, wa_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C2a);
+  wb_t = SHA224_EXPAND_S (w9_t, w4_t, wc_t, wb_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C2b);
+  wc_t = SHA224_EXPAND_S (wa_t, w5_t, wd_t, wc_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C2c);
+  wd_t = SHA224_EXPAND_S (wb_t, w6_t, we_t, wd_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C2d);
+  we_t = SHA224_EXPAND_S (wc_t, w7_t, wf_t, we_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C2e);
+  wf_t = SHA224_EXPAND_S (wd_t, w8_t, w0_t, wf_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C2f);
+  w0_t = SHA224_EXPAND_S (we_t, w9_t, w1_t, w0_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C30);
+  w1_t = SHA224_EXPAND_S (wf_t, wa_t, w2_t, w1_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C31);
+  w2_t = SHA224_EXPAND_S (w0_t, wb_t, w3_t, w2_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C32);
+  w3_t = SHA224_EXPAND_S (w1_t, wc_t, w4_t, w3_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C33);
+  w4_t = SHA224_EXPAND_S (w2_t, wd_t, w5_t, w4_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C34);
+  w5_t = SHA224_EXPAND_S (w3_t, we_t, w6_t, w5_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C35);
+  w6_t = SHA224_EXPAND_S (w4_t, wf_t, w7_t, w6_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C36);
+  w7_t = SHA224_EXPAND_S (w5_t, w0_t, w8_t, w7_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C37);
+  w8_t = SHA224_EXPAND_S (w6_t, w1_t, w9_t, w8_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C38);
+  w9_t = SHA224_EXPAND_S (w7_t, w2_t, wa_t, w9_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C39);
+  wa_t = SHA224_EXPAND_S (w8_t, w3_t, wb_t, wa_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C3a);
+  wb_t = SHA224_EXPAND_S (w9_t, w4_t, wc_t, wb_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C3b);
+  wc_t = SHA224_EXPAND_S (wa_t, w5_t, wd_t, wc_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C3c);
+  wd_t = SHA224_EXPAND_S (wb_t, w6_t, we_t, wd_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C3d);
+  we_t = SHA224_EXPAND_S (wc_t, w7_t, wf_t, we_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C3e);
+  wf_t = SHA224_EXPAND_S (wd_t, w8_t, w0_t, wf_t); SHA224_STEP_S (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C3f);
 
   digest[0] += a;
   digest[1] += b;
@@ -1346,58 +1411,70 @@ DECLSPEC void sha224_transform_vector (PRIVATE_AS const u32x *w0, PRIVATE_AS con
   u32x we_t = w3[2];
   u32x wf_t = w3[3];
 
-  #define ROUND_EXPAND()                            \
-  {                                                 \
-    w0_t = SHA224_EXPAND (we_t, w9_t, w1_t, w0_t);  \
-    w1_t = SHA224_EXPAND (wf_t, wa_t, w2_t, w1_t);  \
-    w2_t = SHA224_EXPAND (w0_t, wb_t, w3_t, w2_t);  \
-    w3_t = SHA224_EXPAND (w1_t, wc_t, w4_t, w3_t);  \
-    w4_t = SHA224_EXPAND (w2_t, wd_t, w5_t, w4_t);  \
-    w5_t = SHA224_EXPAND (w3_t, we_t, w6_t, w5_t);  \
-    w6_t = SHA224_EXPAND (w4_t, wf_t, w7_t, w6_t);  \
-    w7_t = SHA224_EXPAND (w5_t, w0_t, w8_t, w7_t);  \
-    w8_t = SHA224_EXPAND (w6_t, w1_t, w9_t, w8_t);  \
-    w9_t = SHA224_EXPAND (w7_t, w2_t, wa_t, w9_t);  \
-    wa_t = SHA224_EXPAND (w8_t, w3_t, wb_t, wa_t);  \
-    wb_t = SHA224_EXPAND (w9_t, w4_t, wc_t, wb_t);  \
-    wc_t = SHA224_EXPAND (wa_t, w5_t, wd_t, wc_t);  \
-    wd_t = SHA224_EXPAND (wb_t, w6_t, we_t, wd_t);  \
-    we_t = SHA224_EXPAND (wc_t, w7_t, wf_t, we_t);  \
-    wf_t = SHA224_EXPAND (wd_t, w8_t, w0_t, wf_t);  \
-  }
-
-  #define ROUND_STEP(i)                                                                   \
-  {                                                                                       \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, k_sha224[i +  0]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, k_sha224[i +  1]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, k_sha224[i +  2]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, k_sha224[i +  3]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, k_sha224[i +  4]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, k_sha224[i +  5]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, k_sha224[i +  6]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, k_sha224[i +  7]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, k_sha224[i +  8]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, k_sha224[i +  9]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, k_sha224[i + 10]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, k_sha224[i + 11]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, k_sha224[i + 12]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, k_sha224[i + 13]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, k_sha224[i + 14]); \
-    SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, k_sha224[i + 15]); \
-  }
-
-  ROUND_STEP (0);
-
-  #ifdef _unroll
-  #pragma unroll
-  #endif
-  for (int i = 16; i < 64; i += 16)
-  {
-    ROUND_EXPAND (); ROUND_STEP (i);
-  }
-
-  #undef ROUND_EXPAND
-  #undef ROUND_STEP
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C00);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C01);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C02);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C03);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C04);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C05);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C06);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C07);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C08);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C09);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C0a);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C0b);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C0c);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C0d);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C0e);
+                                                 SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C0f);
+  w0_t = SHA224_EXPAND (we_t, w9_t, w1_t, w0_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C10);
+  w1_t = SHA224_EXPAND (wf_t, wa_t, w2_t, w1_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C11);
+  w2_t = SHA224_EXPAND (w0_t, wb_t, w3_t, w2_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C12);
+  w3_t = SHA224_EXPAND (w1_t, wc_t, w4_t, w3_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C13);
+  w4_t = SHA224_EXPAND (w2_t, wd_t, w5_t, w4_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C14);
+  w5_t = SHA224_EXPAND (w3_t, we_t, w6_t, w5_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C15);
+  w6_t = SHA224_EXPAND (w4_t, wf_t, w7_t, w6_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C16);
+  w7_t = SHA224_EXPAND (w5_t, w0_t, w8_t, w7_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C17);
+  w8_t = SHA224_EXPAND (w6_t, w1_t, w9_t, w8_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C18);
+  w9_t = SHA224_EXPAND (w7_t, w2_t, wa_t, w9_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C19);
+  wa_t = SHA224_EXPAND (w8_t, w3_t, wb_t, wa_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C1a);
+  wb_t = SHA224_EXPAND (w9_t, w4_t, wc_t, wb_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C1b);
+  wc_t = SHA224_EXPAND (wa_t, w5_t, wd_t, wc_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C1c);
+  wd_t = SHA224_EXPAND (wb_t, w6_t, we_t, wd_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C1d);
+  we_t = SHA224_EXPAND (wc_t, w7_t, wf_t, we_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C1e);
+  wf_t = SHA224_EXPAND (wd_t, w8_t, w0_t, wf_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C1f);
+  w0_t = SHA224_EXPAND (we_t, w9_t, w1_t, w0_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C20);
+  w1_t = SHA224_EXPAND (wf_t, wa_t, w2_t, w1_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C21);
+  w2_t = SHA224_EXPAND (w0_t, wb_t, w3_t, w2_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C22);
+  w3_t = SHA224_EXPAND (w1_t, wc_t, w4_t, w3_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C23);
+  w4_t = SHA224_EXPAND (w2_t, wd_t, w5_t, w4_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C24);
+  w5_t = SHA224_EXPAND (w3_t, we_t, w6_t, w5_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C25);
+  w6_t = SHA224_EXPAND (w4_t, wf_t, w7_t, w6_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C26);
+  w7_t = SHA224_EXPAND (w5_t, w0_t, w8_t, w7_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C27);
+  w8_t = SHA224_EXPAND (w6_t, w1_t, w9_t, w8_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C28);
+  w9_t = SHA224_EXPAND (w7_t, w2_t, wa_t, w9_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C29);
+  wa_t = SHA224_EXPAND (w8_t, w3_t, wb_t, wa_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C2a);
+  wb_t = SHA224_EXPAND (w9_t, w4_t, wc_t, wb_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C2b);
+  wc_t = SHA224_EXPAND (wa_t, w5_t, wd_t, wc_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C2c);
+  wd_t = SHA224_EXPAND (wb_t, w6_t, we_t, wd_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C2d);
+  we_t = SHA224_EXPAND (wc_t, w7_t, wf_t, we_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C2e);
+  wf_t = SHA224_EXPAND (wd_t, w8_t, w0_t, wf_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C2f);
+  w0_t = SHA224_EXPAND (we_t, w9_t, w1_t, w0_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w0_t, SHA224C30);
+  w1_t = SHA224_EXPAND (wf_t, wa_t, w2_t, w1_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w1_t, SHA224C31);
+  w2_t = SHA224_EXPAND (w0_t, wb_t, w3_t, w2_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, w2_t, SHA224C32);
+  w3_t = SHA224_EXPAND (w1_t, wc_t, w4_t, w3_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, w3_t, SHA224C33);
+  w4_t = SHA224_EXPAND (w2_t, wd_t, w5_t, w4_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, w4_t, SHA224C34);
+  w5_t = SHA224_EXPAND (w3_t, we_t, w6_t, w5_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, w5_t, SHA224C35);
+  w6_t = SHA224_EXPAND (w4_t, wf_t, w7_t, w6_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, w6_t, SHA224C36);
+  w7_t = SHA224_EXPAND (w5_t, w0_t, w8_t, w7_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, w7_t, SHA224C37);
+  w8_t = SHA224_EXPAND (w6_t, w1_t, w9_t, w8_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, a, b, c, d, e, f, g, h, w8_t, SHA224C38);
+  w9_t = SHA224_EXPAND (w7_t, w2_t, wa_t, w9_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, h, a, b, c, d, e, f, g, w9_t, SHA224C39);
+  wa_t = SHA224_EXPAND (w8_t, w3_t, wb_t, wa_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, g, h, a, b, c, d, e, f, wa_t, SHA224C3a);
+  wb_t = SHA224_EXPAND (w9_t, w4_t, wc_t, wb_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, f, g, h, a, b, c, d, e, wb_t, SHA224C3b);
+  wc_t = SHA224_EXPAND (wa_t, w5_t, wd_t, wc_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, e, f, g, h, a, b, c, d, wc_t, SHA224C3c);
+  wd_t = SHA224_EXPAND (wb_t, w6_t, we_t, wd_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, d, e, f, g, h, a, b, c, wd_t, SHA224C3d);
+  we_t = SHA224_EXPAND (wc_t, w7_t, wf_t, we_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, c, d, e, f, g, h, a, b, we_t, SHA224C3e);
+  wf_t = SHA224_EXPAND (wd_t, w8_t, w0_t, wf_t); SHA224_STEP (SHA224_F0o, SHA224_F1o, b, c, d, e, f, g, h, a, wf_t, SHA224C3f);
 
   digest[0] += a;
   digest[1] += b;

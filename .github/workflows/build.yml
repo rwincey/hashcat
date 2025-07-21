@@ -130,13 +130,14 @@ jobs:
         env:
           SHARED: ${{ matrix.shared }}
         run: |
-          git config user.name "hashcat-bot"
-          git config user.email "hashcat-bot@hashcat.net"
+          # https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-to-a-pr-using-the-built-in-token
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/hashcat-help.md
           git add docs/hashcat-example_hashes.md
           if ! git diff --cached --quiet; then
-            git commit -m "Automatically udated docs/hashcat-help.md or docs/hashcat-example_hashes.md (by Github action)"
-            git push origin HEAD:${{ github.head_ref }}
+            git commit -m "Automatically updated docs/hashcat-help.md or docs/hashcat-example_hashes.md (by Github action)"
+            git push
           else
             echo "No need to update docs/hashcat-help.md or docs/hashcat-example_hashes.md"
           fi

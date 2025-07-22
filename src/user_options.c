@@ -44,6 +44,8 @@ static const struct option long_options[] =
   {"backend-ignore-opencl",     no_argument,       NULL, IDX_BACKEND_IGNORE_OPENCL},
   {"backend-info",              no_argument,       NULL, IDX_BACKEND_INFO},
   {"backend-vector-width",      required_argument, NULL, IDX_BACKEND_VECTOR_WIDTH},
+  {"bypass-delay",              required_argument, NULL, IDX_BYPASS_DELAY},
+  {"bypass-threshold",          required_argument, NULL, IDX_BYPASS_THRESHOLD},
   {"benchmark-all",             no_argument,       NULL, IDX_BENCHMARK_ALL},
   {"benchmark-max",             required_argument, NULL, IDX_BENCHMARK_MAX},
   {"benchmark-min",             required_argument, NULL, IDX_BENCHMARK_MIN},
@@ -90,6 +92,7 @@ static const struct option long_options[] =
   {"increment-max",             required_argument, NULL, IDX_INCREMENT_MAX},
   {"increment-min",             required_argument, NULL, IDX_INCREMENT_MIN},
   {"increment",                 no_argument,       NULL, IDX_INCREMENT},
+  {"increment-inverse",         no_argument,       NULL, IDX_INCREMENT_INVERSE},
   {"induction-dir",             required_argument, NULL, IDX_INDUCTION_DIR},
   {"keep-guessing",             no_argument,       NULL, IDX_KEEP_GUESSING},
   {"kernel-accel",              required_argument, NULL, IDX_KERNEL_ACCEL},
@@ -247,7 +250,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->hex_wordlist              = HEX_WORDLIST;
   user_options->hook_threads              = HOOK_THREADS;
   user_options->identify                  = IDENTIFY;
-  user_options->increment                 = INCREMENT;
+  user_options->increment                 = (increment_t) INCREMENT;
   user_options->increment_max             = INCREMENT_MAX;
   user_options->increment_min             = INCREMENT_MIN;
   user_options->induction_dir             = NULL;
@@ -378,6 +381,8 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_MARKOV_THRESHOLD:
       case IDX_OUTFILE_CHECK_TIMER:
       case IDX_BACKEND_VECTOR_WIDTH:
+      case IDX_BYPASS_DELAY:
+      case IDX_BYPASS_THRESHOLD:
       case IDX_WORKLOAD_PROFILE:
       case IDX_KERNEL_ACCEL:
       case IDX_KERNEL_LOOPS:
@@ -534,6 +539,10 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_BACKEND_DEVICES_KEEPFREE:  user_options->backend_devices_keepfree  = hc_strtoul (optarg, NULL, 10);   break;
       case IDX_BACKEND_VECTOR_WIDTH:      user_options->backend_vector_width      = hc_strtoul (optarg, NULL, 10);
                                           user_options->backend_vector_width_chgd = true;                            break;
+      case IDX_BYPASS_DELAY:              user_options->bypass_delay              = hc_strtoul (optarg, NULL, 10);
+                                          user_options->bypass_delay_chgd         = true;                            break;
+      case IDX_BYPASS_THRESHOLD:          user_options->bypass_threshold          = hc_strtoul (optarg, NULL, 10);
+                                          user_options->bypass_threshold_chgd     = true;                            break;
       case IDX_OPENCL_DEVICE_TYPES:       user_options->opencl_device_types       = optarg;                          break;
       case IDX_OPTIMIZED_KERNEL_ENABLE:   user_options->optimized_kernel          = true;                            break;
       case IDX_MULTIPLY_ACCEL_DISABLE:    user_options->multiply_accel            = false;                           break;
@@ -570,7 +579,8 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_BITMAP_MIN:                user_options->bitmap_min                = hc_strtoul (optarg, NULL, 10);   break;
       case IDX_BITMAP_MAX:                user_options->bitmap_max                = hc_strtoul (optarg, NULL, 10);   break;
       case IDX_HOOK_THREADS:              user_options->hook_threads              = hc_strtoul (optarg, NULL, 10);   break;
-      case IDX_INCREMENT:                 user_options->increment                 = true;                            break;
+      case IDX_INCREMENT:                 user_options->increment++;                                                 break;
+      case IDX_INCREMENT_INVERSE:         user_options->increment                 = INCREMENT_INVERSED;              break;
       case IDX_INCREMENT_MIN:             user_options->increment_min             = hc_strtoul (optarg, NULL, 10);
                                           user_options->increment_min_chgd        = true;                            break;
       case IDX_INCREMENT_MAX:             user_options->increment_max             = hc_strtoul (optarg, NULL, 10);
@@ -938,28 +948,28 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     return -1;
   }
 
-  if ((user_options->increment == true) && (user_options->progress_only == true))
+  if ((user_options->increment != INCREMENT_NONE) && (user_options->progress_only == true))
   {
     event_log_error (hashcat_ctx, "Increment is not allowed in combination with --progress-only.");
 
     return -1;
   }
 
-  if ((user_options->increment == true) && (user_options->speed_only == true))
+  if ((user_options->increment != INCREMENT_NONE) && (user_options->speed_only == true))
   {
     event_log_error (hashcat_ctx, "Increment is not allowed in combination with --speed-only.");
 
     return -1;
   }
 
-  if ((user_options->increment == true) && (user_options->attack_mode == ATTACK_MODE_STRAIGHT))
+  if ((user_options->increment != INCREMENT_NONE) && (user_options->attack_mode == ATTACK_MODE_STRAIGHT))
   {
     event_log_error (hashcat_ctx, "Increment is not allowed in attack mode 0 (straight).");
 
     return -1;
   }
 
-  if ((user_options->increment == true) && (user_options->attack_mode == ATTACK_MODE_ASSOCIATION))
+  if ((user_options->increment != INCREMENT_NONE) && (user_options->attack_mode == ATTACK_MODE_ASSOCIATION))
   {
     event_log_error (hashcat_ctx, "Increment is not allowed in attack mode 9 (association).");
 
@@ -973,18 +983,26 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     return -1;
   }
 
-  if ((user_options->increment == false) && (user_options->increment_min_chgd == true))
+  if ((user_options->increment == INCREMENT_NONE) && (user_options->increment_min_chgd == true))
   {
     event_log_error (hashcat_ctx, "Increment-min is only supported when combined with -i/--increment.");
 
     return -1;
   }
 
-  if ((user_options->increment == false) && (user_options->increment_max_chgd == true))
+  if ((user_options->increment == INCREMENT_NONE) && (user_options->increment_max_chgd == true))
   {
     event_log_error (hashcat_ctx, "Increment-max is only supported combined with -i/--increment.");
 
     return -1;
+  }
+
+  // In case the user uses -iii, escaping enum bounds
+  if (user_options->increment > INCREMENT_INVERSED)
+  {
+    event_log_error (hashcat_ctx, "Invalid -i/--increment value.");
+
+    return -1;    
   }
 
   if ((user_options->rp_files_cnt > 0) && (user_options->rp_gen > 0))
@@ -1410,9 +1428,16 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
       return -1;
     }
 
-    if (user_options->increment == true)
+    if (user_options->increment == INCREMENT_NORMAL)
     {
       event_log_error (hashcat_ctx, "Can't change --increment (-i) in benchmark mode.");
+
+      return -1;
+    }
+
+    if (user_options->increment == INCREMENT_INVERSED)
+    {
+      event_log_error (hashcat_ctx, "Can't change --increment-inverse in benchmark mode.");
 
       return -1;
     }
@@ -1677,6 +1702,13 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
 
       return -1;
     }
+  }
+
+  if ((user_options->bypass_delay_chgd && !user_options->bypass_threshold_chgd) || (!user_options->bypass_delay_chgd && user_options->bypass_threshold_chgd))
+  {
+    event_log_error (hashcat_ctx, "You must specify --bypass-delay and --bypass-threshold together.");
+
+    return -1;
   }
 
   // argc / argv checks
@@ -2031,7 +2063,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
   {
     user_options->attack_mode         = ATTACK_MODE_BF;
     user_options->hwmon_temp_abort    = 0;
-    user_options->increment           = false;
+    user_options->increment           = INCREMENT_NONE;
     user_options->left                = false;
     user_options->logfile             = false;
     user_options->spin_damp           = 0;
@@ -2201,7 +2233,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
         user_options->custom_charset_2 = DEF_MASK_CS_2;
         user_options->custom_charset_3 = DEF_MASK_CS_3;
 
-        user_options->increment = true;
+        user_options->increment = INCREMENT_NORMAL;
       }
     }
     else if (user_options->stdout_flag == true)
@@ -2212,7 +2244,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
         user_options->custom_charset_2 = DEF_MASK_CS_2;
         user_options->custom_charset_3 = DEF_MASK_CS_3;
 
-        user_options->increment = true;
+        user_options->increment = INCREMENT_NORMAL;
       }
     }
     else
@@ -2223,7 +2255,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
         user_options->custom_charset_2 = DEF_MASK_CS_2;
         user_options->custom_charset_3 = DEF_MASK_CS_3;
 
-        user_options->increment = true;
+        user_options->increment = INCREMENT_NORMAL;
       }
     }
   }

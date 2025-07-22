@@ -60,7 +60,6 @@ cpanm Authen::Passphrase::LANManager   \
       Crypt::Mode::ECB                 \
       Crypt::MySQL                     \
       Crypt::OpenSSH::ChachaPoly       \
-      Crypt::OpenSSL::EC               \
       Crypt::OpenSSL::Bignum::CTX      \
       Crypt::Passwd::XS                \
       Crypt::PBKDF2                    \
@@ -74,7 +73,6 @@ cpanm Authen::Passphrase::LANManager   \
       Data::Types                      \
       Digest::CMAC                     \
       Digest::CRC                      \
-      Digest::GOST                     \
       Digest::HMAC                     \
       Digest::HMAC_MD5                 \
       Digest::Keccak                   \
@@ -95,12 +93,17 @@ cpanm Authen::Passphrase::LANManager   \
       Net::DNS::RR::NSEC3              \
       Net::DNS::SEC                    \
       POSIX                            \
-      Text::Iconv                      \
       ;
 
 ERRORS=$((ERRORS+$?))
 
 cpanm https://github.com/matrix/p5-Digest-BLAKE2.git
+ERRORS=$((ERRORS+$?))
+
+cpanm https://github.com/matrix/digest-gost.git
+ERRORS=$((ERRORS+$?))
+
+cpanm https://github.com/matrix/perl-Crypt-OpenSSL-EC.git
 ERRORS=$((ERRORS+$?))
 
 # checks for pyenv
@@ -160,6 +163,9 @@ else
   ERRORS=$((ERRORS+$?))
 
   pip3 install cryptography
+  ERRORS=$((ERRORS+$?))
+
+  pip3 install setuptools
   ERRORS=$((ERRORS+$?))
 
 fi

@@ -17,21 +17,9 @@
 #include <Foundation/Foundation.h>
 #include <Metal/Metal.h>
 
-/*
-typedef NS_ENUM(NSUInteger, hc_mtlFeatureSet)
-{
-  MTL_FEATURESET_MACOS_GPUFAMILY_1_V1 = 10000,
-  MTL_FEATURESET_MACOS_GPUFAMILY_1_V2 = 10001,
-  MTL_FEATURESET_MACOS_GPUFAMILY_1_V3 = 10003,
-  MTL_FEATURESET_MACOS_GPUFAMILY_1_V4 = 10004,
-  MTL_FEATURESET_MACOS_GPUFAMILY_2_V1 = 10005,
-
-} metalDeviceFeatureSet_macOS_t;
-*/
-
 typedef NS_ENUM(NSUInteger, hc_mtlLanguageVersion)
 {
-  MTL_LANGUAGEVERSION_1_0 = (1 << 16),
+//MTL_LANGUAGEVERSION_1_0 = (1 << 16),
   MTL_LANGUAGEVERSION_1_1 = (1 << 16) + 1,
   MTL_LANGUAGEVERSION_1_2 = (1 << 16) + 2,
   MTL_LANGUAGEVERSION_2_0 = (2 << 16),
@@ -39,6 +27,9 @@ typedef NS_ENUM(NSUInteger, hc_mtlLanguageVersion)
   MTL_LANGUAGEVERSION_2_2 = (2 << 16) + 2,
   MTL_LANGUAGEVERSION_2_3 = (2 << 16) + 3,
   MTL_LANGUAGEVERSION_2_4 = (2 << 16) + 4,
+  MTL_LANGUAGEVERSION_3_0 = (3 << 16),
+  MTL_LANGUAGEVERSION_3_1 = (3 << 16) + 1,
+  MTL_LANGUAGEVERSION_3_2 = (3 << 16) + 2
 
 } metalLanguageVersion_t;
 
@@ -110,12 +101,14 @@ static int hc_mtlBuildOptionsToDict (void *hashcat_ctx, const char *build_option
   if (build_options_buf == nil)
   {
     event_log_error (hashcat_ctx, "%s(): build_options_buf is NULL", __func__);
+
     return -1;
   }
 
   if (build_options_dict == nil)
   {
     event_log_error (hashcat_ctx, "%s(): build_options_dict is NULL", __func__);
+
     return -1;
   }
 
@@ -126,6 +119,7 @@ static int hc_mtlBuildOptionsToDict (void *hashcat_ctx, const char *build_option
   if (options == nil)
   {
     event_log_error (hashcat_ctx, "%s(): stringWithCString failed", __func__);
+
     return -1;
   }
 
@@ -136,6 +130,7 @@ static int hc_mtlBuildOptionsToDict (void *hashcat_ctx, const char *build_option
   if (options == nil)
   {
     event_log_error (hashcat_ctx, "%s(): stringByReplacingOccurrencesOfString(-D) failed", __func__);
+
     return -1;
   }
 
@@ -146,6 +141,7 @@ static int hc_mtlBuildOptionsToDict (void *hashcat_ctx, const char *build_option
   if (options == nil)
   {
     event_log_error (hashcat_ctx, "%s(): stringByReplacingOccurrencesOfString(-I OpenCL) failed", __func__);
+
     return -1;
   }
 
@@ -245,14 +241,17 @@ void mtl_close (void *hashcat_ctx)
     if (mtl->devices)
     {
       int count = (int) CFArrayGetCount (mtl->devices);
+
       for (int i = 0; i < count; i++)
       {
         mtl_device_id device = (mtl_device_id) CFArrayGetValueAtIndex (mtl->devices, i);
+
         if (device != nil)
         {
           hc_mtlReleaseDevice (hashcat_ctx, device);
         }
       }
+
       mtl->devices = nil;
     }
 
@@ -423,44 +422,6 @@ int hc_mtlDeviceGetAttribute (void *hashcat_ctx, int *pi, metalDeviceAttribute_t
       *pi = 32;
       break;
 
-    /* unused and deprecated
-    case MTL_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR:
-      *pi = 0;
-
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_2_V1] == true) *pi = 2;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V4] == true) *pi = 1;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V3] == true) *pi = 1;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V2] == true) *pi = 1;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V1] == true) *pi = 1;
-
-      if (*pi == 0)
-      {
-        //event_log_error (hashcat_ctx, "%s(): no feature sets supported", __func__);
-        return -1;
-      }
-
-      break;
-    */
-
-    /* unused and deprecated
-    case MTL_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR:
-      *pi = 0;
-
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_2_V1] == true) *pi = 1;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V4] == true) *pi = 4;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V3] == true) *pi = 3;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V2] == true) *pi = 2;
-      if (*pi == 0 && [metal_device supportsFeatureSet:MTL_FEATURESET_MACOS_GPUFAMILY_1_V1] == true) *pi = 1;
-
-      if (*pi == 0)
-      {
-        //event_log_error (hashcat_ctx, "%s(): no feature sets supported", __func__);
-        return -1;
-      }
-
-      break;
-    */
-
     case MTL_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
       // M1 max is 1024
       // [MTLComputePipelineState maxTotalThreadsPerThreadgroup]
@@ -474,16 +435,21 @@ int hc_mtlDeviceGetAttribute (void *hashcat_ctx, int *pi, metalDeviceAttribute_t
 
     case MTL_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK:
       // 32k
-      *pi = 32768;
-      break;
+      *pi = 0;
 
-    case MTL_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY:
-      // Maximum function memory allocation for a buffer in the constant address space
-      // 64k
-      *pi = 64 * 1024;
+      valULong = 0;
+
+      SEL maxThreadgroupMemoryLengthSelector = NSSelectorFromString (@"maxThreadgroupMemoryLength");
+
+      hc_mtlInvocationHelper (metal_device, maxThreadgroupMemoryLengthSelector, &valULong);
+
+      *pi = valULong;
+
       break;
 
     case MTL_DEVICE_ATTRIBUTE_MAX_TRANSFER_RATE:
+      *pi = 0;
+
       val64 = 0;
 
       SEL maxTransferRateSelector = NSSelectorFromString (@"maxTransferRate");
@@ -516,8 +482,9 @@ int hc_mtlDeviceGetAttribute (void *hashcat_ctx, int *pi, metalDeviceAttribute_t
     case MTL_DEVICE_ATTRIBUTE_PHYSICAL_LOCATION:
       *pi = 0;
 
-      SEL locationSelector = NSSelectorFromString (@"location");
       valULong = 0;
+
+      SEL locationSelector = NSSelectorFromString (@"location");
 
       hc_mtlInvocationHelper (metal_device, locationSelector, &valULong);
 
@@ -528,9 +495,10 @@ int hc_mtlDeviceGetAttribute (void *hashcat_ctx, int *pi, metalDeviceAttribute_t
     case MTL_DEVICE_ATTRIBUTE_LOCATION_NUMBER:
       *pi = 0;
 
+      valULong = 0;
+
       SEL locationNumberSelector = NSSelectorFromString (@"locationNumber");
 
-      valULong = 0;
       hc_mtlInvocationHelper (metal_device, locationNumberSelector, &valULong);
 
       *pi = valULong;
@@ -839,6 +807,26 @@ int hc_mtlGetThreadExecutionWidth (void *hashcat_ctx, mtl_pipeline metal_pipelin
   return 0;
 }
 
+int hc_mtlGetStaticThreadgroupMemoryLength (void *hashcat_ctx, mtl_pipeline metal_pipeline, unsigned int *staticThreadgroupMemoryLength)
+{
+  backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
+
+  MTL_PTR *mtl = (MTL_PTR *) backend_ctx->mtl;
+
+  if (mtl == NULL) return -1;
+
+  if (metal_pipeline == nil)
+  {
+    event_log_error (hashcat_ctx, "%s(): invalid pipeline", __func__);
+
+    return -1;
+  }
+
+  *staticThreadgroupMemoryLength = [metal_pipeline staticThreadgroupMemoryLength];
+
+  return 0;
+}
+
 int hc_mtlCreateBuffer (void *hashcat_ctx, mtl_device_id metal_device, size_t size, void *ptr, mtl_mem *metal_buffer)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
@@ -879,7 +867,7 @@ int hc_mtlCreateBuffer (void *hashcat_ctx, mtl_device_id metal_device, size_t si
   return 0;
 }
 
-int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem metal_buffer)
+int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem *metal_buffer)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
@@ -887,44 +875,46 @@ int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem metal_buffer)
 
   if (mtl == NULL) return -1;
 
-  if (metal_buffer == nil)
-  {
-    event_log_error (hashcat_ctx, "%s(): invalid metal buffer", __func__);
+  if (metal_buffer == NULL || *metal_buffer == nil) return -1;
 
-    return -1;
-  }
+  [*metal_buffer setPurgeableState:MTLPurgeableStateEmpty];
+  [*metal_buffer release];
 
-  [metal_buffer setPurgeableState:MTLPurgeableStateEmpty];
-  [metal_buffer release];
+  *metal_buffer = nil;
 
   return 0;
 }
 
-int hc_mtlReleaseFunction (void *hashcat_ctx, mtl_function metal_function)
+int hc_mtlReleaseFunction (void *hashcat_ctx, mtl_function *metal_function)
 {
-  if (metal_function == nil)
-  {
-    event_log_error (hashcat_ctx, "%s(): invalid metal function", __func__);
+  backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
-    return -1;
-  }
+  MTL_PTR *mtl = (MTL_PTR *) backend_ctx->mtl;
 
-  [metal_function release];
+  if (mtl == NULL) return -1;
+
+  if (metal_function == NULL || *metal_function == nil) return -1;
+
+  [*metal_function release];
+
+  *metal_function = nil;
 
   return 0;
 }
 
-int hc_mtlReleaseLibrary (void *hashcat_ctx, mtl_library metal_library)
+int hc_mtlReleaseLibrary (void *hashcat_ctx, mtl_library *metal_library)
 {
-  if (metal_library == nil)
-  {
-    event_log_error (hashcat_ctx, "%s(): invalid metal library", __func__);
+  backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;
 
-    return -1;
-  }
+  MTL_PTR *mtl = (MTL_PTR *) backend_ctx->mtl;
 
-  [metal_library release];
-  metal_library = nil;
+  if (mtl == NULL) return -1;
+
+  if (metal_library == NULL || *metal_library == nil) return -1;
+
+  [*metal_library release];
+
+  *metal_library = nil;
 
   return 0;
 }
@@ -939,6 +929,7 @@ int hc_mtlReleaseCommandQueue (void *hashcat_ctx, mtl_command_queue command_queu
   }
 
   [command_queue release];
+
   command_queue = nil;
 
   return 0;
@@ -954,6 +945,7 @@ int hc_mtlReleaseDevice (void *hashcat_ctx, mtl_device_id metal_device)
   }
 
   [metal_device release];
+
   metal_device = nil;
 
   return 0;
@@ -966,36 +958,56 @@ int hc_mtlMemcpyDtoD (void *hashcat_ctx, mtl_command_queue command_queue, mtl_me
   if (command_queue == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal command queue is invalid", __func__);
+
     return -1;
   }
 
   if (buf_src == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal src buffer is invalid", __func__);
+
     return -1;
   }
 
   if (buf_src_off < 0)
   {
     event_log_error (hashcat_ctx, "%s(): src buffer offset is invalid", __func__);
+
     return -1;
   }
 
   if (buf_dst == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal dst buffer is invalid", __func__);
+
     return -1;
   }
 
   if (buf_dst_off < 0)
   {
     event_log_error (hashcat_ctx, "%s(): dst buffer offset is invalid", __func__);
+
     return -1;
   }
 
   if (buf_size <= 0)
   {
     event_log_error (hashcat_ctx, "%s(): buffer size is invalid", __func__);
+
+    return -1;
+  }
+
+  if (buf_src_off + buf_size > [buf_src length])
+  {
+    event_log_error (hashcat_ctx, "%s(): src buffer offset + size out of bounds", __func__);
+
+    return -1;
+  }
+
+  if (buf_dst_off + buf_size > [buf_dst length])
+  {
+    event_log_error (hashcat_ctx, "%s(): dst buffer offset + size out of bounds", __func__);
+
     return -1;
   }
 
@@ -1012,6 +1024,7 @@ int hc_mtlMemcpyDtoD (void *hashcat_ctx, mtl_command_queue command_queue, mtl_me
   if (blit_encoder == nil)
   {
     event_log_error (hashcat_ctx, "%s(): failed to create a blit command encoder", __func__);
+
     return -1;
   }
 
@@ -1038,30 +1051,42 @@ int hc_mtlMemcpyHtoD (void *hashcat_ctx, mtl_command_queue command_queue, mtl_me
   if (command_queue == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal command queue is invalid", __func__);
+
     return -1;
   }
 
   if (buf_src == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal src buffer is invalid", __func__);
+
     return -1;
   }
 
   if (buf_dst == nil)
   {
     event_log_error (hashcat_ctx, "%s(): host dst buffer is invalid", __func__);
+
     return -1;
   }
 
   if (buf_size <= 0)
   {
     event_log_error (hashcat_ctx, "%s(): buffer size is invalid", __func__);
+
     return -1;
   }
 
   if (buf_dst_off < 0)
   {
     event_log_error (hashcat_ctx, "%s(): buffer dst offset is invalid", __func__);
+
+    return -1;
+  }
+
+  if (buf_dst_off + buf_size > [buf_dst length])
+  {
+    event_log_error (hashcat_ctx, "%s(): buffer offset + size out of bounds", __func__);
+
     return -1;
   }
 
@@ -1081,6 +1106,8 @@ int hc_mtlMemcpyHtoD (void *hashcat_ctx, mtl_command_queue command_queue, mtl_me
     return -1;
   }
 
+  // On macOS Intel, for Managed storage, notify GPU of modified range. Not on Apple Silicon
+
   [buf_dst didModifyRange: NSMakeRange (buf_dst_off, buf_size)];
 
   return 0;
@@ -1093,24 +1120,35 @@ int hc_mtlMemcpyDtoH (void *hashcat_ctx, mtl_command_queue command_queue, void *
   if (command_queue == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal command queue is invalid", __func__);
+
     return -1;
   }
 
   if (buf_src == nil)
   {
     event_log_error (hashcat_ctx, "%s(): metal src buffer is invalid", __func__);
+
     return -1;
   }
 
   if (buf_dst == nil)
   {
     event_log_error (hashcat_ctx, "%s(): host dst buffer is invalid", __func__);
+
     return -1;
   }
 
   if (buf_size <= 0)
   {
     event_log_error (hashcat_ctx, "%s(): buffer size is invalid", __func__);
+
+    return -1;
+  }
+
+  if (buf_src_off + buf_size > [buf_src length])
+  {
+    event_log_error (hashcat_ctx, "%s(): buffer offset + size out of bounds", __func__);
+
     return -1;
   }
 
@@ -1119,10 +1157,13 @@ int hc_mtlMemcpyDtoH (void *hashcat_ctx, mtl_command_queue command_queue, void *
   if (command_buffer == nil)
   {
     event_log_error (hashcat_ctx, "%s(): failed to create a new command buffer", __func__);
+
     return -1;
   }
 
   id<MTLBlitCommandEncoder> blit_encoder = [command_buffer blitCommandEncoder];
+
+  // On macOS Intel, for Managed storage, synchronizeResource. Not on Apple Silicon
 
   [blit_encoder synchronizeResource: buf_src];
 
@@ -1198,6 +1239,7 @@ int hc_mtlRuntimeGetVersionString (void *hashcat_ctx, char *runtimeVersion_str, 
 
     CFRelease (plist_stream);
     CFRelease (plist_url);
+
     return -1;
   }
 
@@ -1209,7 +1251,9 @@ int hc_mtlRuntimeGetVersionString (void *hashcat_ctx, char *runtimeVersion_str, 
     {
       CFIndex len = CFStringGetLength (runtime_version_str);
       CFIndex maxSize = CFStringGetMaximumSizeForEncoding (len, kCFStringEncodingUTF8) + 1;
+
       *size = maxSize;
+
       return 0;
     }
 
@@ -1359,21 +1403,21 @@ int hc_mtlEncodeComputeCommand (void *hashcat_ctx, mtl_command_encoder metal_com
   [metal_command_encoder dispatchThreadgroups: threadgroupsPerGrid threadsPerThreadgroup: threadsPerThreadgroup];
 
   [metal_command_encoder endEncoding];
+
+  // using completition handler to get GPU timing
+
+  __block CFTimeInterval elapsed = 0;
+
+  [metal_command_buffer addCompletedHandler:^(id<MTLCommandBuffer> cb) {
+    CFTimeInterval gpuStart = cb.GPUStartTime;
+    CFTimeInterval gpuEnd = cb.GPUEndTime;
+    elapsed = gpuEnd - gpuStart;
+
+    *ms = elapsed * 1000.0;
+  }];
+
   [metal_command_buffer commit];
   [metal_command_buffer waitUntilCompleted];
-
-  CFTimeInterval myGPUStartTime = 0;
-  CFTimeInterval myGPUEndTime = 0;
-
-  SEL myGPUStartTimeSelector = NSSelectorFromString (@"GPUStartTime");
-  SEL myGPUEndTimeSelector   = NSSelectorFromString (@"GPUEndTime");
-
-  if (hc_mtlInvocationHelper (metal_command_buffer, myGPUStartTimeSelector, &myGPUStartTime) == -1) return -1;
-  if (hc_mtlInvocationHelper (metal_command_buffer, myGPUEndTimeSelector, &myGPUEndTime) == -1) return -1;
-
-  CFTimeInterval elapsed = myGPUEndTime - myGPUStartTime;
-
-  *ms = (1000.0 * elapsed);
 
   return 0;
 }
@@ -1409,6 +1453,7 @@ int hc_mtlCreateLibraryWithFile (void *hashcat_ctx, mtl_device_id metal_device, 
       if (error != nil)
       {
         event_log_error (hashcat_ctx, "%s(): failed to create metal library from metallib, %s", __func__, [[error localizedDescription] UTF8String]);
+
         return -1;
       }
 
@@ -1444,6 +1489,7 @@ int hc_mtlCreateLibraryWithSource (void *hashcat_ctx, mtl_device_id metal_device
         event_log_error (hashcat_ctx, "%s(): failed to build options dictionary", __func__);
 
         [build_options_dict release];
+
         return -1;
       }
 
@@ -1454,14 +1500,25 @@ int hc_mtlCreateLibraryWithSource (void *hashcat_ctx, mtl_device_id metal_device
       compileOptions.mathMode = MTLMathModeSafe;
       // compileOptions.mathMode = MTLMathModeRelaxed;
       // compileOptions.enableLogging = true;
-      // compileOptions.fastMathEnabled = false;
       */
     }
 
     // todo: detect current os version and choose the right
     // compileOptions.languageVersion = MTL_LANGUAGEVERSION_2_3;
 /*
-    if (@available(macOS 12.0, *))
+    if (@available(macOS 15.0, *))
+    {
+      compileOptions.languageVersion = MTL_LANGUAGEVERSION_3_2;
+    }
+    else if (@available(macOS 14.0, *))
+    {
+      compileOptions.languageVersion = MTL_LANGUAGEVERSION_3_1;
+    }
+    else if (@available(macOS 13.0, *))
+    {
+      compileOptions.languageVersion = MTL_LANGUAGEVERSION_3_0;
+    }
+    else if (@available(macOS 12.0, *))
     {
       compileOptions.languageVersion = MTL_LANGUAGEVERSION_2_4;
     }

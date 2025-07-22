@@ -126,6 +126,10 @@ const char *val2cstr_cl          (cl_int CL_err);
 int  ocl_init                    (void *hashcat_ctx);
 void ocl_close                   (void *hashcat_ctx);
 
+int hc_clReleaseMemObjectPtr     (void *hashcat_ctx, cl_mem *mem);
+int hc_clReleaseKernelPtr        (void *hashcat_ctx, cl_kernel *kernel);
+int hc_clReleaseProgramPtr       (void *hashcat_ctx, cl_program *program);
+
 int hc_clEnqueueNDRangeKernel    (void *hashcat_ctx, cl_command_queue command_queue, cl_kernel kernel, cl_uint work_dim, const size_t *global_work_offset, const size_t *global_work_size, const size_t *local_work_size, cl_uint num_events_in_wait_list, const cl_event *event_wait_list, cl_event *event);
 int hc_clGetEventInfo            (void *hashcat_ctx, cl_event event, cl_event_info param_name, size_t param_value_size, void *param_value, size_t *param_value_size_ret);
 int hc_clFlush                   (void *hashcat_ctx, cl_command_queue command_queue);

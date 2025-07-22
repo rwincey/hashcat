@@ -1887,11 +1887,11 @@ DECLSPEC u32 hc_bytealign_S (const u32 a, const u32 b, const int c)
   return r;
 }
 #else
-DECLSPEC u32 hc_bytealign_be (const u32 a, const u32 b, const int c)
+DECLSPEC u32x hc_bytealign_be (const u32x a, const u32x b, const int c)
 {
   const int c_mod_4 = c & 3;
 
-  const u32 r = hc_byte_perm (b, a, (0x76543210 >> (c_mod_4 * 4)) & 0xffff);
+  const u32x r = hc_byte_perm (b, a, (0x76543210 >> (c_mod_4 * 4)) & 0xffff);
 
   return r;
 }

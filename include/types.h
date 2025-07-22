@@ -315,67 +315,79 @@ typedef enum kern_run_mp
 
 typedef enum rule_functions
 {
-  RULE_OP_MANGLE_NOOP            = ':',
-  RULE_OP_MANGLE_LREST           = 'l',
-  RULE_OP_MANGLE_UREST           = 'u',
-  RULE_OP_MANGLE_LREST_UFIRST    = 'c',
-  RULE_OP_MANGLE_UREST_LFIRST    = 'C',
-  RULE_OP_MANGLE_TREST           = 't',
-  RULE_OP_MANGLE_TOGGLE_AT       = 'T',
-  RULE_OP_MANGLE_TOGGLE_AT_SEP   = '3',
-  RULE_OP_MANGLE_REVERSE         = 'r',
-  RULE_OP_MANGLE_DUPEWORD        = 'd',
-  RULE_OP_MANGLE_DUPEWORD_TIMES  = 'p',
-  RULE_OP_MANGLE_REFLECT         = 'f',
-  RULE_OP_MANGLE_ROTATE_LEFT     = '{',
-  RULE_OP_MANGLE_ROTATE_RIGHT    = '}',
-  RULE_OP_MANGLE_APPEND          = '$',
-  RULE_OP_MANGLE_PREPEND         = '^',
-  RULE_OP_MANGLE_DELETE_FIRST    = '[',
-  RULE_OP_MANGLE_DELETE_LAST     = ']',
-  RULE_OP_MANGLE_DELETE_AT       = 'D',
-  RULE_OP_MANGLE_EXTRACT         = 'x',
-  RULE_OP_MANGLE_OMIT            = 'O',
-  RULE_OP_MANGLE_INSERT          = 'i',
-  RULE_OP_MANGLE_OVERSTRIKE      = 'o',
-  RULE_OP_MANGLE_TRUNCATE_AT     = '\'',
-  RULE_OP_MANGLE_REPLACE         = 's',
-  RULE_OP_MANGLE_PURGECHAR       = '@',
-  RULE_OP_MANGLE_TOGGLECASE_REC  = 'a',
-  RULE_OP_MANGLE_DUPECHAR_FIRST  = 'z',
-  RULE_OP_MANGLE_DUPECHAR_LAST   = 'Z',
-  RULE_OP_MANGLE_DUPECHAR_ALL    = 'q',
-  RULE_OP_MANGLE_EXTRACT_MEMORY  = 'X',
-  RULE_OP_MANGLE_APPEND_MEMORY   = '4',
-  RULE_OP_MANGLE_PREPEND_MEMORY  = '6',
-  RULE_OP_MANGLE_TITLE_SEP       = 'e',
+  RULE_OP_MANGLE_NOOP              = ':',
+  RULE_OP_MANGLE_LREST             = 'l',
+  RULE_OP_MANGLE_UREST             = 'u',
+  RULE_OP_MANGLE_LREST_UFIRST      = 'c',
+  RULE_OP_MANGLE_UREST_LFIRST      = 'C',
+  RULE_OP_MANGLE_TREST             = 't',
+  RULE_OP_MANGLE_TOGGLE_AT         = 'T',
+  RULE_OP_MANGLE_TOGGLE_AT_SEP     = '3',
+  RULE_OP_MANGLE_REVERSE           = 'r',
+  RULE_OP_MANGLE_DUPEWORD          = 'd',
+  RULE_OP_MANGLE_DUPEWORD_TIMES    = 'p',
+  RULE_OP_MANGLE_REFLECT           = 'f',
+  RULE_OP_MANGLE_ROTATE_LEFT       = '{',
+  RULE_OP_MANGLE_ROTATE_RIGHT      = '}',
+  RULE_OP_MANGLE_APPEND            = '$',
+  RULE_OP_MANGLE_PREPEND           = '^',
+  RULE_OP_MANGLE_DELETE_FIRST      = '[',
+  RULE_OP_MANGLE_DELETE_LAST       = ']',
+  RULE_OP_MANGLE_DELETE_AT         = 'D',
+  RULE_OP_MANGLE_EXTRACT           = 'x',
+  RULE_OP_MANGLE_OMIT              = 'O',
+  RULE_OP_MANGLE_INSERT            = 'i',
+  RULE_OP_MANGLE_OVERSTRIKE        = 'o',
+  RULE_OP_MANGLE_TRUNCATE_AT       = '\'',
+  RULE_OP_MANGLE_REPLACE           = 's',
+  RULE_OP_MANGLE_PURGECHAR         = '@',
+  RULE_OP_MANGLE_TOGGLECASE_REC    = 'a',
+  RULE_OP_MANGLE_DUPECHAR_FIRST    = 'z',
+  RULE_OP_MANGLE_DUPECHAR_LAST     = 'Z',
+  RULE_OP_MANGLE_DUPECHAR_ALL      = 'q',
+  RULE_OP_MANGLE_EXTRACT_MEMORY    = 'X',
+  RULE_OP_MANGLE_APPEND_MEMORY     = '4',
+  RULE_OP_MANGLE_PREPEND_MEMORY    = '6',
+  RULE_OP_MANGLE_TITLE_SEP         = 'e',
 
-  RULE_OP_MEMORIZE_WORD          = 'M',
+  RULE_OP_MEMORIZE_WORD            = 'M',
 
-  RULE_OP_REJECT_LESS            = '<',
-  RULE_OP_REJECT_GREATER         = '>',
-  RULE_OP_REJECT_EQUAL           = '_',
-  RULE_OP_REJECT_CONTAIN         = '!',
-  RULE_OP_REJECT_NOT_CONTAIN     = '/',
-  RULE_OP_REJECT_EQUAL_FIRST     = '(',
-  RULE_OP_REJECT_EQUAL_LAST      = ')',
-  RULE_OP_REJECT_EQUAL_AT        = '=',
-  RULE_OP_REJECT_CONTAINS        = '%',
-  RULE_OP_REJECT_MEMORY          = 'Q',
-  RULE_LAST_REJECTED_SAVED_POS   = 'p',
+  RULE_OP_REJECT_LESS              = '<',
+  RULE_OP_REJECT_GREATER           = '>',
+  RULE_OP_REJECT_EQUAL             = '_',
+  RULE_OP_REJECT_CONTAIN           = '!',
+  RULE_OP_REJECT_NOT_CONTAIN       = '/',
+  RULE_OP_REJECT_EQUAL_FIRST       = '(',
+  RULE_OP_REJECT_EQUAL_LAST        = ')',
+  RULE_OP_REJECT_EQUAL_AT          = '=',
+  RULE_OP_REJECT_CONTAINS          = '%',
+  RULE_OP_REJECT_MEMORY            = 'Q',
+  RULE_LAST_REJECTED_SAVED_POS     = 'p',
 
-  RULE_OP_MANGLE_SWITCH_FIRST    = 'k',
-  RULE_OP_MANGLE_SWITCH_LAST     = 'K',
-  RULE_OP_MANGLE_SWITCH_AT       = '*',
-  RULE_OP_MANGLE_CHR_SHIFTL      = 'L',
-  RULE_OP_MANGLE_CHR_SHIFTR      = 'R',
-  RULE_OP_MANGLE_CHR_INCR        = '+',
-  RULE_OP_MANGLE_CHR_DECR        = '-',
-  RULE_OP_MANGLE_REPLACE_NP1     = '.',
-  RULE_OP_MANGLE_REPLACE_NM1     = ',',
-  RULE_OP_MANGLE_DUPEBLOCK_FIRST = 'y',
-  RULE_OP_MANGLE_DUPEBLOCK_LAST  = 'Y',
-  RULE_OP_MANGLE_TITLE           = 'E',
+  RULE_OP_MANGLE_SWITCH_FIRST      = 'k',
+  RULE_OP_MANGLE_SWITCH_LAST       = 'K',
+  RULE_OP_MANGLE_SWITCH_AT         = '*',
+  RULE_OP_MANGLE_CHR_SHIFTL        = 'L',
+  RULE_OP_MANGLE_CHR_SHIFTR        = 'R',
+  RULE_OP_MANGLE_CHR_INCR          = '+',
+  RULE_OP_MANGLE_CHR_DECR          = '-',
+  RULE_OP_MANGLE_REPLACE_NP1       = '.',
+  RULE_OP_MANGLE_REPLACE_NM1       = ',',
+  RULE_OP_MANGLE_DUPEBLOCK_FIRST   = 'y',
+  RULE_OP_MANGLE_DUPEBLOCK_LAST    = 'Y',
+  RULE_OP_MANGLE_TITLE             = 'E',
+
+  /* using character classes */
+  RULE_OP_CLASS_BASED              = '~',
+  RULE_OP_MANGLE_REPLACE_CLASS     = 0x01,
+  RULE_OP_MANGLE_PURGECHAR_CLASS   = 0x02,
+  RULE_OP_MANGLE_TITLE_SEP_CLASS   = 0x03,
+  RULE_OP_REJECT_CONTAIN_CLASS     = 0x04,
+  RULE_OP_REJECT_NOT_CONTAIN_CLASS = 0x05,
+  RULE_OP_REJECT_EQUAL_FIRST_CLASS = 0x06,
+  RULE_OP_REJECT_EQUAL_LAST_CLASS  = 0x07,
+  RULE_OP_REJECT_EQUAL_AT_CLASS    = 0x08,
+  RULE_OP_REJECT_CONTAINS_CLASS    = 0x09,
 
 } rule_functions_t;
 
@@ -421,108 +433,105 @@ typedef enum opti_type
 
 typedef enum opts_type
 {
-  OPTS_TYPE_PT_UTF16LE        = (1ULL <<  0),
-  OPTS_TYPE_PT_UTF16BE        = (1ULL <<  1),
-  OPTS_TYPE_PT_UPPER          = (1ULL <<  2),
-  OPTS_TYPE_PT_LOWER          = (1ULL <<  3),
-  OPTS_TYPE_PT_ADD01          = (1ULL <<  4),
-  OPTS_TYPE_PT_ADD02          = (1ULL <<  5),
-  OPTS_TYPE_PT_ADD80          = (1ULL <<  6),
-  OPTS_TYPE_PT_ADDBITS14      = (1ULL <<  7),
-  OPTS_TYPE_PT_ADDBITS15      = (1ULL <<  8),
-  OPTS_TYPE_PT_GENERATE_LE    = (1ULL <<  9),
-  OPTS_TYPE_PT_GENERATE_BE    = (1ULL << 10),
-  OPTS_TYPE_PT_NEVERCRACK     = (1ULL << 11), // if we want all possible results
-  OPTS_TYPE_PT_ALWAYS_ASCII   = (1ULL << 12),
-  OPTS_TYPE_PT_ALWAYS_HEXIFY  = (1ULL << 13),
-  OPTS_TYPE_PT_LM             = (1ULL << 14), // special handling: all lower, 7 max, ...
-  OPTS_TYPE_PT_HEX            = (1ULL << 15), // input wordlist is always in hex
-  OPTS_TYPE_ST_UTF16LE        = (1ULL << 16),
-  OPTS_TYPE_ST_UTF16BE        = (1ULL << 17),
-  OPTS_TYPE_ST_UPPER          = (1ULL << 18),
-  OPTS_TYPE_ST_LOWER          = (1ULL << 19),
-  OPTS_TYPE_ST_ADD01          = (1ULL << 20),
-  OPTS_TYPE_ST_ADD02          = (1ULL << 21),
-  OPTS_TYPE_ST_ADD80          = (1ULL << 22),
-  OPTS_TYPE_ST_ADDBITS14      = (1ULL << 23),
-  OPTS_TYPE_ST_ADDBITS15      = (1ULL << 24),
-  OPTS_TYPE_ST_HEX            = (1ULL << 25),
-  OPTS_TYPE_ST_BASE64         = (1ULL << 26),
-  OPTS_TYPE_MT_HEX            = (1ULL << 27), // mask is always in hex
-  OPTS_TYPE_HASH_COPY         = (1ULL << 28),
-  OPTS_TYPE_HASH_SPLIT        = (1ULL << 29),
-  OPTS_TYPE_INIT              = (1ULL << 30), // Added v7, since bridge can fully replace these, but are set by default automatically
-  OPTS_TYPE_LOOP              = (1ULL << 31), // Added v7, since bridge can fully replace these, but are set by default automatically
-  OPTS_TYPE_COMP              = (1ULL << 32), // Added v7, since bridge can fully replace these, but are set by default automatically
-  OPTS_TYPE_LOOP_PREPARE      = (1ULL << 33), // a kernel which is called each time before _loop kernel started.
-                                              // like a hook12 kernel but without extra buffers.
-  OPTS_TYPE_LOOP_EXTENDED     = (1ULL << 34), // a kernel which is called each time normal _loop kernel finished.
-                                              // but unlike a hook kernel this kernel is called for every _loop iteration offset
-  OPTS_TYPE_HOOK12            = (1ULL << 35),
-  OPTS_TYPE_HOOK23            = (1ULL << 36),
-  OPTS_TYPE_INIT2             = (1ULL << 37),
-  OPTS_TYPE_LOOP2_PREPARE     = (1ULL << 38), // same as OPTS_TYPE_LOOP_PREPARE but for loop2 kernel
-  OPTS_TYPE_LOOP2             = (1ULL << 39),
-  OPTS_TYPE_AUX1              = (1ULL << 40),
-  OPTS_TYPE_AUX2              = (1ULL << 41),
-  OPTS_TYPE_AUX3              = (1ULL << 42),
-  OPTS_TYPE_AUX4              = (1ULL << 43),
-  OPTS_TYPE_BINARY_HASHFILE   = (1ULL << 44),
-  OPTS_TYPE_BINARY_HASHFILE_OPTIONAL
-                              = (1ULL << 45), // this allows us to not enforce the use of a binary file. requires OPTS_TYPE_BINARY_HASHFILE set to be effective.
-  OPTS_TYPE_PT_ADD06          = (1ULL << 46),
-  OPTS_TYPE_KEYBOARD_MAPPING  = (1ULL << 47),
-  OPTS_TYPE_DEEP_COMP_KERNEL  = (1ULL << 48), // if we have to iterate through each hash inside the comp kernel, for example if each hash has to be decrypted separately
-  OPTS_TYPE_TM_KERNEL         = (1ULL << 49),
-  OPTS_TYPE_SUGGEST_KG        = (1ULL << 50), // suggest keep guessing for modules the user maybe wants to use --keep-guessing
-  OPTS_TYPE_COPY_TMPS         = (1ULL << 51), // if we want to use data from tmps buffer (for example get the PMK in WPA)
-  OPTS_TYPE_POTFILE_NOPASS    = (1ULL << 52), // sometimes the password should not be printed to potfile
-  OPTS_TYPE_DYNAMIC_SHARED    = (1ULL << 53), // use dynamic shared memory (note: needs special kernel changes)
-  OPTS_TYPE_SELF_TEST_DISABLE = (1ULL << 54), // some algos use JiT in combinations with a salt or create too much startup time
-  OPTS_TYPE_MP_MULTI_DISABLE  = (1ULL << 55), // do not multiply the kernel-accel with the multiprocessor count per device to allow more fine-tuned workload settings
-  OPTS_TYPE_THREAD_MULTI_DISABLE              // do not multiply the kernel-power with the thread count per device for super slow algos
-                              = (1ULL << 56),
-  OPTS_TYPE_NATIVE_THREADS    = (1ULL << 57), // forces "native" thread count: CPU=1, GPU-Intel=8, GPU-AMD=64 (wavefront), GPU-NV=32 (warps)
-  OPTS_TYPE_MAXIMUM_THREADS   = (1ULL << 58), // disable else branch in pre-compilation thread count optimization setting
-  OPTS_TYPE_POST_AMP_UTF16LE  = (1ULL << 59), // run the utf8 to utf16le conversion kernel after they have been processed from amplifiers
-  OPTS_TYPE_AUTODETECT_DISABLE
-                              = (1ULL << 60), // skip autodetect engine
-  OPTS_TYPE_STOCK_MODULE      = (1ULL << 61), // module included with hashcat default distribution
-  OPTS_TYPE_MULTIHASH_DESPITE_ESALT
-                              = (1ULL << 62), // overrule multihash cracking check same salt but not same esalt
-  OPTS_TYPE_MAXIMUM_ACCEL     = (1ULL << 63)  // try to maximize kernel-accel during autotune
+  OPTS_TYPE_PT_UTF16LE               = (1ULL <<  0),
+  OPTS_TYPE_PT_UTF16BE               = (1ULL <<  1),
+  OPTS_TYPE_PT_UPPER                 = (1ULL <<  2),
+  OPTS_TYPE_PT_LOWER                 = (1ULL <<  3),
+  OPTS_TYPE_PT_ADD01                 = (1ULL <<  4),
+  OPTS_TYPE_PT_ADD02                 = (1ULL <<  5),
+  OPTS_TYPE_PT_ADD80                 = (1ULL <<  6),
+  OPTS_TYPE_PT_ADDBITS14             = (1ULL <<  7),
+  OPTS_TYPE_PT_ADDBITS15             = (1ULL <<  8),
+  OPTS_TYPE_PT_GENERATE_LE           = (1ULL <<  9),
+  OPTS_TYPE_PT_GENERATE_BE           = (1ULL << 10),
+  OPTS_TYPE_PT_NEVERCRACK            = (1ULL << 11), // if we want all possible results
+  OPTS_TYPE_PT_ALWAYS_ASCII          = (1ULL << 12),
+  OPTS_TYPE_PT_ALWAYS_HEXIFY         = (1ULL << 13),
+  OPTS_TYPE_PT_LM                    = (1ULL << 14), // special handling: all lower, 7 max, ...
+  OPTS_TYPE_PT_HEX                   = (1ULL << 15), // input wordlist is always in hex
+  OPTS_TYPE_PT_BASE58                = (1ULL << 16), // only informative
+  OPTS_TYPE_ST_UTF16LE               = (1ULL << 17),
+  OPTS_TYPE_ST_UTF16BE               = (1ULL << 18),
+  OPTS_TYPE_ST_UPPER                 = (1ULL << 19),
+  OPTS_TYPE_ST_LOWER                 = (1ULL << 20),
+  OPTS_TYPE_ST_ADD01                 = (1ULL << 21),
+  OPTS_TYPE_ST_ADD02                 = (1ULL << 22),
+  OPTS_TYPE_ST_ADD80                 = (1ULL << 23),
+  OPTS_TYPE_ST_ADDBITS14             = (1ULL << 24),
+  OPTS_TYPE_ST_ADDBITS15             = (1ULL << 25),
+  OPTS_TYPE_ST_HEX                   = (1ULL << 26),
+  OPTS_TYPE_ST_BASE64                = (1ULL << 27),
+  OPTS_TYPE_MT_HEX                   = (1ULL << 28), // mask is always in hex
+  OPTS_TYPE_HASH_COPY                = (1ULL << 29),
+  OPTS_TYPE_HASH_SPLIT               = (1ULL << 30),
+  OPTS_TYPE_INIT                     = (1ULL << 31), // Added v7, since bridge can fully replace these, but are set by default automatically
+  OPTS_TYPE_LOOP                     = (1ULL << 32), // Added v7, since bridge can fully replace these, but are set by default automatically
+  OPTS_TYPE_COMP                     = (1ULL << 33), // Added v7, since bridge can fully replace these, but are set by default automatically
+  OPTS_TYPE_LOOP_PREPARE             = (1ULL << 34), // a kernel which is called each time before _loop kernel started.
+                                                     // like a hook12 kernel but without extra buffers.
+  OPTS_TYPE_LOOP_EXTENDED            = (1ULL << 35), // a kernel which is called each time normal _loop kernel finished.
+                                                     // but unlike a hook kernel this kernel is called for every _loop iteration offset
+  OPTS_TYPE_HOOK12                   = (1ULL << 36),
+  OPTS_TYPE_HOOK23                   = (1ULL << 37),
+  OPTS_TYPE_INIT2                    = (1ULL << 38),
+  OPTS_TYPE_LOOP2_PREPARE            = (1ULL << 39), // same as OPTS_TYPE_LOOP_PREPARE but for loop2 kernel
+  OPTS_TYPE_LOOP2                    = (1ULL << 40),
+  OPTS_TYPE_AUX1                     = (1ULL << 41),
+  OPTS_TYPE_AUX2                     = (1ULL << 42),
+  OPTS_TYPE_AUX3                     = (1ULL << 43),
+  OPTS_TYPE_AUX4                     = (1ULL << 44),
+  OPTS_TYPE_BINARY_HASHFILE          = (1ULL << 45),
+  OPTS_TYPE_BINARY_HASHFILE_OPTIONAL = (1ULL << 46), // this allows us to not enforce the use of a binary file. requires OPTS_TYPE_BINARY_HASHFILE set to be effective.
+  OPTS_TYPE_PT_ADD06                 = (1ULL << 47),
+  OPTS_TYPE_KEYBOARD_MAPPING         = (1ULL << 48),
+  OPTS_TYPE_DEEP_COMP_KERNEL         = (1ULL << 49), // if we have to iterate through each hash inside the comp kernel, for example if each hash has to be decrypted separately
+  OPTS_TYPE_TM_KERNEL                = (1ULL << 50),
+  OPTS_TYPE_SUGGEST_KG               = (1ULL << 51), // suggest keep guessing for modules the user maybe wants to use --keep-guessing
+  OPTS_TYPE_COPY_TMPS                = (1ULL << 52), // if we want to use data from tmps buffer (for example get the PMK in WPA)
+  OPTS_TYPE_POTFILE_NOPASS           = (1ULL << 53), // sometimes the password should not be printed to potfile
+  OPTS_TYPE_DYNAMIC_SHARED           = (1ULL << 54), // use dynamic shared memory (note: needs special kernel changes)
+  OPTS_TYPE_SELF_TEST_DISABLE        = (1ULL << 55), // some algos use JiT in combinations with a salt or create too much startup time
+  OPTS_TYPE_MP_MULTI_DISABLE         = (1ULL << 56), // do not multiply the kernel-accel with the multiprocessor count per device to allow more fine-tuned workload settings
+  OPTS_TYPE_THREAD_MULTI_DISABLE     = (1ULL << 57), // do not multiply the kernel-power with the thread count per device for super slow algos
+  OPTS_TYPE_NATIVE_THREADS           = (1ULL << 58), // forces "native" thread count: CPU=1, GPU-Intel=8, GPU-AMD=64 (wavefront), GPU-NV=32 (warps)
+  OPTS_TYPE_MAXIMUM_THREADS          = (1ULL << 59), // disable else branch in pre-compilation thread count optimization setting
+  OPTS_TYPE_POST_AMP_UTF16LE         = (1ULL << 60), // run the utf8 to utf16le conversion kernel after they have been processed from amplifiers
+  OPTS_TYPE_AUTODETECT_DISABLE       = (1ULL << 61), // skip autodetect engine
+  OPTS_TYPE_STOCK_MODULE             = (1ULL << 62), // module included with hashcat default distribution
+  OPTS_TYPE_MULTIHASH_DESPITE_ESALT  = (1ULL << 63)  // overrule multihash cracking check same salt but not same esalt
+//OPTS_TYPE_MAXIMUM_ACCEL            = (1ULL << 64)  // try to maximize kernel-accel during autotune
 
 } opts_type_t;
 
 typedef enum bridge_type
 {
-  BRIDGE_TYPE_NONE                = 0,            // no bridge support
-  BRIDGE_TYPE_MATCH_TUNINGS       = (1ULL <<  1), // Disables autotune and adjusts -n, -u and -T for the backend device according to match bridge dimensions
-  BRIDGE_TYPE_UPDATE_SELFTEST     = (1ULL <<  2), // updates the selftest configured in the module. Can be useful for generic hash modes such as the python one
+  BRIDGE_TYPE_NONE                   = 0,            // no bridge support
+  BRIDGE_TYPE_MATCH_TUNINGS          = (1ULL <<  1), // Disables autotune and adjusts -n, -u and -T for the backend device according to match bridge dimensions
+  BRIDGE_TYPE_UPDATE_SELFTEST        = (1ULL <<  2), // updates the selftest configured in the module. Can be useful for generic hash modes such as the python one
 
-  BRIDGE_TYPE_LAUNCH_INIT         = (1ULL << 10), // attention! not yet implemented
-  BRIDGE_TYPE_LAUNCH_LOOP         = (1ULL << 11),
-  BRIDGE_TYPE_LAUNCH_LOOP2        = (1ULL << 12),
-  BRIDGE_TYPE_LAUNCH_COMP         = (1ULL << 13), // attention! not yet implemented
+  BRIDGE_TYPE_LAUNCH_INIT            = (1ULL << 10), // attention! not yet implemented
+  BRIDGE_TYPE_LAUNCH_LOOP            = (1ULL << 11),
+  BRIDGE_TYPE_LAUNCH_LOOP2           = (1ULL << 12),
+  BRIDGE_TYPE_LAUNCH_COMP            = (1ULL << 13), // attention! not yet implemented
 
   // BRIDGE_TYPE_REPLACE_* is like
   // BRIDGE_TYPE_LAUNCH_*, but
   // deactivates KERN_RUN INIT/LOOP/COMP
 
-  BRIDGE_TYPE_REPLACE_INIT        = (1ULL << 20), // attention! not yet implemented
-  BRIDGE_TYPE_REPLACE_LOOP        = (1ULL << 21),
-  BRIDGE_TYPE_REPLACE_LOOP2       = (1ULL << 22),
-  BRIDGE_TYPE_REPLACE_COMP        = (1ULL << 23), // attention! not yet implemented
+  BRIDGE_TYPE_REPLACE_INIT           = (1ULL << 20), // attention! not yet implemented
+  BRIDGE_TYPE_REPLACE_LOOP           = (1ULL << 21),
+  BRIDGE_TYPE_REPLACE_LOOP2          = (1ULL << 22),
+  BRIDGE_TYPE_REPLACE_COMP           = (1ULL << 23), // attention! not yet implemented
 
-  BRIDGE_TYPE_FORCE_WORKITEMS_001 = (1ULL << 30), // This override the workitem counts reported from the bridge device
-  BRIDGE_TYPE_FORCE_WORKITEMS_002 = (1ULL << 31), // Can be useful if this is not a physical hardware
-  BRIDGE_TYPE_FORCE_WORKITEMS_004 = (1ULL << 32),
-  BRIDGE_TYPE_FORCE_WORKITEMS_008 = (1ULL << 33),
-  BRIDGE_TYPE_FORCE_WORKITEMS_016 = (1ULL << 34),
-  BRIDGE_TYPE_FORCE_WORKITEMS_032 = (1ULL << 35),
-  BRIDGE_TYPE_FORCE_WORKITEMS_064 = (1ULL << 36),
-  BRIDGE_TYPE_FORCE_WORKITEMS_128 = (1ULL << 37),
-  BRIDGE_TYPE_FORCE_WORKITEMS_256 = (1ULL << 36),
+  BRIDGE_TYPE_FORCE_WORKITEMS_001    = (1ULL << 30), // This override the workitem counts reported from the bridge device
+  BRIDGE_TYPE_FORCE_WORKITEMS_002    = (1ULL << 31), // Can be useful if this is not a physical hardware
+  BRIDGE_TYPE_FORCE_WORKITEMS_004    = (1ULL << 32),
+  BRIDGE_TYPE_FORCE_WORKITEMS_008    = (1ULL << 33),
+  BRIDGE_TYPE_FORCE_WORKITEMS_016    = (1ULL << 34),
+  BRIDGE_TYPE_FORCE_WORKITEMS_032    = (1ULL << 35),
+  BRIDGE_TYPE_FORCE_WORKITEMS_064    = (1ULL << 36),
+  BRIDGE_TYPE_FORCE_WORKITEMS_128    = (1ULL << 37),
+  BRIDGE_TYPE_FORCE_WORKITEMS_256    = (1ULL << 36),
 
 } bridge_type_t;
 
@@ -675,6 +684,12 @@ typedef enum progress_mode
 
 } progress_mode_t;
 
+typedef enum increment {
+  INCREMENT_NONE      = 0,
+  INCREMENT_NORMAL    = 1,
+  INCREMENT_INVERSED  = 2,
+} increment_t;
+
 typedef enum user_options_defaults
 {
   ADVICE                   = true,
@@ -715,7 +730,8 @@ typedef enum user_options_defaults
   HEX_WORDLIST             = false,
   HOOK_THREADS             = 0,
   IDENTIFY                 = false,
-  INCREMENT                = false,
+  INCREMENT                = INCREMENT_NONE,
+  INCREMENT_INVERSE        = false,
   INCREMENT_MAX            = PW_MAX,
   INCREMENT_MIN            = 1,
   KEEP_GUESSING            = false,
@@ -816,6 +832,8 @@ typedef enum user_options_map
   IDX_BRAIN_SESSION             = 0xff0f,
   IDX_BRAIN_SESSION_WHITELIST   = 0xff10,
   #endif
+  IDX_BYPASS_THRESHOLD          = 0xff84,
+  IDX_BYPASS_DELAY              = 0xff85,
   IDX_COLOR_CRACKED             = 0xff59,
   IDX_BRIDGE_PARAMETER1         = 0xff80,
   IDX_BRIDGE_PARAMETER2         = 0xff81,
@@ -849,6 +867,7 @@ typedef enum user_options_map
   IDX_HOOK_THREADS              = 0xff1f,
   IDX_IDENTIFY                  = 0xff20,
   IDX_INCREMENT                 = 'i',
+  IDX_INCREMENT_INVERSE         = 0xff61,
   IDX_INCREMENT_MAX             = 0xff21,
   IDX_INCREMENT_MIN             = 0xff22,
   IDX_INDUCTION_DIR             = 0xff23,
@@ -2404,6 +2423,8 @@ typedef struct user_options
   bool         brain_password_chgd;
   bool         brain_server_timer_chgd;
   #endif
+  bool         bypass_delay_chgd;
+  bool         bypass_threshold_chgd;
   bool         hash_mode_chgd;
   bool         hccapx_message_pair_chgd;
   bool         identify;
@@ -2446,7 +2467,7 @@ typedef struct user_options
   bool         hex_charset;
   bool         hex_salt;
   bool         hex_wordlist;
-  bool         increment;
+  increment_t  increment;
   bool         keep_guessing;
   bool         keyspace;
   bool         total_candidates;
@@ -2538,6 +2559,8 @@ typedef struct user_options
   u32          brain_session;
   u32          brain_attack;
   #endif
+  u32          bypass_delay;
+  u32          bypass_threshold;
   u32          debug_mode;
   u32          hwmon_temp_abort;
   u32          hash_info;
@@ -2896,12 +2919,17 @@ typedef struct status_ctx
   u64 *words_progress_rejected; // progress number of words rejected per salt
   u64 *words_progress_restored; // progress number of words restored per salt
 
+  int bypass_digests_done_new;  // --bypass-threshold cracked counter
+
   /**
    * timer
    */
 
   time_t runtime_start;
   time_t runtime_stop;
+
+  time_t timer_bypass_start;
+  time_t timer_bypass_cur;
 
   hc_timer_t timer_running;     // timer on current dict
   hc_timer_t timer_paused;      // timer on current dict

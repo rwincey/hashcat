@@ -15,25 +15,22 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u32 MurmurHash64A_32 (PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u32 MurmurHash64A_truncated (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
   //Initialize hash
-  u64 hash = 0 ^ (len * M);
+  u64 hash = len * M;
 
-  //printf("len = %d\n", len);
-  //printf("INITIAL = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
+  // Twice the number of u64 blocks
+  const u32 num_u32_blocks = (len / 8) * 2;
 
-  // 2 for each u64 block
-  const u32 num_blocks = (len / 8) * 2;
-
-  //printf("num_blocks = %d\n", num_blocks);
-
-  // Loop over blocks of 8 bytes
+  // Loop over one u64 at a time
   u32 i = 0;
-  while (i < num_blocks) {
+  while (i < num_u32_blocks)
+  {
+    // Reconstruct u64 from two u32s
     u64 k = hl32_to_64 (data[i + 1], data[i]);
 
     k *= M;
@@ -46,35 +43,19 @@ DECLSPEC u32 MurmurHash64A_32 (PRIVATE_AS const u32 *data, const u32 len)
     i += 2;
   }
 
-  //printf("BEFORE_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
-
-  // Overflow
-
+  // Up to 7 overflow bytes
   const u32 overflow = len & 7;
 
-  //printf("OVERFLOW = %d\n", overflow);
-
-  //printf("data = %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9]);
-
-  //printf("i = %d\n", i);
-  //printf("data[i] data[i + 1] = %08x%08x\n", data[i], data[i + 1]);
-
-  // can we turn this into a single xor
-
-  if ((overflow > 0) &&  (overflow <= 4)) {
-    //printf("Overflow case 1\n");
+  if (overflow > 4)
+  {
     hash ^= hl32_to_64 (data[i + 1], data[i]);
     hash *= M;
   }
-
-  else if (overflow > 4) {
-    //printf("Overflow case 2\n");
-    //printf("tmp = %08x%08x\n", h32_from_64(tmp), l32_from_64(tmp));
-    hash ^= hl32_to_64 (data[i + 1], data[i]);
+  else if (overflow > 0)
+  {
+    hash ^= hl32_to_64 (0, data[i]);
     hash *= M;
   }
-
-  //printf("AFTER_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   hash ^= hash >> R;
   hash *= M;
@@ -83,16 +64,12 @@ DECLSPEC u32 MurmurHash64A_32 (PRIVATE_AS const u32 *data, const u32 len)
   #undef M
   #undef R
 
-  //printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
-
+  // Truncate to high 4 bytes
   return (u32) (hash >> 32);
 }
 
-
-
-KERNEL_FQ void m90030_m04 (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m90030_m04 (KERN_ATTR_RULES ())
 {
-  //printf("Hello world m90030_m04\n");
   /**
    * modifier
    */
@@ -119,7 +96,6 @@ KERNEL_FQ void m90030_m04 (KERN_ATTR_RULES ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  // max pw len of 32
   const u32 pw_len = (pws[gid].pw_len > 32) ? 32 : pws[gid].pw_len;
 
   /**
@@ -132,9 +108,7 @@ KERNEL_FQ void m90030_m04 (KERN_ATTR_RULES ())
 
     const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    u32x hash = MurmurHash64A_32 (w, out_len);
-
-    //printf("hash = %08x\n", hash);
+    u32x hash = MurmurHash64A_truncated (w, out_len);
 
     const u32x z = 0;
 
@@ -142,17 +116,16 @@ KERNEL_FQ void m90030_m04 (KERN_ATTR_RULES ())
   }
 }
 
-KERNEL_FQ void m90030_m08 (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m90030_m08 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90030_m16 (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m90030_m16 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90030_s04 (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m90030_s04 (KERN_ATTR_RULES ())
 {
-  //printf("Hello world m90030_s04\n");
   /**
    * modifier
    */
@@ -179,7 +152,6 @@ KERNEL_FQ void m90030_s04 (KERN_ATTR_RULES ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  // max pw len of 32
   const u32 pw_len = (pws[gid].pw_len > 32) ? 32 : pws[gid].pw_len;
 
   /**
@@ -204,7 +176,7 @@ KERNEL_FQ void m90030_s04 (KERN_ATTR_RULES ())
 
     const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    u32x hash = MurmurHash64A_32 (w, out_len);
+    u32x hash = MurmurHash64A_truncated (w, out_len);
 
     const u32x z = 0;
 
@@ -212,10 +184,10 @@ KERNEL_FQ void m90030_s04 (KERN_ATTR_RULES ())
   }
 }
 
-KERNEL_FQ void m90030_s08 (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m90030_s08 (KERN_ATTR_RULES ())
 {
 }
 
-KERNEL_FQ void m90030_s16 (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m90030_s16 (KERN_ATTR_RULES ())
 {
 }

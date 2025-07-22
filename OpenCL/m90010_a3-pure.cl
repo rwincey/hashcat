@@ -10,7 +10,7 @@
 #include M2S(INCLUDE_PATH/inc_types.h)
 #include M2S(INCLUDE_PATH/inc_platform.cl)
 #include M2S(INCLUDE_PATH/inc_common.cl)
-#include M2S(INCLUDE_PATH/inc_simd.cl)
+#include M2S(INCLUDE_PATH/inc_scalar.cl)
 #endif
 
 DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
@@ -19,19 +19,16 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   #define R 47
 
   //Initialize hash
-  u64 hash = 0 ^ (len * M);
+  u64 hash = len * M;
 
-  //printf("len = %d\n", len);
-  //printf("INITIAL = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
+  // Twice the number of u64 blocks
+  const u32 num_u32_blocks = (len / 8) * 2;
 
-  // 2 for each u64 block
-  const u32 num_blocks = (len / 8) * 2;
-
-  //printf("num_blocks = %d\n", num_blocks);
-
-  // Loop over blocks of 8 bytes
+  // Loop over one u64 at a time
   u32 i = 0;
-  while (i < num_blocks) {
+  while (i < num_u32_blocks)
+  {
+    // Reconstruct u64 from two u32s
     u64 k = hl32_to_64 (data[i + 1], data[i]);
 
     k *= M;
@@ -44,38 +41,19 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
     i += 2;
   }
 
-  //printf("BEFORE_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
-
-  // Overflow
-
+  // Up to 7 overflow bytes
   const u32 overflow = len & 7;
 
-  //printf("OVERFLOW = %d\n", overflow);
-
-  //printf("data = %08x%08x%08x%08x%08x%08x%08x%08x%08x%08x\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9]);
-
-  //printf("i = %d\n", i);
-  //printf("data[i] data[i + 1] = %08x%08x\n", data[i], data[i + 1]);
-
-  // can we turn this into a single xor
-
-  if ((overflow > 0) &&  (overflow <= 4)) {
-    //printf("Overflow case 1\n");
+  if (overflow > 4)
+  {
     hash ^= hl32_to_64 (data[i + 1], data[i]);
     hash *= M;
   }
-
-  else if (overflow > 4) {
-    //printf("Overflow case 2\n");
-    //printf("tmp = %08x%08x\n", h32_from_64(tmp), l32_from_64(tmp));
-    hash ^= hl32_to_64 (data[i + 1], data[i]);
+  else if (overflow > 0)
+  {
+    hash ^= hl32_to_64 (0, data[i]);
     hash *= M;
   }
-
-  //u64 test = hl32_to_64 (0x0a16869e, 0xcb107f54);
-  //printf("hl32_to_64 test = %08x%08x\n", h32_from_64(test), l32_from_64(test));
-
-  //printf("AFTER_OVERFLOW = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
 
   hash ^= hash >> R;
   hash *= M;
@@ -84,12 +62,10 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   #undef M
   #undef R
 
-  //printf("hash = %08x%08x\n", h32_from_64(hash), l32_from_64(hash));
-
   return hash;
 }
 
-KERNEL_FQ void m90010_mxx (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m90010_mxx (KERN_ATTR_VECTOR ())
 {
   /**
    * modifier
@@ -129,15 +105,15 @@ KERNEL_FQ void m90010_mxx (KERN_ATTR_VECTOR ())
 
     const u64x hash = MurmurHash64A (w, pw_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
+    const u32x r0 = l32_from_64 (hash);
+    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_M_SCALAR (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ void m90010_sxx (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m90010_sxx (KERN_ATTR_VECTOR ())
 {
   /**
    * modifier
@@ -189,10 +165,10 @@ KERNEL_FQ void m90010_sxx (KERN_ATTR_VECTOR ())
 
     const u64x hash = MurmurHash64A (w, pw_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
+    const u32x r0 = l32_from_64 (hash);
+    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_S_SIMD (r0, r1, z, z);
+    COMPARE_S_SCALAR (r0, r1, z, z);
   }
 }

@@ -3,7 +3,6 @@
  * License.....: MIT
  */
 
-//too much register pressure
 //#define NEW_SIMD_CODE
 
 #ifdef KERNEL_STATIC
@@ -14,46 +13,45 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A_round (PRIVATE_AS const u8 *data, u64 hash, const u32 cur_pos) {
+DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
+{
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
-  u64 k = ((u64) data[cur_pos])
-    | ((u64) data[cur_pos + 1] << 8)
-    | ((u64) data[cur_pos + 2] << 16)
-    | ((u64) data[cur_pos + 3] << 24)
-    | ((u64) data[cur_pos + 4] << 32)
-    | ((u64) data[cur_pos + 5] << 40)
-    | ((u64) data[cur_pos + 6] << 48)
-    | ((u64) data[cur_pos + 7] << 56);
-  
-  k *= M;
-  k ^= k >> R;
-  k *= M;
+  //Initialize hash
+  u64 hash = seed ^ (len * M);
 
-  hash ^= k;
-  hash *= M;
+  // Twice the number of u64 blocks
+  const u32 num_u32_blocks = (len / 8) * 2;
 
-  #undef M
-  #undef R
+  // Loop over one u64 at a time
+  u32 i = 0;
+  while (i < num_u32_blocks)
+  {
+    // Reconstruct u64 from two u32s
+    u64 k = hl32_to_64 (data[i + 1], data[i]);
 
-  return hash;
-}
+    k *= M;
+    k ^= k >> R;
+    k *= M;
 
-DECLSPEC u64 MurmurHash64A_final (PRIVATE_AS const u8 *data, u64 hash, const u32 cur_pos, const u32 len) {
-  #define M 0xc6a4a7935bd1e995
-  #define R 47
+    hash ^= k;
+    hash *= M;
 
+    i += 2;
+  }
+
+  // Up to 7 overflow bytes
   const u32 overflow = len & 7;
 
-  switch (overflow) {
-    case 7: hash ^= ((u64) data[cur_pos + 6]) << 48;
-    case 6: hash ^= ((u64) data[cur_pos + 5]) << 40;
-    case 5: hash ^= ((u64) data[cur_pos + 4]) << 32;
-    case 4: hash ^= ((u64) data[cur_pos + 3]) << 24;
-    case 3: hash ^= ((u64) data[cur_pos + 2]) << 16;
-    case 2: hash ^= ((u64) data[cur_pos + 1]) << 8;
-    case 1: hash ^= ((u64) data[cur_pos]);
+  if (overflow > 4)
+  {
+    hash ^= hl32_to_64 (data[i + 1], data[i]);
+    hash *= M;
+  }
+  else if (overflow > 0)
+  {
+    hash ^= hl32_to_64 (0, data[i]);
     hash *= M;
   }
 
@@ -67,49 +65,7 @@ DECLSPEC u64 MurmurHash64A_final (PRIVATE_AS const u8 *data, u64 hash, const u32
   return hash;
 }
 
-DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
-{
-  #define M 0xc6a4a7935bd1e995
-  #define R 47
-
-  //Initialize hash
-  u64 hash = seed ^ (len * M);
-
-  //const u64 INITIAL = hash;
-  
-  const u32 endpos = len - (len & 7);
-
-  //const u32 nBlocks = len >> 3; // number of 8 byte blocks
-  const u8 *data2 = (const u8*) data;
-
-  //u64 MIDDLE_OF_BLOCK = 0;
-
-  // Loop over blocks of 8 bytes
-  u32 i = 0;
-  while (i != endpos) {
-    hash = MurmurHash64A_round(data2, hash, i);
-
-    i += 8;
-  }
-
-  // Overflow
-
-  //const u64 BEFORE_FINAL = hash;
-
-  hash = MurmurHash64A_final (data2, hash, i, len);
-
-  //const u64 AFTER_FINAL = hash;
-
-  //printf("debug: %016lx:%016lx:%c%c%c%c%c%c%c%c%c%c len: %d INITIAL: %016lx MIDDLE_O_BLK: %016lx B4FINAL: %016lx overflow: %d AFTER_FINAL: %016lx\n", hash, seed, data2[0], data2[1], data2[2], data2[3], data2[4], data2[5], data2[6], data2[7], data2[8], data2[9], len, INITIAL, MIDDLE_OF_BLOCK, BEFORE_FINAL, overflow, AFTER_FINAL);
-  //printf("data2 = %.2s, len = %d\n", data2[0], len);
-
-  #undef M
-  #undef R
-
-  return hash;
-}
-
-KERNEL_FQ void m90000_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m90000_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -142,9 +98,10 @@ KERNEL_FQ void m90000_m04 (KERN_ATTR_BASIC ())
    * seed
    */
 
+  // Reconstruct seed from two u32s
   const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
   const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64 seed = ((u64) seed_hi << 32) | ((u64) seed_lo);
+  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * loop
@@ -218,23 +175,23 @@ KERNEL_FQ void m90000_m04 (KERN_ATTR_BASIC ())
 
     u64x hash = MurmurHash64A (seed, w, pw_len);
 
-    const u32x r0 = l32_from_64(hash);
-    const u32x r1 = h32_from_64(hash);
+    const u32x r0 = l32_from_64 (hash);
+    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
     COMPARE_M_SIMD (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ void m90000_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m90000_m08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m90000_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m90000_m16 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m90000_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -267,9 +224,10 @@ KERNEL_FQ void m90000_s04 (KERN_ATTR_BASIC ())
    * seed
    */
 
+  // Reconstruct seed from two u32s
   const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
   const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64 seed = ((u64) seed_hi << 32) | ((u64) seed_lo);
+  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * digest
@@ -355,18 +313,18 @@ KERNEL_FQ void m90000_s04 (KERN_ATTR_BASIC ())
 
     u64 hash = MurmurHash64A (seed, w, pw_len);
 
-    const u32 r0 = l32_from_64(hash);
-    const u32 r1 = h32_from_64(hash);
+    const u32 r0 = l32_from_64 (hash);
+    const u32 r1 = h32_from_64 (hash);
     const u32 z = 0;
 
     COMPARE_S_SIMD (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ void m90000_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m90000_s08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ void m90000_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m90000_s16 (KERN_ATTR_BASIC ())
 {
 }

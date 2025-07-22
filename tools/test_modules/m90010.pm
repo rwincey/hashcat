@@ -11,31 +11,26 @@ use Math::BigInt;
 
 sub module_constraints { [[0, 256], [-1, -1], [0, 63], [-1, -1], [0, 63]] }
 
+my $u64_width = Math::BigInt->new("0x10000000000000000"); # 2**64
+
+# Ensure that uint64 integer overflow is replicated correctly
 sub wrapping_mul
 {
   my $a = shift;
   my $b = shift;
 
-  # 2**64
-  my $width = Math::BigInt->new("0x10000000000000000");
-
-  return ($a * $b)->bmod($width);
+  return ($a * $b)->bmod($u64_width);
 }
+
+my $m = Math::BigInt->new("0xc6a4a7935bd1e995");
+my $r = 47;
 
 sub murmurhash64a
 {
   use integer;
 
   my $word = shift;
-  my $seed = 0;
-
-  # https://gitlab.com/lschwiderski/vt2_bundle_unpacker/-/blob/master/src/murmur/murmurhash64.rs
-  # 'm' and 'r' are mixing constants generated offline.
-  # They're not really 'magic', they just happen to work well.
-
-  my $m = Math::BigInt->new("0xc6a4a7935bd1e995");
-  #my $m = 0xc6a4a7935bd1e995;
-  my $r = 47;
+  my $seed = shift;
 
   my @chars = unpack ("C*", $word);
   my $len = length $word;

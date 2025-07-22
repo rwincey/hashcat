@@ -72,15 +72,13 @@ ALIAS_nv_sm50_or_higher                         3       1421    4       A       
 ALIAS_nv_sm50_or_higher                         3       1430    4       A       A
 ALIAS_nv_sm50_or_higher                         3       1440    4       A       A
 ALIAS_nv_sm50_or_higher                         3       1441    4       A       A
-ALIAS_nv_sm50_or_higher                         3       1450    4       A       A
-ALIAS_nv_sm50_or_higher                         3       1460    4       A       A
 ALIAS_nv_sm50_or_higher                         3       1470    4       A       A
 ALIAS_nv_sm50_or_higher                         3       2400    8       A       A
 ALIAS_nv_sm50_or_higher                         3       2410    4       A       A
 ALIAS_nv_sm50_or_higher                         3       3800    4       A       A
 ALIAS_nv_sm50_or_higher                         3       4800    8       A       A
 ALIAS_nv_sm50_or_higher                         3       5300    4       A       A
-ALIAS_nv_sm50_or_higher                         3       5400    4       A       A
+ALIAS_nv_sm50_or_higher                         3       5400    2       A       A
 ALIAS_nv_sm50_or_higher                         3       6100    2       A       A
 ALIAS_nv_sm50_or_higher                         3       7300    2       A       A
 ALIAS_nv_sm50_or_higher                         3       9720    2       A       A

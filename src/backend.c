@@ -5977,7 +5977,7 @@ static void backend_ctx_devices_init_cuda (hashcat_ctx_t *hashcat_ctx, int *virt
       device_param->has_lop3  = (sm >= 50) ? true : false;
       device_param->has_mov64 = (sm >= 10) ? true : false;
       device_param->has_prmt  = (sm >= 20) ? true : false;
-      device_param->has_shfw  = (sm >= 70) ? true : false;
+      device_param->has_shfw  = (sm >= 70) ? true : true; // still faster
 
       // one-time init cuda context
 
@@ -8120,7 +8120,7 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
           device_param->has_lop3  = (sm >= 50) ? true : false;
           device_param->has_mov64 = (sm >= 10) ? true : false;
           device_param->has_prmt  = (sm >= 20) ? true : false;
-          device_param->has_shfw  = (sm >= 70) ? true : false;
+          device_param->has_shfw  = (sm >= 70) ? true : true; // still faster
         }
 
         // common driver check

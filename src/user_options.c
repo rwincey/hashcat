@@ -1197,6 +1197,23 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     }
   }
 
+  if (user_options->total_candidates == true)
+  {
+    if (user_options->show == true)
+    {
+      event_log_error (hashcat_ctx, "Combining --show with --total-candidates is not allowed.");
+
+      return -1;
+    }
+
+   if (user_options->left == true)
+    {
+      event_log_error (hashcat_ctx, "Combining --left with --total-candidates is not allowed.");
+
+      return -1;
+    }
+  }
+
   if (user_options->machine_readable == true)
   {
     if (user_options->status_json == true)
@@ -1658,7 +1675,7 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
 
     bool mask_is_missing = true;
 
-    if (user_options->keyspace == true) // special case if --keyspace was used: we need the mask but no hash file
+    if (user_options->keyspace == true || user_options->total_candidates == true) // special case if --keyspace was used: we need the mask but no hash file
     {
       if (user_options->hc_argc > 0) mask_is_missing = false;
     }
@@ -1725,7 +1742,7 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
       show_error = false;
     }
   }
-  else if (user_options->keyspace == true)
+  else if (user_options->keyspace == true || user_options->total_candidates == true)
   {
     if (user_options->attack_mode == ATTACK_MODE_STRAIGHT)
     {

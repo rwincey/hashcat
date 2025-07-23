@@ -20,8 +20,9 @@ static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_HASH;
 static const char *HASH_NAME      = "MurmurHash64A truncated (zero seed)";
 static const u64   KERN_TYPE      = 90030;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
-                                  | OPTI_TYPE_NOT_SALTED
-                                  | OPTI_TYPE_USES_BITS_64;
+                                  | OPTI_TYPE_USES_BITS_64
+                                  | OPTI_TYPE_NOT_ITERATED
+                                  | OPTI_TYPE_NOT_SALTED;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE
                                   | OPTS_TYPE_SUGGEST_KG;
@@ -71,18 +72,18 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   if (rc_tokenizer != PARSER_OK) return (rc_tokenizer);
 
-  // digest
+  // Digest
 
+  // 8 chars (hash hex string, big endian)
   const u8 *hash_pos = token.buf[0];
-  // we have 8 chars (hash hex string, big endian)
 
-
+  // Convert to little endian u32
   digest[0] = ((hex_to_u32 (&hash_pos[0])));
   digest[1] = 0;
+  digest[2] = 0;
+  digest[3] = 0;
 
   digest[0] = byte_swap_32 (digest[0]);
-
-  // now `digest` contains a proper little endian u64
 
   return (PARSER_OK);
 }
@@ -98,6 +99,7 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   const int out_len = 8;
 
+  // Write hash as big endian hex
   u32_to_hex (byte_swap_32 (digest[0]), out_buf);
 
   return out_len;

@@ -11,7 +11,7 @@ use Math::BigInt;
 
 sub module_constraints { [[0, 256], [-1, -1], [0, 32], [-1, -1], [0, 32]] }
 
-my $u64_width = Math::BigInt->new("0x10000000000000000"); # 2**64
+my $u64_width = Math::BigInt->new ("0x10000000000000000"); # 2**64
 
 # Ensure that uint64 integer overflow is replicated correctly
 sub wrapping_mul
@@ -19,10 +19,10 @@ sub wrapping_mul
   my $a = shift;
   my $b = shift;
 
-  return ($a * $b)->bmod($u64_width);
+  return ($a * $b)->bmod ($u64_width);
 }
 
-my $m = Math::BigInt->new("0xc6a4a7935bd1e995");
+my $m = Math::BigInt->new ("0xc6a4a7935bd1e995");
 my $r = 47;
 
 sub murmurhash64a_truncated_zero_seed

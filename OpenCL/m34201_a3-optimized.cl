@@ -15,10 +15,10 @@
 
 DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 {
-  #define M 0xc6a4a7935bd1e995
-  #define R 47
+#define M 0xc6a4a7935bd1e995
+#define R 47
 
-  //Initialize hash
+  // Initialize hash
   u64 hash = len * M;
 
   // Twice the number of u64 blocks
@@ -59,8 +59,8 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   hash *= M;
   hash ^= hash >> R;
 
-  #undef M
-  #undef R
+#undef M
+#undef R
 
   return hash;
 }
@@ -413,7 +413,7 @@ KERNEL_FQ KERNEL_FA void m34201_s16 (KERN_ATTR_VECTOR ())
   w[13] = pws[gid].i[13];
   w[14] = pws[gid].i[14];
   w[15] = pws[gid].i[15];
-  
+
   const u32 pw_len = pws[gid].pw_len & 63;
 
   /**

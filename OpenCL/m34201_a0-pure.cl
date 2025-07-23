@@ -17,10 +17,10 @@
 
 DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 {
-  #define M 0xc6a4a7935bd1e995
-  #define R 47
+#define M 0xc6a4a7935bd1e995
+#define R 47
 
-  //Initialize hash
+  // Initialize hash
   u64 hash = len * M;
 
   // Twice the number of u64 blocks
@@ -61,8 +61,8 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   hash *= M;
   hash ^= hash >> R;
 
-  #undef M
-  #undef R
+#undef M
+#undef R
 
   return hash;
 }

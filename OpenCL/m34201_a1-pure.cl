@@ -15,10 +15,10 @@
 
 DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 {
-  #define M 0xc6a4a7935bd1e995
-  #define R 47
+#define M 0xc6a4a7935bd1e995
+#define R 47
 
-  //Initialize hash
+  // Initialize hash
   u64 hash = len * M;
 
   // Twice the number of u64 blocks
@@ -59,8 +59,8 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   hash *= M;
   hash ^= hash >> R;
 
-  #undef M
-  #undef R
+#undef M
+#undef R
 
   return hash;
 }
@@ -75,7 +75,7 @@ KERNEL_FQ KERNEL_FA void m34201_mxx (KERN_ATTR_BASIC ())
   const u64 gid = get_global_id (0);
 
   if (gid >= GID_CNT) return;
-  
+
   /**
    * base
    */
@@ -128,7 +128,7 @@ KERNEL_FQ KERNEL_FA void m34201_sxx (KERN_ATTR_BASIC ())
   /**
    * base
    */
-  
+
   PRIVATE_AS u8 combined_buf[256] = {0};
   const u32 *comb_ptr = (u32*) combined_buf;
 

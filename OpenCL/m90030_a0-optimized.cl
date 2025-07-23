@@ -96,7 +96,7 @@ KERNEL_FQ KERNEL_FA void m90030_m04 (KERN_ATTR_RULES ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  const u32 pw_len = (pws[gid].pw_len > 32) ? 32 : pws[gid].pw_len;
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * loop
@@ -152,7 +152,7 @@ KERNEL_FQ KERNEL_FA void m90030_s04 (KERN_ATTR_RULES ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  const u32 pw_len = (pws[gid].pw_len > 32) ? 32 : pws[gid].pw_len;
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * digest

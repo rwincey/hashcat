@@ -153,7 +153,6 @@ KERNEL_FQ KERNEL_FA void m90010_s04 (KERN_ATTR_RULES ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  // Max pw len of 32
   const u32 pw_len = pws[gid].pw_len & 63;
 
   /**

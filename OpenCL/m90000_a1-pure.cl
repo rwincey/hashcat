@@ -85,7 +85,7 @@ KERNEL_FQ KERNEL_FA void m90000_mxx (KERN_ATTR_BASIC ())
 
   // copy left buffer
   GLOBAL_AS const u8 *left = (GLOBAL_AS const u8*) pws[gid].i;
-  // probably really bad for performance. fix later
+  // probably bad for performance
   for (u32 i = 0; i < pws[gid].pw_len; i++)
   {
     combined_buf[i] = left[i];
@@ -143,7 +143,7 @@ KERNEL_FQ KERNEL_FA void m90000_sxx (KERN_ATTR_BASIC ())
 
   // copy left buffer
   GLOBAL_AS const u8 *left = (GLOBAL_AS const u8*) pws[gid].i;
-  // probably really bad for performance. fix later
+  // probably bad for performance
   for (u32 i = 0; i < pws[gid].pw_len; i++)
   {
     combined_buf[i] = left[i];

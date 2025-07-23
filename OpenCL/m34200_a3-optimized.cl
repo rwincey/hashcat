@@ -13,13 +13,13 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
   //Initialize hash
-  u64 hash = len * M;
+  u64 hash = seed ^ (len * M);
 
   // Twice the number of u64 blocks
   const u32 num_u32_blocks = (len / 8) * 2;
@@ -65,11 +65,20 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   return hash;
 }
 
-DECLSPEC void m90010m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
+DECLSPEC void m34200m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
 {
   /**
    * modifiers are taken from args
    */
+
+  /**
+   * seed
+   */
+
+  // Reconstruct seed from two u32s
+  const u32x seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32x seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64x seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * base
@@ -108,7 +117,7 @@ DECLSPEC void m90010m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
 
     w[0] = w0;
 
-    const u64x hash = MurmurHash64A (w, pw_len);
+    const u64x hash = MurmurHash64A (seed, w, pw_len);
 
     const u32x r0 = l32_from_64 (hash);
     const u32x r1 = h32_from_64 (hash);
@@ -118,7 +127,7 @@ DECLSPEC void m90010m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
   }
 }
 
-DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
+DECLSPEC void m34200s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
 {
   /**
    * modifiers are taken from args
@@ -137,6 +146,15 @@ DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
   };
 
   /**
+   * seed
+   */
+
+  // Reconstruct seed from two u32s
+  const u32x seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32x seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64x seed = hl32_to_64 (seed_hi, seed_lo);
+
+  /**
    * base
    */
 
@@ -173,7 +191,7 @@ DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
 
     w[0] = w0;
 
-    const u64x hash = MurmurHash64A (w, pw_len);
+    const u64x hash = MurmurHash64A (seed, w, pw_len);
 
     const u32x r0 = l32_from_64 (hash);
     const u32x r1 = h32_from_64 (hash);
@@ -183,7 +201,7 @@ DECLSPEC void m90010s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90010_m04 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34200_m04 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -220,205 +238,205 @@ KERNEL_FQ KERNEL_FA void m90010_m04 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90010m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34200m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ KERNEL_FA void m90010_m08 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34200_m08 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
    */
-
-  const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-  const u64 lsz = get_local_size (0);
-
-  if (gid >= GID_CNT) return;
-
-  u32 w[16];
-
-  w[ 0] = pws[gid].i[ 0];
-  w[ 1] = pws[gid].i[ 1];
-  w[ 2] = pws[gid].i[ 2];
-  w[ 3] = pws[gid].i[ 3];
-  w[ 4] = pws[gid].i[ 4];
-  w[ 5] = pws[gid].i[ 5];
-  w[ 6] = pws[gid].i[ 6];
-  w[ 7] = pws[gid].i[ 7];
-  w[ 8] = 0;
-  w[ 9] = 0;
-  w[10] = 0;
-  w[11] = 0;
-  w[12] = 0;
-  w[13] = 0;
-  w[14] = 0;
-  w[15] = 0;
-
-  const u32 pw_len = pws[gid].pw_len & 63;
-
-  /**
-   * main
-   */
-
-  m90010m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
-}
-
-KERNEL_FQ KERNEL_FA void m90010_m16 (KERN_ATTR_VECTOR ())
-{
-  /**
-   * base
-   */
-
-  const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-  const u64 lsz = get_local_size (0);
-
-  if (gid >= GID_CNT) return;
-
-  u32 w[16];
-
-  w[ 0] = pws[gid].i[ 0];
-  w[ 1] = pws[gid].i[ 1];
-  w[ 2] = pws[gid].i[ 2];
-  w[ 3] = pws[gid].i[ 3];
-  w[ 4] = pws[gid].i[ 4];
-  w[ 5] = pws[gid].i[ 5];
-  w[ 6] = pws[gid].i[ 6];
-  w[ 7] = pws[gid].i[ 7];
-  w[ 8] = pws[gid].i[ 8];
-  w[ 9] = pws[gid].i[ 9];
-  w[10] = pws[gid].i[10];
-  w[11] = pws[gid].i[11];
-  w[12] = pws[gid].i[12];
-  w[13] = pws[gid].i[13];
-  w[14] = pws[gid].i[14];
-  w[15] = pws[gid].i[15];
-
-  const u32 pw_len = pws[gid].pw_len & 63;
-
-  /**
-   * main
-   */
-
-  m90010m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
-}
-
-KERNEL_FQ KERNEL_FA void m90010_s04 (KERN_ATTR_VECTOR ())
-{
-  /**
-   * base
-   */
-
-  const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-  const u64 lsz = get_local_size (0);
-
-  if (gid >= GID_CNT) return;
-
-  u32 w[16];
-
-  w[ 0] = pws[gid].i[ 0];
-  w[ 1] = pws[gid].i[ 1];
-  w[ 2] = pws[gid].i[ 2];
-  w[ 3] = pws[gid].i[ 3];
-  w[ 4] = 0;
-  w[ 5] = 0;
-  w[ 6] = 0;
-  w[ 7] = 0;
-  w[ 8] = 0;
-  w[ 9] = 0;
-  w[10] = 0;
-  w[11] = 0;
-  w[12] = 0;
-  w[13] = 0;
-  w[14] = 0;
-  w[15] = 0;
-
-  const u32 pw_len = pws[gid].pw_len & 63;
-
-  /**
-   * main
-   */
-
-  m90010s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
-}
-
-KERNEL_FQ KERNEL_FA void m90010_s08 (KERN_ATTR_VECTOR ())
-{
-  /**
-   * base
-   */
-
-  const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-  const u64 lsz = get_local_size (0);
-
-  if (gid >= GID_CNT) return;
-
-  u32 w[16];
-
-  w[ 0] = pws[gid].i[ 0];
-  w[ 1] = pws[gid].i[ 1];
-  w[ 2] = pws[gid].i[ 2];
-  w[ 3] = pws[gid].i[ 3];
-  w[ 4] = pws[gid].i[ 4];
-  w[ 5] = pws[gid].i[ 5];
-  w[ 6] = pws[gid].i[ 6];
-  w[ 7] = pws[gid].i[ 7];
-  w[ 8] = 0;
-  w[ 9] = 0;
-  w[10] = 0;
-  w[11] = 0;
-  w[12] = 0;
-  w[13] = 0;
-  w[14] = 0;
-  w[15] = 0;
-
-  const u32 pw_len = pws[gid].pw_len & 63;
-
-  /**
-   * main
-   */
-
-  m90010s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
-}
-
-KERNEL_FQ KERNEL_FA void m90010_s16 (KERN_ATTR_VECTOR ())
-{
-  /**
-   * base
-   */
-
-  const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-  const u64 lsz = get_local_size (0);
-
-  if (gid >= GID_CNT) return;
-
-  u32 w[16];
-
-  w[ 0] = pws[gid].i[ 0];
-  w[ 1] = pws[gid].i[ 1];
-  w[ 2] = pws[gid].i[ 2];
-  w[ 3] = pws[gid].i[ 3];
-  w[ 4] = pws[gid].i[ 4];
-  w[ 5] = pws[gid].i[ 5];
-  w[ 6] = pws[gid].i[ 6];
-  w[ 7] = pws[gid].i[ 7];
-  w[ 8] = pws[gid].i[ 8];
-  w[ 9] = pws[gid].i[ 9];
-  w[10] = pws[gid].i[10];
-  w[11] = pws[gid].i[11];
-  w[12] = pws[gid].i[12];
-  w[13] = pws[gid].i[13];
-  w[14] = pws[gid].i[14];
-  w[15] = pws[gid].i[15];
   
+  const u64 lid = get_local_id (0);
+  const u64 gid = get_global_id (0);
+  const u64 lsz = get_local_size (0);
+
+  if (gid >= GID_CNT) return;
+
+  u32 w[16];
+
+  w[ 0] = pws[gid].i[ 0];
+  w[ 1] = pws[gid].i[ 1];
+  w[ 2] = pws[gid].i[ 2];
+  w[ 3] = pws[gid].i[ 3];
+  w[ 4] = pws[gid].i[ 4];
+  w[ 5] = pws[gid].i[ 5];
+  w[ 6] = pws[gid].i[ 6];
+  w[ 7] = pws[gid].i[ 7];
+  w[ 8] = 0;
+  w[ 9] = 0;
+  w[10] = 0;
+  w[11] = 0;
+  w[12] = 0;
+  w[13] = 0;
+  w[14] = 0;
+  w[15] = 0;
+
   const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * main
    */
 
-  m90010s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34200m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+}
+
+KERNEL_FQ KERNEL_FA void m34200_m16 (KERN_ATTR_VECTOR ())
+{
+  /**
+   * base
+   */
+
+  const u64 lid = get_local_id (0);
+  const u64 gid = get_global_id (0);
+  const u64 lsz = get_local_size (0);
+
+  if (gid >= GID_CNT) return;
+
+  u32 w[16];
+
+  w[ 0] = pws[gid].i[ 0];
+  w[ 1] = pws[gid].i[ 1];
+  w[ 2] = pws[gid].i[ 2];
+  w[ 3] = pws[gid].i[ 3];
+  w[ 4] = pws[gid].i[ 4];
+  w[ 5] = pws[gid].i[ 5];
+  w[ 6] = pws[gid].i[ 6];
+  w[ 7] = pws[gid].i[ 7];
+  w[ 8] = pws[gid].i[ 8];
+  w[ 9] = pws[gid].i[ 9];
+  w[10] = pws[gid].i[10];
+  w[11] = pws[gid].i[11];
+  w[12] = pws[gid].i[12];
+  w[13] = pws[gid].i[13];
+  w[14] = pws[gid].i[14];
+  w[15] = pws[gid].i[15];
+
+  const u32 pw_len = pws[gid].pw_len & 63;
+
+  /**
+   * main
+   */
+
+  m34200m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+}
+
+KERNEL_FQ KERNEL_FA void m34200_s04 (KERN_ATTR_VECTOR ())
+{
+  /**
+   * base
+   */
+
+  const u64 lid = get_local_id (0);
+  const u64 gid = get_global_id (0);
+  const u64 lsz = get_local_size (0);
+
+  if (gid >= GID_CNT) return;
+
+  u32 w[16];
+
+  w[ 0] = pws[gid].i[ 0];
+  w[ 1] = pws[gid].i[ 1];
+  w[ 2] = pws[gid].i[ 2];
+  w[ 3] = pws[gid].i[ 3];
+  w[ 4] = 0;
+  w[ 5] = 0;
+  w[ 6] = 0;
+  w[ 7] = 0;
+  w[ 8] = 0;
+  w[ 9] = 0;
+  w[10] = 0;
+  w[11] = 0;
+  w[12] = 0;
+  w[13] = 0;
+  w[14] = 0;
+  w[15] = 0;
+
+  const u32 pw_len = pws[gid].pw_len & 63;
+
+  /**
+   * main
+   */
+
+  m34200s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+}
+
+KERNEL_FQ KERNEL_FA void m34200_s08 (KERN_ATTR_VECTOR ())
+{
+  /**
+   * base
+   */
+
+  const u64 lid = get_local_id (0);
+  const u64 gid = get_global_id (0);
+  const u64 lsz = get_local_size (0);
+
+  if (gid >= GID_CNT) return;
+
+  u32 w[16];
+
+  w[ 0] = pws[gid].i[ 0];
+  w[ 1] = pws[gid].i[ 1];
+  w[ 2] = pws[gid].i[ 2];
+  w[ 3] = pws[gid].i[ 3];
+  w[ 4] = pws[gid].i[ 4];
+  w[ 5] = pws[gid].i[ 5];
+  w[ 6] = pws[gid].i[ 6];
+  w[ 7] = pws[gid].i[ 7];
+  w[ 8] = 0;
+  w[ 9] = 0;
+  w[10] = 0;
+  w[11] = 0;
+  w[12] = 0;
+  w[13] = 0;
+  w[14] = 0;
+  w[15] = 0;
+
+  const u32 pw_len = pws[gid].pw_len & 63;
+
+  /**
+   * main
+   */
+
+  m34200s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+}
+
+KERNEL_FQ KERNEL_FA void m34200_s16 (KERN_ATTR_VECTOR ())
+{
+  /**
+   * base
+   */
+
+  const u64 lid = get_local_id (0);
+  const u64 gid = get_global_id (0);
+  const u64 lsz = get_local_size (0);
+
+  if (gid >= GID_CNT) return;
+
+  u32 w[16];
+
+  w[ 0] = pws[gid].i[ 0];
+  w[ 1] = pws[gid].i[ 1];
+  w[ 2] = pws[gid].i[ 2];
+  w[ 3] = pws[gid].i[ 3];
+  w[ 4] = pws[gid].i[ 4];
+  w[ 5] = pws[gid].i[ 5];
+  w[ 6] = pws[gid].i[ 6];
+  w[ 7] = pws[gid].i[ 7];
+  w[ 8] = pws[gid].i[ 8];
+  w[ 9] = pws[gid].i[ 9];
+  w[10] = pws[gid].i[10];
+  w[11] = pws[gid].i[11];
+  w[12] = pws[gid].i[12];
+  w[13] = pws[gid].i[13];
+  w[14] = pws[gid].i[14];
+  w[15] = pws[gid].i[15];
+
+  const u32 pw_len = pws[gid].pw_len & 63;
+
+  /**
+   * main
+   */
+
+  m34200s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }

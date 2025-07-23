@@ -67,7 +67,7 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   return hash;
 }
 
-KERNEL_FQ KERNEL_FA void m90010_mxx (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m34201_mxx (KERN_ATTR_RULES ())
 {
   /**
    * modifier
@@ -105,7 +105,7 @@ KERNEL_FQ KERNEL_FA void m90010_mxx (KERN_ATTR_RULES ())
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90010_sxx (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m34201_sxx (KERN_ATTR_RULES ())
 {
   /**
    * modifier

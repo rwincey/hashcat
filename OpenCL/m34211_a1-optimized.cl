@@ -13,13 +13,13 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u32 MurmurHash64A_truncated (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
   //Initialize hash
-  u64 hash = seed ^ (len * M);
+  u64 hash = len * M;
 
   // Twice the number of u64 blocks
   const u32 num_u32_blocks = (len / 8) * 2;
@@ -62,10 +62,11 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   #undef M
   #undef R
 
-  return hash;
+  // Truncate to high 4 bytes
+  return (u32) (hash >> 32);
 }
 
-KERNEL_FQ KERNEL_FA void m90000_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34211_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -92,16 +93,7 @@ KERNEL_FQ KERNEL_FA void m90000_m04 (KERN_ATTR_BASIC ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  const u32 pw_l_len = pws[gid].pw_len & 63;
-
-  /**
-   * seed
-   */
-
-  // Reconstruct seed from two u32s
-  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * loop
@@ -173,25 +165,23 @@ KERNEL_FQ KERNEL_FA void m90000_m04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u64x hash = MurmurHash64A (seed, w, pw_len);
+    u32x hash = MurmurHash64A_truncated (w, pw_len);
 
-    const u32x r0 = l32_from_64 (hash);
-    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_M_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90000_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34211_m08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90000_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34211_m16 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34211_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -218,16 +208,7 @@ KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_BASIC ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  const u32 pw_l_len = pws[gid].pw_len & 63;
-
-  /**
-   * seed
-   */
-
-  // Reconstruct seed from two u32s
-  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * digest
@@ -236,7 +217,7 @@ KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_BASIC ())
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
+    0,
     0,
     0
   };
@@ -311,20 +292,18 @@ KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u64 hash = MurmurHash64A (seed, w, pw_len);
+    u32 hash = MurmurHash64A_truncated (w, pw_len);
 
-    const u32 r0 = l32_from_64 (hash);
-    const u32 r1 = h32_from_64 (hash);
     const u32 z = 0;
 
-    COMPARE_S_SIMD (r0, r1, z, z);
+    COMPARE_S_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90000_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34211_s08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90000_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34211_s16 (KERN_ATTR_BASIC ())
 {
 }

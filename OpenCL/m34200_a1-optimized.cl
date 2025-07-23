@@ -13,13 +13,13 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
   //Initialize hash
-  u64 hash = len * M;
+  u64 hash = seed ^ (len * M);
 
   // Twice the number of u64 blocks
   const u32 num_u32_blocks = (len / 8) * 2;
@@ -65,7 +65,7 @@ DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
   return hash;
 }
 
-KERNEL_FQ KERNEL_FA void m90010_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34200_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -92,7 +92,16 @@ KERNEL_FQ KERNEL_FA void m90010_m04 (KERN_ATTR_BASIC ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  const u32 pw_len = pws[gid].pw_len & 63;
+  const u32 pw_l_len = pws[gid].pw_len & 63;
+
+  /**
+   * seed
+   */
+
+  // Reconstruct seed from two u32s
+  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * loop
@@ -164,7 +173,7 @@ KERNEL_FQ KERNEL_FA void m90010_m04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u64x hash = MurmurHash64A (w, pw_len);
+    u64x hash = MurmurHash64A (seed, w, pw_len);
 
     const u32x r0 = l32_from_64 (hash);
     const u32x r1 = h32_from_64 (hash);
@@ -174,15 +183,15 @@ KERNEL_FQ KERNEL_FA void m90010_m04 (KERN_ATTR_BASIC ())
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90010_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34200_m08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90010_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34200_m16 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90010_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34200_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -209,7 +218,16 @@ KERNEL_FQ KERNEL_FA void m90010_s04 (KERN_ATTR_BASIC ())
   pw_buf1[2] = pws[gid].i[6];
   pw_buf1[3] = pws[gid].i[7];
 
-  const u32 pw_len = pws[gid].pw_len & 63;
+  const u32 pw_l_len = pws[gid].pw_len & 63;
+
+  /**
+   * seed
+   */
+
+  // Reconstruct seed from two u32s
+  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * digest
@@ -293,7 +311,7 @@ KERNEL_FQ KERNEL_FA void m90010_s04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u64 hash = MurmurHash64A (w, pw_len);
+    u64 hash = MurmurHash64A (seed, w, pw_len);
 
     const u32 r0 = l32_from_64 (hash);
     const u32 r1 = h32_from_64 (hash);
@@ -303,10 +321,10 @@ KERNEL_FQ KERNEL_FA void m90010_s04 (KERN_ATTR_BASIC ())
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90010_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34200_s08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90010_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34200_s16 (KERN_ATTR_BASIC ())
 {
 }

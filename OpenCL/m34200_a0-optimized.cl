@@ -10,9 +10,9 @@
 #include M2S(INCLUDE_PATH/inc_types.h)
 #include M2S(INCLUDE_PATH/inc_platform.cl)
 #include M2S(INCLUDE_PATH/inc_common.cl)
-#include M2S(INCLUDE_PATH/inc_rp.h)
-#include M2S(INCLUDE_PATH/inc_rp.cl)
-#include M2S(INCLUDE_PATH/inc_scalar.cl)
+#include M2S(INCLUDE_PATH/inc_rp_optimized.h)
+#include M2S(INCLUDE_PATH/inc_rp_optimized.cl)
+#include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
 DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
@@ -67,7 +67,7 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   return hash;
 }
 
-KERNEL_FQ KERNEL_FA void m90000_mxx (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m34200_m04 (KERN_ATTR_RULES ())
 {
   /**
    * modifier
@@ -83,10 +83,22 @@ KERNEL_FQ KERNEL_FA void m90000_mxx (KERN_ATTR_RULES ())
 
   if (gid >= GID_CNT) return;
 
-  COPY_PW (pws[gid]);
+  u32 pw_buf0[4];
+  u32 pw_buf1[4];
+
+  pw_buf0[0] = pws[gid].i[0];
+  pw_buf0[1] = pws[gid].i[1];
+  pw_buf0[2] = pws[gid].i[2];
+  pw_buf0[3] = pws[gid].i[3];
+  pw_buf1[0] = pws[gid].i[4];
+  pw_buf1[1] = pws[gid].i[5];
+  pw_buf1[2] = pws[gid].i[6];
+  pw_buf1[3] = pws[gid].i[7];
+
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
-   * salt
+   * seed
    */
 
   // Reconstruct seed from two u32s
@@ -98,23 +110,31 @@ KERNEL_FQ KERNEL_FA void m90000_mxx (KERN_ATTR_RULES ())
    * loop
    */
 
-  for (u32 il_pos = 0; il_pos < IL_CNT; il_pos++)
+  for (u32 il_pos = 0; il_pos < IL_CNT; il_pos += VECT_SIZE)
   {
-    pw_t tmp = PASTE_PW;
+    u32x w[16] = { 0 };
 
-    tmp.pw_len = apply_rules (rules_buf[il_pos].cmds, tmp.i, tmp.pw_len);
+    const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    u64x hash = MurmurHash64A (seed, tmp.i, tmp.pw_len);
+    u64x hash = MurmurHash64A (seed, w, out_len);
 
     const u32x r0 = l32_from_64 (hash);
     const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SCALAR (r0, r1, z, z);
+    COMPARE_M_SIMD (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90000_sxx (KERN_ATTR_RULES ())
+KERNEL_FQ KERNEL_FA void m34200_m08 (KERN_ATTR_RULES ())
+{
+}
+
+KERNEL_FQ KERNEL_FA void m34200_m16 (KERN_ATTR_RULES ())
+{
+}
+
+KERNEL_FQ KERNEL_FA void m34200_s04 (KERN_ATTR_RULES ())
 {
   /**
    * modifier
@@ -130,14 +150,19 @@ KERNEL_FQ KERNEL_FA void m90000_sxx (KERN_ATTR_RULES ())
 
   if (gid >= GID_CNT) return;
 
-  /**
-   * salt
-   */
+  u32 pw_buf0[4];
+  u32 pw_buf1[4];
 
-  // Reconstruct seed from two u32s
-  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
+  pw_buf0[0] = pws[gid].i[0];
+  pw_buf0[1] = pws[gid].i[1];
+  pw_buf0[2] = pws[gid].i[2];
+  pw_buf0[3] = pws[gid].i[3];
+  pw_buf1[0] = pws[gid].i[4];
+  pw_buf1[1] = pws[gid].i[5];
+  pw_buf1[2] = pws[gid].i[6];
+  pw_buf1[3] = pws[gid].i[7];
+
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * digest
@@ -152,27 +177,38 @@ KERNEL_FQ KERNEL_FA void m90000_sxx (KERN_ATTR_RULES ())
   };
 
   /**
-   * base
+   * seed
    */
 
-  COPY_PW (pws[gid]);
+  // Reconstruct seed from two u32s
+  const u32 seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
+  const u32 seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
+  const u64 seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * loop
    */
 
-  for (u32 il_pos = 0; il_pos < IL_CNT; il_pos++)
+  for (u32 il_pos = 0; il_pos < IL_CNT; il_pos += VECT_SIZE)
   {
-    pw_t tmp = PASTE_PW;
+    u32x w[16] = { 0 };
 
-    tmp.pw_len = apply_rules (rules_buf[il_pos].cmds, tmp.i, tmp.pw_len);
+    const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    u64x hash = MurmurHash64A (seed, tmp.i, tmp.pw_len);
+    u64x hash = MurmurHash64A (seed, w, out_len);
 
-    const u32 r0 = l32_from_64 (hash);
-    const u32 r1 = h32_from_64 (hash);
-    const u32 z = 0;
+    const u32x r0 = l32_from_64 (hash);
+    const u32x r1 = h32_from_64 (hash);
+    const u32x z = 0;
 
-    COMPARE_S_SCALAR (r0, r1, z, z);
+    COMPARE_S_SIMD (r0, r1, z, z);
   }
+}
+
+KERNEL_FQ KERNEL_FA void m34200_s08 (KERN_ATTR_RULES ())
+{
+}
+
+KERNEL_FQ KERNEL_FA void m34200_s16 (KERN_ATTR_RULES ())
+{
 }

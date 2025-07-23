@@ -13,13 +13,13 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u32 MurmurHash64A_truncated (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
   //Initialize hash
-  u64 hash = seed ^ (len * M);
+  u64 hash = len * M;
 
   // Twice the number of u64 blocks
   const u32 num_u32_blocks = (len / 8) * 2;
@@ -62,23 +62,15 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   #undef M
   #undef R
 
-  return hash;
+  // Truncate to high 4 bytes
+  return (u32) (hash >> 32);
 }
 
-DECLSPEC void m90000m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
+DECLSPEC void m34211m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
 {
   /**
    * modifiers are taken from args
    */
-
-  /**
-   * seed
-   */
-
-  // Reconstruct seed from two u32s
-  const u32x seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32x seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64x seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * base
@@ -117,17 +109,15 @@ DECLSPEC void m90000m (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
 
     w[0] = w0;
 
-    const u64x hash = MurmurHash64A (seed, w, pw_len);
+    const u32x hash = MurmurHash64A_truncated (w, pw_len);
 
-    const u32x r0 = l32_from_64 (hash);
-    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SIMD (r0, r1, z, z);
+    COMPARE_M_SIMD (hash, z, z, z);
   }
 }
 
-DECLSPEC void m90000s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
+DECLSPEC void m34211s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_FUNC_VECTOR ())
 {
   /**
    * modifiers are taken from args
@@ -140,19 +130,10 @@ DECLSPEC void m90000s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
+    0,
     0,
     0
   };
-
-  /**
-   * seed
-   */
-
-  // Reconstruct seed from two u32s
-  const u32x seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32x seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64x seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * base
@@ -191,17 +172,15 @@ DECLSPEC void m90000s (PRIVATE_AS const u32 *data, const u32 pw_len, KERN_ATTR_F
 
     w[0] = w0;
 
-    const u64x hash = MurmurHash64A (seed, w, pw_len);
+    const u32x hash = MurmurHash64A_truncated (w, pw_len);
 
-    const u32x r0 = l32_from_64 (hash);
-    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_S_SIMD (r0, r1, z, z);
+    COMPARE_S_SIMD (hash, z, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90000_m04 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34211_m04 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -238,15 +217,15 @@ KERNEL_FQ KERNEL_FA void m90000_m04 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90000m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34211m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ KERNEL_FA void m90000_m08 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34211_m08 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
    */
-  
+
   const u64 lid = get_local_id (0);
   const u64 gid = get_global_id (0);
   const u64 lsz = get_local_size (0);
@@ -278,10 +257,10 @@ KERNEL_FQ KERNEL_FA void m90000_m08 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90000m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34211m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ KERNEL_FA void m90000_m16 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34211_m16 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -318,10 +297,10 @@ KERNEL_FQ KERNEL_FA void m90000_m16 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90000m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34211m (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34211_s04 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -358,10 +337,10 @@ KERNEL_FQ KERNEL_FA void m90000_s04 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90000s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34211s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ KERNEL_FA void m90000_s08 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34211_s08 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -398,10 +377,10 @@ KERNEL_FQ KERNEL_FA void m90000_s08 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90000s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34211s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }
 
-KERNEL_FQ KERNEL_FA void m90000_s16 (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34211_s16 (KERN_ATTR_VECTOR ())
 {
   /**
    * base
@@ -438,5 +417,5 @@ KERNEL_FQ KERNEL_FA void m90000_s16 (KERN_ATTR_VECTOR ())
    * main
    */
 
-  m90000s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
+  m34211s (w, pw_len, pws, rules_buf, combs_buf, words_buf_r, tmps, hooks, bitmaps_buf_s1_a, bitmaps_buf_s1_b, bitmaps_buf_s1_c, bitmaps_buf_s1_d, bitmaps_buf_s2_a, bitmaps_buf_s2_b, bitmaps_buf_s2_c, bitmaps_buf_s2_d, plains_buf, digests_buf, hashes_shown, salt_bufs, esalt_bufs, d_return_buf, d_extra0_buf, d_extra1_buf, d_extra2_buf, d_extra3_buf, kernel_param, gid, lid, lsz);
 }

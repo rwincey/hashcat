@@ -13,7 +13,7 @@
 #include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u32 MurmurHash64A_truncated (PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
@@ -62,11 +62,10 @@ DECLSPEC u32 MurmurHash64A_truncated (PRIVATE_AS const u32 *data, const u32 len)
   #undef M
   #undef R
 
-  // Truncate to high 4 bytes
-  return (u32) (hash >> 32);
+  return hash;
 }
 
-KERNEL_FQ KERNEL_FA void m90030_m04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34201_m04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -165,23 +164,25 @@ KERNEL_FQ KERNEL_FA void m90030_m04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u32x hash = MurmurHash64A_truncated (w, pw_len);
+    u64x hash = MurmurHash64A (w, pw_len);
 
+    const u32x r0 = l32_from_64 (hash);
+    const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SIMD (hash, z, z, z);
+    COMPARE_M_SIMD (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90030_m08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34201_m08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90030_m16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34201_m16 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90030_s04 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34201_s04 (KERN_ATTR_BASIC ())
 {
   /**
    * modifier
@@ -217,7 +218,7 @@ KERNEL_FQ KERNEL_FA void m90030_s04 (KERN_ATTR_BASIC ())
   const u32 search[4] =
   {
     digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R0],
-    0,
+    digests_buf[DIGESTS_OFFSET_HOST].digest_buf[DGST_R1],
     0,
     0
   };
@@ -292,18 +293,20 @@ KERNEL_FQ KERNEL_FA void m90030_s04 (KERN_ATTR_BASIC ())
     w[14] = wordl3[2] | wordr3[2];
     w[15] = wordl3[3] | wordr3[3];
 
-    u32 hash = MurmurHash64A_truncated (w, pw_len);
+    u64 hash = MurmurHash64A (w, pw_len);
 
+    const u32 r0 = l32_from_64 (hash);
+    const u32 r1 = h32_from_64 (hash);
     const u32 z = 0;
 
-    COMPARE_S_SIMD (hash, z, z, z);
+    COMPARE_S_SIMD (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90030_s08 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34201_s08 (KERN_ATTR_BASIC ())
 {
 }
 
-KERNEL_FQ KERNEL_FA void m90030_s16 (KERN_ATTR_BASIC ())
+KERNEL_FQ KERNEL_FA void m34201_s16 (KERN_ATTR_BASIC ())
 {
 }

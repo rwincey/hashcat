@@ -25,12 +25,12 @@ sub wrapping_mul
 my $m = Math::BigInt->new("0xc6a4a7935bd1e995");
 my $r = 47;
 
-sub murmurhash64a
+sub murmurhash64a_zero_seed
 {
   use integer;
 
   my $word = shift;
-  my $seed = shift;
+  my $seed = 0;
 
   my @chars = unpack ("C*", $word);
   my $len = length $word;
@@ -115,7 +115,7 @@ sub module_generate_hash
 {
   my $word = shift;
 
-  my $digest = murmurhash64a ($word);
+  my $digest = murmurhash64a_zero_seed ($word);
 
   $digest = unpack ("H*", pack ("Q>", $digest));
 

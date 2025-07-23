@@ -10,16 +10,18 @@
 #include M2S(INCLUDE_PATH/inc_types.h)
 #include M2S(INCLUDE_PATH/inc_platform.cl)
 #include M2S(INCLUDE_PATH/inc_common.cl)
-#include M2S(INCLUDE_PATH/inc_scalar.cl)
+#include M2S(INCLUDE_PATH/inc_rp_optimized.h)
+#include M2S(INCLUDE_PATH/inc_rp_optimized.cl)
+#include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
-DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u32 len)
+DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
 {
   #define M 0xc6a4a7935bd1e995
   #define R 47
 
   //Initialize hash
-  u64 hash = seed ^ (len * M);
+  u64 hash = len * M;
 
   // Twice the number of u64 blocks
   const u32 num_u32_blocks = (len / 8) * 2;
@@ -65,82 +67,93 @@ DECLSPEC u64 MurmurHash64A (const u64 seed, PRIVATE_AS const u32 *data, const u3
   return hash;
 }
 
-KERNEL_FQ KERNEL_FA void m90000_mxx (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34201_m04 (KERN_ATTR_RULES ())
 {
   /**
    * modifier
    */
 
   const u64 lid = get_local_id (0);
-  const u64 gid = get_global_id (0);
-
-  if (gid >= GID_CNT) return;
-
-  /**
-   * seed
-   */
-
-  // Reconstruct seed from two u32s
-  const u32x seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32x seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64x seed = hl32_to_64 (seed_hi, seed_lo);
 
   /**
    * base
    */
 
-  const u32 pw_len = pws[gid].pw_len;
+  const u64 gid = get_global_id (0);
 
-  u32x w[64] = { 0 };
+  if (gid >= GID_CNT) return;
 
-  for (u32 i = 0, idx = 0; i < pw_len; i += 4, idx += 1)
-  {
-    w[idx] = pws[gid].i[idx];
-  }
+  u32 pw_buf0[4];
+  u32 pw_buf1[4];
+
+  pw_buf0[0] = pws[gid].i[0];
+  pw_buf0[1] = pws[gid].i[1];
+  pw_buf0[2] = pws[gid].i[2];
+  pw_buf0[3] = pws[gid].i[3];
+  pw_buf1[0] = pws[gid].i[4];
+  pw_buf1[1] = pws[gid].i[5];
+  pw_buf1[2] = pws[gid].i[6];
+  pw_buf1[3] = pws[gid].i[7];
+
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * loop
    */
 
-  u32x w0l = w[0];
-
   for (u32 il_pos = 0; il_pos < IL_CNT; il_pos += VECT_SIZE)
   {
-    const u32x w0r = words_buf_r[il_pos / VECT_SIZE];
+    u32x w[8] = { 0 };
 
-    const u32x w0 = w0l | w0r;
+    const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    w[0] = w0;
-
-    const u64x hash = MurmurHash64A (seed, w, pw_len);
+    u64x hash = MurmurHash64A (w, out_len);
 
     const u32x r0 = l32_from_64 (hash);
     const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SCALAR (r0, r1, z, z);
+    COMPARE_M_SIMD (r0, r1, z, z);
   }
 }
 
-KERNEL_FQ KERNEL_FA void m90000_sxx (KERN_ATTR_VECTOR ())
+KERNEL_FQ KERNEL_FA void m34201_m08 (KERN_ATTR_RULES ())
+{
+}
+
+KERNEL_FQ KERNEL_FA void m34201_m16 (KERN_ATTR_RULES ())
+{
+}
+
+KERNEL_FQ KERNEL_FA void m34201_s04 (KERN_ATTR_RULES ())
 {
   /**
    * modifier
    */
 
   const u64 lid = get_local_id (0);
+
+  /**
+   * base
+   */
+
   const u64 gid = get_global_id (0);
 
   if (gid >= GID_CNT) return;
 
-  /**
-   * seed
-   */
+  u32 pw_buf0[4];
+  u32 pw_buf1[4];
 
-  // Reconstruct seed from two u32s
-  const u32x seed_lo = salt_bufs[SALT_POS_HOST].salt_buf[0];
-  const u32x seed_hi = salt_bufs[SALT_POS_HOST].salt_buf[1];
-  const u64x seed = hl32_to_64 (seed_hi, seed_lo);
+  pw_buf0[0] = pws[gid].i[0];
+  pw_buf0[1] = pws[gid].i[1];
+  pw_buf0[2] = pws[gid].i[2];
+  pw_buf0[3] = pws[gid].i[3];
+  pw_buf1[0] = pws[gid].i[4];
+  pw_buf1[1] = pws[gid].i[5];
+  pw_buf1[2] = pws[gid].i[6];
+  pw_buf1[3] = pws[gid].i[7];
+
+  const u32 pw_len = pws[gid].pw_len & 63;
 
   /**
    * digest
@@ -155,38 +168,29 @@ KERNEL_FQ KERNEL_FA void m90000_sxx (KERN_ATTR_VECTOR ())
   };
 
   /**
-   * base
-   */
-
-  const u32 pw_len = pws[gid].pw_len;
-
-  u32x w[64] = { 0 };
-
-  for (u32 i = 0, idx = 0; i < pw_len; i += 4, idx += 1)
-  {
-    w[idx] = pws[gid].i[idx];
-  }
-
-  /**
    * loop
    */
 
-  u32x w0l = w[0];
-
   for (u32 il_pos = 0; il_pos < IL_CNT; il_pos += VECT_SIZE)
   {
-    const u32x w0r = words_buf_r[il_pos / VECT_SIZE];
+    u32x w[16] = { 0 };
 
-    const u32x w0 = w0l | w0r;
+    const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w + 0, w + 4);
 
-    w[0] = w0;
-
-    const u64x hash = MurmurHash64A (seed, w, pw_len);
+    u64x hash = MurmurHash64A (w, out_len);
 
     const u32x r0 = l32_from_64 (hash);
     const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_S_SCALAR (r0, r1, z, z);
+    COMPARE_S_SIMD (r0, r1, z, z);
   }
+}
+
+KERNEL_FQ KERNEL_FA void m34201_s08 (KERN_ATTR_RULES ())
+{
+}
+
+KERNEL_FQ KERNEL_FA void m34201_s16 (KERN_ATTR_RULES ())
+{
 }

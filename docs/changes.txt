@@ -211,6 +211,7 @@
 - Metal Backend: define USE_BITSELECT and USE_SWIZZLE for Apple Intel
 - Metal Backend: disable Metal devices only if at least one OpenCL device is active
 - Metal Backend: improved compute workloads calculation
+- Metal Backend: improved memory management
 - Metal Backend: parallelize pipeline state object (PSO) compilation internally
 - Modules: Added OPTS_TYPE_PT_BASE58 in 28501 28502 28503 28504 28505 28506 30901 30902 30903 30904 30905 30906
 - Modules: Added module_unstable_warning for 22500, update module_unstable_warning for 10700

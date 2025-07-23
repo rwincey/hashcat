@@ -1002,7 +1002,7 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
   {
     event_log_error (hashcat_ctx, "Invalid -i/--increment value.");
 
-    return -1;    
+    return -1;
   }
 
   if ((user_options->rp_files_cnt > 0) && (user_options->rp_gen > 0))
@@ -2453,7 +2453,7 @@ void user_options_info (hashcat_ctx_t *hashcat_ctx)
     {
       event_log_info (hashcat_ctx, "# option: --kernel-threads=%u", user_options->kernel_threads);
     }
-    
+
     if (user_options->workload_profile_chgd == true)
     {
       event_log_info (hashcat_ctx, "# option: --workload-profile=%u", user_options->workload_profile);
@@ -3331,6 +3331,70 @@ int user_options_check_files (hashcat_ctx_t *hashcat_ctx)
 
       return -1;
     }
+  }
+
+  if (user_options->veracrypt_keyfiles != NULL)
+  {
+    char *keyfiles = hcstrdup (user_options->veracrypt_keyfiles);
+
+    char *saveptr = NULL;
+
+    char *keyfile = strtok_r (keyfiles, ",", &saveptr);
+
+    while (keyfile)
+    {
+      if (hc_path_exist (keyfile) == true)
+      {
+        if (hc_path_read (keyfile) == false)
+        {
+          event_log_error (hashcat_ctx, "%s: %s", keyfile, strerror (errno));
+
+          return -1;
+        }
+      }
+      else
+      {
+        event_log_error (hashcat_ctx, "%s: %s", keyfile, strerror (errno));
+
+        return -1;
+      }
+
+      keyfile = strtok_r ((char *) NULL, ",", &saveptr);
+    }
+
+    hcfree (keyfiles);
+  }
+
+  if (user_options->truecrypt_keyfiles != NULL)
+  {
+    char *keyfiles = hcstrdup (user_options->truecrypt_keyfiles);
+
+    char *saveptr = NULL;
+
+    char *keyfile = strtok_r (keyfiles, ",", &saveptr);
+
+    while (keyfile)
+    {
+      if (hc_path_exist (keyfile) == true)
+      {
+        if (hc_path_read (keyfile) == false)
+        {
+          event_log_error (hashcat_ctx, "%s: %s", keyfile, strerror (errno));
+
+          return -1;
+        }
+      }
+      else
+      {
+        event_log_error (hashcat_ctx, "%s: %s", keyfile, strerror (errno));
+
+        return -1;
+      }
+
+      keyfile = strtok_r ((char *) NULL, ",", &saveptr);
+    }
+
+    hcfree (keyfiles);
   }
 
   /**

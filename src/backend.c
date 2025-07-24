@@ -5634,9 +5634,10 @@ static void backend_ctx_devices_init_cuda (hashcat_ctx_t *hashcat_ctx, int *virt
       device_param->is_metal  = false;
       device_param->is_opencl = false;
 
+      device_param->use_opencl11 = false;
       device_param->use_opencl12 = false;
       device_param->use_opencl20 = false;
-      device_param->use_opencl21 = false;
+      device_param->use_opencl30 = false;
 
       // device_name
 
@@ -6111,9 +6112,10 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
       device_param->is_metal  = false;
       device_param->is_opencl = false;
 
+      device_param->use_opencl11 = false;
       device_param->use_opencl12 = false;
       device_param->use_opencl20 = false;
-      device_param->use_opencl21 = false;
+      device_param->use_opencl30 = false;
 
       // device_name
 
@@ -6621,9 +6623,10 @@ static void backend_ctx_devices_init_metal (hashcat_ctx_t *hashcat_ctx, MAYBE_UN
       device_param->is_metal  = true;
       device_param->is_opencl = false;
 
+      device_param->use_opencl11 = false;
       device_param->use_opencl12 = false;
       device_param->use_opencl20 = false;
-      device_param->use_opencl21 = false;
+      device_param->use_opencl30 = false;
 
       device_param->is_apple_silicon = is_apple_silicon ();
 
@@ -7029,16 +7032,21 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
         // check OpenCL version
 
+        device_param->use_opencl11 = false;
         device_param->use_opencl12 = false;
         device_param->use_opencl20 = false;
-        device_param->use_opencl21 = false;
+        device_param->use_opencl30 = false;
 
         int opencl_version_min = 0;
         int opencl_version_maj = 0;
 
         if (sscanf (opencl_platform_version, "OpenCL %d.%d", &opencl_version_min, &opencl_version_maj) == 2)
         {
-          if ((opencl_version_min == 1) && (opencl_version_maj == 2))
+          if ((opencl_version_min == 1) && (opencl_version_maj == 1))
+          {
+            device_param->use_opencl11 = true;
+          }
+          else if ((opencl_version_min == 1) && (opencl_version_maj == 2))
           {
             device_param->use_opencl12 = true;
           }
@@ -7046,9 +7054,9 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
           {
             device_param->use_opencl20 = true;
           }
-          else if ((opencl_version_min == 2) && (opencl_version_maj == 1))
+          else if ((opencl_version_min == 3) && (opencl_version_maj == 0))
           {
-            device_param->use_opencl21 = true;
+            device_param->use_opencl30 = true;
           }
         }
 
@@ -10433,10 +10441,19 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
           if (device_param->is_opencl == true)
           {
-            if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG, sizeof (vector_width), &vector_width, NULL) == -1)
+            // For CPU we can ask the runtime
+            // For GPUs we want to be more selective and we will use the tuning db
+
+            vector_width = 1;
+
+            if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
             {
-              device_param->skipped = true;
-              continue;
+              if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG, sizeof (vector_width), &vector_width, NULL) == -1)
+              {
+                device_param->skipped = true;
+
+                continue;
+              }
             }
           }
         }
@@ -10467,11 +10484,19 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
           if (device_param->is_opencl == true)
           {
-            if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_NATIVE_VECTOR_WIDTH_INT,  sizeof (vector_width), &vector_width, NULL) == -1)
-            {
-              device_param->skipped = true;
+            // For CPU we can ask the runtime
+            // For GPUs we want to be more selective and we will use the tuning db
 
-              continue;
+            vector_width = 1;
+
+            if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
+            {
+              if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_NATIVE_VECTOR_WIDTH_INT,  sizeof (vector_width), &vector_width, NULL) == -1)
+              {
+                device_param->skipped = true;
+
+                continue;
+              }
             }
           }
         }
@@ -11124,10 +11149,16 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
     /* currently disabled, hangs NEO drivers since 20.09.
        was required for NEO driver 20.08 to workaround the same issue!
        we go with the latest version
+       v7 re-enabled
+      */
 
     if (device_param->is_opencl == true)
     {
-      if (device_param->use_opencl12 == true)
+      if (device_param->use_opencl11 == true)
+      {
+        build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-cl-std=CL1.1 ");
+      }
+      else if (device_param->use_opencl12 == true)
       {
         build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-cl-std=CL1.2 ");
       }
@@ -11135,12 +11166,11 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       {
         build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-cl-std=CL2.0 ");
       }
-      else if (device_param->use_opencl21 == true)
+      else if (device_param->use_opencl30 == true)
       {
-        build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-cl-std=CL2.1 ");
+        build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-cl-std=CL3.0 ");
       }
     }
-    */
 
     // we don't have sm_* on vendors not NV but it doesn't matter
 
@@ -16199,13 +16229,6 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       cl_kernel kernel = opencl_kernel_with_id (device_param, kern_run);
 
       threads_per_block = opencl_query_threads_per_block (hashcat_ctx, device_param, kernel);
-
-      if ((device_param->opencl_device_type & CL_DEVICE_TYPE_GPU) && (device_param->device_host_unified_memory == 0) && (device_param->opencl_device_vendor_id == VENDOR_ID_INTEL_SDK))
-      {
-        // Intel is highly inaccurate here: https://github.com/hashcat/hashcat/issues/4356
-
-        threads_per_block = MIN (threads_per_block, device_param->kernel_preferred_wgs_multiple);
-      }
 
       // num_regs check should be included in opencl's CL_KERNEL_WORK_GROUP_SIZE
     }

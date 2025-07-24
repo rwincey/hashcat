@@ -321,3 +321,23 @@ AMD_Instinct_MI300X                             ALIAS_AMD
 AMD_Instinct_MI325X                             ALIAS_AMD
 AMD_Instinct_MI350X                             ALIAS_AMD
 AMD_Instinct_MI355X                             ALIAS_AMD
+
+Intel(R)_Arc(TM)_A310_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_A380_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_A580_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_A750_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_A770_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_B570_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_B580_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_B770_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_Cxxx_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_Dxxx_Graphics                  ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_A30M_Graphics              ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_A40_Graphics               ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_A50_Graphics               ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_A60_Graphics               ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_A60M_Graphics              ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_B50_Graphics               ALIAS_INTEL
+Intel(R)_Arc(TM)_Pro_B60_Graphics               ALIAS_INTEL
+
+Intel(R)_Data_Center_GPU_Max_1100               ALIAS_INTEL

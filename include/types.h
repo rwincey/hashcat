@@ -1518,9 +1518,10 @@ typedef struct hc_device_param
 
   // Some more attributes
 
+  bool    use_opencl11;
   bool    use_opencl12;
   bool    use_opencl20;
-  bool    use_opencl21;
+  bool    use_opencl30;
 
   // AMD
   bool    has_vadd;

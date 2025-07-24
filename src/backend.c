@@ -7885,11 +7885,33 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
         {
           if (device_param->opencl_platform_vendor_id == VENDOR_ID_INTEL_SDK)
           {
-            // This is as invalid as it can be, most of them are either 8 and some are 64, but this is just an initial value
-            // The problem is that on opencl we can find out the preferred value only in combination with a kernel, so we have
-            // to wait for an early chance to re-query it when we start loading the kernels and update it.
+            #define CL_DEVICE_NUM_SLICES_INTEL                 0x4252
+            #define CL_DEVICE_NUM_SUB_SLICES_PER_SLICE_INTEL   0x4253
+            #define CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL      0x4254
+            #define CL_DEVICE_NUM_THREADS_PER_EU_INTEL         0x4255
 
-            device_param->kernel_preferred_wgs_multiple = 32;
+            //cl_uint num_slices;
+            //cl_uint num_subslices_per_slice;
+            cl_uint num_eus_per_subslice;
+            cl_uint num_threads_per_eu;
+
+            if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL, sizeof (num_eus_per_subslice), &num_eus_per_subslice, NULL) == -1)
+            {
+              device_param->skipped = true;
+
+              continue;
+            }
+
+            if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_NUM_THREADS_PER_EU_INTEL, sizeof (num_threads_per_eu), &num_threads_per_eu, NULL) == -1)
+            {
+              device_param->skipped = true;
+
+              continue;
+            }
+
+            device_param->device_processors = num_eus_per_subslice;
+
+            device_param->kernel_preferred_wgs_multiple = num_threads_per_eu;
           }
 
           if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_vendor_id == VENDOR_ID_AMD))
@@ -16177,6 +16199,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       cl_kernel kernel = opencl_kernel_with_id (device_param, kern_run);
 
       threads_per_block = opencl_query_threads_per_block (hashcat_ctx, device_param, kernel);
+
+      if ((device_param->opencl_device_type & CL_DEVICE_TYPE_GPU) && (device_param->device_host_unified_memory == 0) && (device_param->opencl_device_vendor_id == VENDOR_ID_INTEL_SDK))
+      {
+        // Intel is highly inaccurate here: https://github.com/hashcat/hashcat/issues/4356
+
+        threads_per_block = MIN (threads_per_block, device_param->kernel_preferred_wgs_multiple);
+      }
 
       // num_regs check should be included in opencl's CL_KERNEL_WORK_GROUP_SIZE
     }

@@ -194,7 +194,8 @@ using namespace metal;
 #endif
 
 #ifdef IS_OPENCL
-#define USE_BITSELECT
+//Slow on Intel
+//#define USE_BITSELECT
 #define USE_ROTATE
 #define USE_SWIZZLE
 #endif

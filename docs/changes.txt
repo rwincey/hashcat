@@ -195,6 +195,7 @@
 - Dependencies: Updated xxHash to 0.8.3 (commit 50f4226)
 - Documents: Renamed status_code.txt in exit_status_code.txt and added device_status_code.txt
 - Documents: Updated BUILD.md and added BUILD_macOS.md (containing instructions for building windows binaries on macOS)
+- Filehandling: Solved TODOs in hc_fstat()
 - HIP Backend: Avoid deprecated functions
 - Hardware Monitor: Splitting hwmon_ctx_init function into smaller library-specific functions
 - Hardware Monitor: avoid sprintf in src/ext_iokit.c
@@ -212,6 +213,7 @@
 - Metal Backend: disable Metal devices only if at least one OpenCL device is active
 - Metal Backend: improved compute workloads calculation
 - Metal Backend: improved memory management
+- Metal Backend: fixed memory leaks
 - Metal Backend: parallelize pipeline state object (PSO) compilation internally
 - Modules: Added OPTS_TYPE_PT_BASE58 in 28501 28502 28503 28504 28505 28506 30901 30902 30903 30904 30905 30906
 - Modules: Added module_unstable_warning for 22500, update module_unstable_warning for 10700
@@ -220,6 +222,8 @@
 - Modules: Updated module_unstable_warning
 - Open Document Format: Added support for small documents with content length < 1024
 - OpenCL Backend: added workaround to set device_available_memory from CUDA/HIP alias device
+- OpenCL Backend: using CL_TRUE with all hc_clEnqueueWriteBuffer() call
+- OpenCL Backend: using HC_OCL_CREATEBUFFER macro for buffer allocation and openclMemoryFlags array to configure the memory flags
 - Rules: Add support to character class rules
 - Rules: Rename best64.rule to best66.rule and remove the unknown section from it
 - Scrypt: Increase buffer sizes in module for hash mode 8900 to allow longer scrypt digests
@@ -242,6 +246,7 @@
 - User Options: Added error message when mixing --username and --show to warn users of exponential delay
 - User Options: added --metal-compiler-runtime option
 - User Options: assigned -H to --hash-info
+- User Options: do not allow --slow-candidates (-S) in benchmark mode
 - User Options: limit --bitmap-max value to 31
 
 * changes v6.2.5 -> v6.2.6

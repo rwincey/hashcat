@@ -215,8 +215,8 @@ int  hc_mtlMemcpyDtoH                       (void *hashcat_ctx, mtl_device_id me
 int  hc_mtlReleaseMemObject                 (void *hashcat_ctx, mtl_mem_t *metal_buffer);
 int  hc_mtlReleaseFunction                  (void *hashcat_ctx, mtl_function *metal_function);
 int  hc_mtlReleaseLibrary                   (void *hashcat_ctx, mtl_function *metal_library);
-int  hc_mtlReleaseCommandQueue              (void *hashcat_ctx, mtl_command_queue command_queue);
-int  hc_mtlReleaseDevice                    (void *hashcat_ctx, mtl_device_id metal_device);
+int  hc_mtlReleaseCommandQueue              (void *hashcat_ctx, mtl_command_queue *command_queue);
+int  hc_mtlReleaseDevice                    (void *hashcat_ctx, mtl_device_id *metal_device);
 
 int  hc_mtlCreateLibraryWithSource          (void *hashcat_ctx, mtl_device_id metal_device, const char *kernel_sources, const char *build_options_buf, const char *include_path, mtl_library *metal_library);
 int  hc_mtlCreateLibraryWithFile            (void *hashcat_ctx, mtl_device_id metal_device, const char *cached_file, mtl_library *metal_library);

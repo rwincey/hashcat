@@ -6428,7 +6428,6 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
          backend_ctx->need_sysfs_amdgpu = true;
          #endif
       }
-
       // CPU burning loop damper
       // Value is given as number between 0-100
       // By default 8%
@@ -7878,6 +7877,13 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
             #endif
           }
 
+          if (device_param->opencl_device_vendor_id == VENDOR_ID_INTEL_SDK)
+          {
+            #if defined (__linux__)
+            backend_ctx->need_sysfs_intelgpu = true;
+            #endif
+          }
+
           #if defined (__APPLE__)
           if (strncmp (device_param->device_name, "Apple M", 7) == 0)
           {
@@ -7920,6 +7926,27 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
             device_param->device_processors = num_eus_per_subslice;
 
             device_param->kernel_preferred_wgs_multiple = num_threads_per_eu;
+
+            #define CL_DEVICE_PCI_BUS_INFO_INTEL 0x410F
+
+            typedef struct _cl_device_pci_bus_info_intel {
+                cl_uint pci_domain;
+                cl_uint pci_bus;
+                cl_uint pci_device;
+                cl_uint pci_function;
+            } cl_device_pci_bus_info_intel;
+
+            cl_device_pci_bus_info_intel pci_info;
+
+            if (hc_clGetDeviceInfo (hashcat_ctx, device_param->opencl_device, CL_DEVICE_PCI_BUS_INFO_INTEL, sizeof (pci_info), &pci_info, NULL) == 0)
+            {
+              // If this is not supported we will silently ignore. Most of the Intel GPU's do not support this
+
+              device_param->pcie_domain   = pci_info.pci_domain;
+              device_param->pcie_bus      = pci_info.pci_bus;
+              device_param->pcie_device   = pci_info.pci_device;
+              device_param->pcie_function = pci_info.pci_function;
+            }
           }
 
           if ((device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE) && (device_param->opencl_device_vendor_id == VENDOR_ID_AMD))
@@ -8438,12 +8465,13 @@ int backend_ctx_devices_init (hashcat_ctx_t *hashcat_ctx, const int comptime)
   user_options_t    *user_options  = hashcat_ctx->user_options;
   hc_device_param_t *devices_param = backend_ctx->devices_param;
 
-  backend_ctx->need_adl           = false;
-  backend_ctx->need_nvml          = false;
-  backend_ctx->need_nvapi         = false;
-  backend_ctx->need_sysfs_amdgpu  = false;
-  backend_ctx->need_sysfs_cpu     = false;
-  backend_ctx->need_iokit         = false;
+  backend_ctx->need_adl             = false;
+  backend_ctx->need_nvml            = false;
+  backend_ctx->need_nvapi           = false;
+  backend_ctx->need_sysfs_amdgpu    = false;
+  backend_ctx->need_sysfs_intelgpu  = false;
+  backend_ctx->need_sysfs_cpu       = false;
+  backend_ctx->need_iokit           = false;
 
   int bridge_link_device = 0; // this will only count active device
 
@@ -9167,12 +9195,13 @@ void backend_ctx_devices_destroy (hashcat_ctx_t *hashcat_ctx)
   backend_ctx->opencl_devices_cnt     = 0;
   backend_ctx->opencl_devices_active  = 0;
 
-  backend_ctx->need_adl           = false;
-  backend_ctx->need_nvml          = false;
-  backend_ctx->need_nvapi         = false;
-  backend_ctx->need_sysfs_amdgpu  = false;
-  backend_ctx->need_sysfs_cpu     = false;
-  backend_ctx->need_iokit         = false;
+  backend_ctx->need_adl             = false;
+  backend_ctx->need_nvml            = false;
+  backend_ctx->need_nvapi           = false;
+  backend_ctx->need_sysfs_amdgpu    = false;
+  backend_ctx->need_sysfs_intelgpu  = false;
+  backend_ctx->need_sysfs_cpu       = false;
+  backend_ctx->need_iokit           = false;
 }
 
 void backend_ctx_devices_sync_tuning (hashcat_ctx_t *hashcat_ctx)

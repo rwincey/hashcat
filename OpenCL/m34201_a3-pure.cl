@@ -3,14 +3,14 @@
  * License.....: MIT
  */
 
-//#define NEW_SIMD_CODE
+#define NEW_SIMD_CODE
 
 #ifdef KERNEL_STATIC
 #include M2S(INCLUDE_PATH/inc_vendor.h)
 #include M2S(INCLUDE_PATH/inc_types.h)
 #include M2S(INCLUDE_PATH/inc_platform.cl)
 #include M2S(INCLUDE_PATH/inc_common.cl)
-#include M2S(INCLUDE_PATH/inc_scalar.cl)
+#include M2S(INCLUDE_PATH/inc_simd.cl)
 #endif
 
 DECLSPEC u64 MurmurHash64A (PRIVATE_AS const u32 *data, const u32 len)
@@ -109,7 +109,7 @@ KERNEL_FQ KERNEL_FA void m34201_mxx (KERN_ATTR_VECTOR ())
     const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_M_SCALAR (r0, r1, z, z);
+    COMPARE_M_SIMD (r0, r1, z, z);
   }
 }
 
@@ -169,6 +169,6 @@ KERNEL_FQ KERNEL_FA void m34201_sxx (KERN_ATTR_VECTOR ())
     const u32x r1 = h32_from_64 (hash);
     const u32x z = 0;
 
-    COMPARE_S_SCALAR (r0, r1, z, z);
+    COMPARE_S_SIMD (r0, r1, z, z);
   }
 }

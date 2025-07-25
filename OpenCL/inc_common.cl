@@ -1089,10 +1089,39 @@ DECLSPEC u32x hc_swap32 (const u32x v)
                  rotate (v, make_u32x ( 8)),
                             make_u32x (0x00ff00ff));
   #else
-  r = ((v & make_u32x (0xff000000)) >> 24)
-    | ((v & make_u32x (0x00ff0000)) >>  8)
-    | ((v & make_u32x (0x0000ff00)) <<  8)
-    | ((v & make_u32x (0x000000ff)) << 24);
+
+  #if VECT_SIZE == 1
+  r = hc_swap32_S (v);
+  #endif
+
+  #if VECT_SIZE >= 2
+  r.s0 = hc_swap32_S (v.s0);
+  r.s1 = hc_swap32_S (v.s1);
+  #endif
+
+  #if VECT_SIZE >= 4
+  r.s2 = hc_swap32_S (v.s2);
+  r.s3 = hc_swap32_S (v.s3);
+  #endif
+
+  #if VECT_SIZE >= 8
+  r.s4 = hc_swap32_S (v.s4);
+  r.s5 = hc_swap32_S (v.s5);
+  r.s6 = hc_swap32_S (v.s6);
+  r.s7 = hc_swap32_S (v.s7);
+  #endif
+
+  #if VECT_SIZE >= 16
+  r.s8 = hc_swap32_S (v.s8);
+  r.s9 = hc_swap32_S (v.s9);
+  r.sa = hc_swap32_S (v.sa);
+  r.sb = hc_swap32_S (v.sb);
+  r.sc = hc_swap32_S (v.sc);
+  r.sd = hc_swap32_S (v.sd);
+  r.se = hc_swap32_S (v.se);
+  r.sf = hc_swap32_S (v.sf);
+  #endif
+
   #endif
 
   #endif

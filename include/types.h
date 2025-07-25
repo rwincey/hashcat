@@ -1235,6 +1235,8 @@ typedef struct hc_fp
   const char *mode;
   const char *path;
 
+  off_t       uncompressed_size;
+
 } HCFILE;
 
 #include "ext_nvrtc.h"

@@ -76,6 +76,8 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
   fp->path     = NULL;
   fp->mode     = NULL;
 
+  fp->uncompressed_size = 0;
+
   int oflag = -1;
 
   int fmode = S_IRUSR|S_IWUSR;
@@ -421,6 +423,8 @@ size_t hc_fread (void *ptr, size_t size, size_t nmemb, HCFILE *fp)
         return (size_t) -1;
       }
     }
+
+    fp->uncompressed_size += n;
   }
   else if (fp->ufp)
   {
@@ -669,11 +673,20 @@ int hc_fstat (HCFILE *fp, struct stat *buf)
 
   if (fp->gfp)
   {
-    /* TODO: For compressed files hc_ftell() reports uncompressed bytes, but hc_fstat() reports compressed bytes */
+    if (fp->uncompressed_size > 0)
+    {
+      buf->st_size = fp->uncompressed_size;
+    }
   }
   else if (fp->ufp)
   {
-    /* TODO: For compressed files hc_ftell() reports uncompressed bytes, but hc_fstat() reports compressed bytes */
+    unz_file_info file_info;
+
+    // Get metadata about the current file
+    if (unzGetCurrentFileInfo(fp->ufp, &file_info, NULL, 0, NULL, 0, NULL, 0) == UNZ_OK)
+    {
+      buf->st_size = (off_t) file_info.uncompressed_size;
+    }
   }
   else if (fp->xfp)
   {

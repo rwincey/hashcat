@@ -37,7 +37,15 @@ static bool iokit_getGPUCore (void *hashcat_ctx, int *gpu_core)
 {
   bool rc = false;
 
-  CFMutableDictionaryRef matching = IOServiceMatching ("IOAccelerator");
+  CFDictionaryRef matching = IOServiceMatching ("IOAccelerator");
+
+  if (!matching)
+  {
+    event_log_error (hashcat_ctx, "IOServiceMatching() failed");
+
+    return rc;
+  }
+
 
   io_service_t service = IOServiceGetMatchingService (hc_IOMasterPortDefault, matching);
 
@@ -65,6 +73,8 @@ static bool iokit_getGPUCore (void *hashcat_ctx, int *gpu_core)
     rc = true;
   }
 
+  if (num) CFRelease(num);
+
   IOObjectRelease (service);
 
   return rc;
@@ -87,7 +97,16 @@ static int hc_mtlInvocationHelper (id target, SEL selector, void *returnValue)
 
     [invocation setTarget: target];
     [invocation setSelector: selector];
-    [invocation invoke];
+
+    @try
+    {
+      [invocation invoke];
+    }
+    @catch (NSException *exception)
+    {
+      return -1;
+    }
+
     [invocation getReturnValue: returnValue];
 
     return 0;
@@ -160,12 +179,12 @@ static int hc_mtlBuildOptionsToDict (void *hashcat_ctx, const char *build_option
 
     if ([components count] != 2)
     {
-      if ([key isEqualToString:[NSString stringWithUTF8String:"KERNEL_STATIC"]] ||
-          [key isEqualToString:[NSString stringWithUTF8String:"IS_APPLE_SILICON"]] ||
-          [key isEqualToString:[NSString stringWithUTF8String:"DYNAMIC_LOCAL"]] ||
-          [key isEqualToString:[NSString stringWithUTF8String:"_unroll"]] ||
-          [key isEqualToString:[NSString stringWithUTF8String:"NO_UNROLL"]] ||
-          [key isEqualToString:[NSString stringWithUTF8String:"FORCE_DISABLE_SHM"]])
+      if ([key isEqualToString:@"KERNEL_STATIC"] ||
+          [key isEqualToString:@"IS_APPLE_SILICON"] ||
+          [key isEqualToString:@"DYNAMIC_LOCAL"] ||
+          [key isEqualToString:@"_unroll"] ||
+          [key isEqualToString:@"NO_UNROLL"] ||
+          [key isEqualToString:@"FORCE_DISABLE_SHM"])
       {
         value = @"1";
       }
@@ -248,9 +267,11 @@ void mtl_close (void *hashcat_ctx)
 
         if (device != nil)
         {
-          hc_mtlReleaseDevice (hashcat_ctx, device);
+          hc_mtlReleaseDevice (hashcat_ctx, &device);
         }
       }
+
+      CFRelease (mtl->devices);
 
       mtl->devices = nil;
     }
@@ -275,14 +296,21 @@ int hc_mtlDeviceGetCount (void *hashcat_ctx, int *count)
   {
     event_log_error (hashcat_ctx, "metalDeviceGetCount(): empty device objects");
 
-    mtl->devices = nil;
+    if (mtl->devices)
+    {
+      CFRelease (mtl->devices);
+
+      mtl->devices = nil;
+    }
+
+    *count = 0;
 
     return -1;
   }
 
   mtl->devices = devices;
 
-  *count = CFArrayGetCount (devices);
+  *count = (int) CFArrayGetCount (devices);
 
   return 0;
 }
@@ -372,12 +400,11 @@ int hc_mtlDeviceGetName (void *hashcat_ctx, char *name, size_t len, mtl_device_i
     return -1;
   }
 
-  if (strncpy (name, device_name_str, (device_name_len > len) ? len : device_name_len) != name)
-  {
-    event_log_error (hashcat_ctx, "%s(): strncpy failed", __func__);
+  size_t copy_len = (device_name_len < len - 1) ? device_name_len : len - 1;
 
-    return -1;
-  }
+  memcpy(name, device_name_str, copy_len);
+
+  name[copy_len] = '\0';
 
   return 0;
 }
@@ -523,7 +550,7 @@ int hc_mtlMemGetInfo (void *hashcat_ctx, size_t *mem_free, size_t *mem_total)
 
   if (mtl == NULL) return -1;
 
-  struct vm_statistics64 vm_stats;
+  struct vm_statistics64 vm_stats = { 0 };
 
   vm_size_t page_size = 0;
 
@@ -535,6 +562,8 @@ int hc_mtlMemGetInfo (void *hashcat_ctx, size_t *mem_free, size_t *mem_total)
   {
     event_log_error (hashcat_ctx, "metalMemGetInfo(): cannot get page_size");
 
+    mach_port_deallocate (mach_task_self(), port);
+
     return -1;
   }
 
@@ -542,8 +571,12 @@ int hc_mtlMemGetInfo (void *hashcat_ctx, size_t *mem_free, size_t *mem_total)
   {
     event_log_error (hashcat_ctx, "metalMemGetInfo(): cannot get vm_stats");
 
+    mach_port_deallocate (mach_task_self(), port);
+
     return -1;
   }
+
+  mach_port_deallocate (mach_task_self(), port);
 
   uint64_t mem_free_tmp = (uint64_t) (vm_stats.free_count - vm_stats.speculative_count) * page_size;
 
@@ -606,7 +639,7 @@ int hc_mtlDeviceTotalMem (void *hashcat_ctx, size_t *bytes, mtl_device_id metal_
 
   uint64_t memsize = 0;
 
-  if (true)
+  if ([metal_device respondsToSelector:@selector(recommendedMaxWorkingSetSize)])
   {
     memsize = [metal_device recommendedMaxWorkingSetSize];
   }
@@ -697,6 +730,13 @@ int hc_mtlCreateKernel (void *hashcat_ctx, mtl_device_id metal_device, mtl_libra
   __block NSError *error = nil;
 
   NSString *f_name = [NSString stringWithCString: func_name encoding: NSUTF8StringEncoding];
+
+  if (f_name == nil)
+  {
+    event_log_error (hashcat_ctx, "%s(): failed to convert function name to NSString", __func__);
+
+    return -1;
+  }
 
   mtl_function mtl_func = [metal_library newFunctionWithName: f_name];
 
@@ -948,7 +988,9 @@ int hc_mtlReleaseMemObject (void *hashcat_ctx, mtl_mem_t *mem)
 
   [mem->buf_ptr setPurgeableState: MTLPurgeableStateEmpty];
 
+  #if !__has_feature(objc_arc)
   [mem->buf_ptr release];
+  #endif
 
   mem->buf_ptr = nil;
 
@@ -965,7 +1007,9 @@ int hc_mtlReleaseFunction (void *hashcat_ctx, mtl_function *metal_function)
 
   if (metal_function == NULL || *metal_function == nil) return -1;
 
+  #if !__has_feature(objc_arc)
   [*metal_function release];
+  #endif
 
   *metal_function = nil;
 
@@ -982,41 +1026,47 @@ int hc_mtlReleaseLibrary (void *hashcat_ctx, mtl_library *metal_library)
 
   if (metal_library == NULL || *metal_library == nil) return -1;
 
+  #if !__has_feature(objc_arc)
   [*metal_library release];
+  #endif
 
   *metal_library = nil;
 
   return 0;
 }
 
-int hc_mtlReleaseCommandQueue (void *hashcat_ctx, mtl_command_queue command_queue)
+int hc_mtlReleaseCommandQueue (void *hashcat_ctx, mtl_command_queue *command_queue)
 {
-  if (command_queue == nil)
+  if (command_queue == NULL || *command_queue == nil)
   {
     event_log_error (hashcat_ctx, "%s(): invalid metal command queue", __func__);
 
     return -1;
   }
 
-  [command_queue release];
+  #if !__has_feature(objc_arc)
+  [*command_queue release];
+  #endif
 
-  command_queue = nil;
+  *command_queue = nil;
 
   return 0;
 }
 
-int hc_mtlReleaseDevice (void *hashcat_ctx, mtl_device_id metal_device)
+int hc_mtlReleaseDevice (void *hashcat_ctx, mtl_device_id *metal_device)
 {
-  if (metal_device == nil)
+  if (metal_device == NULL || *metal_device == nil)
   {
     event_log_error (hashcat_ctx, "%s(): invalid metal device", __func__);
 
     return -1;
   }
 
-  [metal_device release];
+  #if !__has_feature(objc_arc)
+  [*metal_device release];
+  #endif
 
-  metal_device = nil;
+  *metal_device = nil;
 
   return 0;
 }
@@ -1223,7 +1273,9 @@ int hc_mtlMemcpyHtoD (void *hashcat_ctx, mtl_device_id metal_device, mtl_command
 
     [command_buffer waitUntilCompleted];
 
+    #if !__has_feature(objc_arc)
     [staging_buf release];
+    #endif
 
     return 0;
   }
@@ -1334,6 +1386,13 @@ int hc_mtlMemcpyDtoH (void *hashcat_ctx, mtl_device_id metal_device, mtl_command
   {
     event_log_error (hashcat_ctx, "%s(): failed to create a new command buffer", __func__);
 
+    #if !__has_feature(objc_arc)
+    if (staging_buf != nil)
+    {
+      [staging_buf release];
+    }
+    #endif
+
     return -1;
   }
 
@@ -1342,6 +1401,13 @@ int hc_mtlMemcpyDtoH (void *hashcat_ctx, mtl_device_id metal_device, mtl_command
   if (blit_encoder == nil)
   {
     event_log_error (hashcat_ctx, "%s(): failed to create a blit command encoder", __func__);
+
+    #if !__has_feature(objc_arc)
+    if (staging_buf != nil)
+    {
+      [staging_buf release];
+    }
+    #endif
 
     return -1;
   }
@@ -1392,6 +1458,10 @@ int hc_mtlMemcpyDtoH (void *hashcat_ctx, mtl_device_id metal_device, mtl_command
   {
     event_log_error (hashcat_ctx, "%s(): failed to get staging buffer ptr", __func__);
 
+    #if !__has_feature(objc_arc)
+    [staging_buf release];
+    #endif
+
     return -1;
   }
 
@@ -1399,12 +1469,16 @@ int hc_mtlMemcpyDtoH (void *hashcat_ctx, mtl_device_id metal_device, mtl_command
   {
     event_log_error (hashcat_ctx, "%s(): memcpy failed", __func__);
 
+    #if !__has_feature(objc_arc)
     [staging_buf release];
+    #endif
 
     return -1;
   }
 
+  #if !__has_feature(objc_arc)
   [staging_buf release];
+  #endif
 
   return 0;
 }
@@ -1448,40 +1522,64 @@ int hc_mtlRuntimeGetVersionString (void *hashcat_ctx, char *runtimeVersion_str, 
     event_log_error (hashcat_ctx, "%s(): CFPropertyListCreateWithStream() failed\n", __func__);
 
     CFReadStreamClose (plist_stream);
-
     CFRelease (plist_stream);
     CFRelease (plist_url);
 
     return -1;
   }
 
-  CFStringRef runtime_version_str = CFRetain (CFDictionaryGetValue (plist_prop, CFSTR ("CFBundleVersion")));
+  CFStringRef runtime_version_cfstr = CFRetain (CFDictionaryGetValue (plist_prop, CFSTR ("CFBundleVersion")));
 
-  if (runtime_version_str != NULL)
+  if (runtime_version_cfstr != NULL)
   {
+    CFRetain (runtime_version_cfstr);
+
     if (runtimeVersion_str == NULL)
     {
-      CFIndex len = CFStringGetLength (runtime_version_str);
+      CFIndex len = CFStringGetLength (runtime_version_cfstr);
       CFIndex maxSize = CFStringGetMaximumSizeForEncoding (len, kCFStringEncodingUTF8) + 1;
 
       *size = maxSize;
+
+      CFRelease (runtime_version_cfstr);
+      CFRelease (plist_prop);
+      CFReadStreamClose (plist_stream);
+      CFRelease (plist_stream);
+      CFRelease (plist_url);
 
       return 0;
     }
 
     CFIndex maxSize = *size;
 
-    if (CFStringGetCString (runtime_version_str, runtimeVersion_str, maxSize, kCFStringEncodingUTF8) == false)
+    if (CFStringGetCString (runtime_version_cfstr, runtimeVersion_str, maxSize, kCFStringEncodingUTF8) == false)
     {
       event_log_error (hashcat_ctx, "%s(): CFStringGetCString() failed\n", __func__);
 
       hcfree (runtimeVersion_str);
 
+      CFRelease (runtime_version_cfstr);
+      CFRelease (plist_prop);
+      CFReadStreamClose (plist_stream);
+      CFRelease (plist_stream);
+      CFRelease (plist_url);
+
       return -1;
     }
 
+    CFRelease (runtime_version_cfstr);
+    CFRelease (plist_prop);
+    CFReadStreamClose (plist_stream);
+    CFRelease (plist_stream);
+    CFRelease (plist_url);
+
     return 0;
   }
+
+  CFRelease (plist_prop);
+  CFReadStreamClose (plist_stream);
+  CFRelease (plist_stream);
+  CFRelease (plist_url);
 
   return -1;
 }
@@ -1557,7 +1655,7 @@ int hc_mtlSetCommandEncoderArg (void *hashcat_ctx, mtl_command_encoder metal_com
   }
   else
   {
-    if (off < 0)
+    if (off < 0 || off > SIZE_MAX)
     {
       event_log_error (hashcat_ctx, "%s(): invalid buf off", __func__);
 
@@ -1764,13 +1862,17 @@ int hc_mtlCreateLibraryWithSource (void *hashcat_ctx, mtl_device_id metal_device
 */
     id<MTLLibrary> metal_library_tmp = [metal_device newLibraryWithSource: k_string options: compileOptions error: &error];
 
+    #if !__has_feature(objc_arc)
     [compileOptions release];
+    #endif
 
     compileOptions = nil;
 
     if (build_options_dict != nil)
     {
+      #if !__has_feature(objc_arc)
       [build_options_dict release];
+      #endif
 
       build_options_dict = nil;
     }

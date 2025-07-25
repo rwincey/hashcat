@@ -9126,7 +9126,7 @@ void backend_ctx_devices_destroy (hashcat_ctx_t *hashcat_ctx)
     {
       if (device_param->metal_command_queue)
       {
-        hc_mtlReleaseCommandQueue (hashcat_ctx, device_param->metal_command_queue);
+        hc_mtlReleaseCommandQueue (hashcat_ctx, &device_param->metal_command_queue);
 
         device_param->metal_command_queue = NULL;
       }
@@ -12340,26 +12340,26 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_opencl == true)
     {
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s1_a)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s1_b)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s1_c)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s1_d)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s2_a)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s2_b)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s2_c)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   bitmap_ctx->bitmap_size, NULL, &device_param->opencl_d_bitmap_s2_d)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_plains,             NULL, &device_param->opencl_d_plain_bufs)     == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_digests,            NULL, &device_param->opencl_d_digests_buf)    == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_shown,              NULL, &device_param->opencl_d_digests_shown)  == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_salts,              NULL, &device_param->opencl_d_salt_bufs)      == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_results,            NULL, &device_param->opencl_d_result)         == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_extra_buffer1,      NULL, &device_param->opencl_d_extra0_buf)     == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_extra_buffer2,      NULL, &device_param->opencl_d_extra1_buf)     == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_extra_buffer3,      NULL, &device_param->opencl_d_extra2_buf)     == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_extra_buffer4,      NULL, &device_param->opencl_d_extra3_buf)     == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_st_digests,         NULL, &device_param->opencl_d_st_digests_buf) == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_st_salts,           NULL, &device_param->opencl_d_st_salts_buf)   == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_kernel_params,      NULL, &device_param->opencl_d_kernel_param)   == -1) return -1;
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s1_a);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s1_b);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s1_c);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s1_d);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s2_a);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s2_b);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s2_c);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, bitmap_ctx->bitmap_size, NULL, bitmap_s2_d);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_plains,             NULL, plain_bufs);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_digests,            NULL, digests_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_shown,              NULL, digests_shown);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_salts,              NULL, salt_bufs);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_results,            NULL, result);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_extra_buffer1,      NULL, extra0_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_extra_buffer2,      NULL, extra1_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_extra_buffer3,      NULL, extra2_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_extra_buffer4,      NULL, extra3_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_st_digests,         NULL, st_digests_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_st_salts,           NULL, st_salts_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_kernel_params,      NULL, kernel_param);
 
       if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_bitmap_s1_a, CL_TRUE, 0, bitmap_ctx->bitmap_size, bitmap_ctx->bitmap_s1_a, 0, NULL, NULL) == -1) return -1;
       if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_bitmap_s1_b, CL_TRUE, 0, bitmap_ctx->bitmap_size, bitmap_ctx->bitmap_s1_b, 0, NULL, NULL) == -1) return -1;
@@ -12370,7 +12370,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_bitmap_s2_c, CL_TRUE, 0, bitmap_ctx->bitmap_size, bitmap_ctx->bitmap_s2_c, 0, NULL, NULL) == -1) return -1;
       if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_bitmap_s2_d, CL_TRUE, 0, bitmap_ctx->bitmap_size, bitmap_ctx->bitmap_s2_d, 0, NULL, NULL) == -1) return -1;
       if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_digests_buf, CL_TRUE, 0, size_digests,            hashes->digests_buf,     0, NULL, NULL) == -1) return -1;
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_salt_bufs,   CL_FALSE, 0, size_salts,              hashes->salts_buf,       0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_salt_bufs,   CL_TRUE, 0, size_salts,              hashes->salts_buf,       0, NULL, NULL) == -1) return -1;
 
       /**
        * special buffers
@@ -12378,51 +12378,51 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
       if (user_options->slow_candidates == true)
       {
-        if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_rules_c, NULL, &device_param->opencl_d_rules_c)   == -1) return -1;
+        HC_OCL_CREATEBUFFER(hashcat_ctx, size_rules_c,          NULL, rules_c);
       }
       else
       {
         if (user_options_extra->attack_kern == ATTACK_KERN_STRAIGHT)
         {
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_rules,   NULL, &device_param->opencl_d_rules)   == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_rules_c, NULL, &device_param->opencl_d_rules_c) == -1) return -1;
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_rules,          NULL, rules);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_rules_c,        NULL, rules_c);
 
-          if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_rules, CL_TRUE, 0, size_rules_src, straight_ctx->kernel_rules_buf, 0, NULL, NULL) == -1) return -1;
+          if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_rules,   CL_TRUE, 0, size_rules_src, straight_ctx->kernel_rules_buf, 0, NULL, NULL) == -1) return -1;
         }
         else if (user_options_extra->attack_kern == ATTACK_KERN_COMBI)
         {
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_combs,      NULL, &device_param->opencl_d_combs)          == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_combs,      NULL, &device_param->opencl_d_combs_c)        == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_root_css,   NULL, &device_param->opencl_d_root_css_buf)   == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_markov_css, NULL, &device_param->opencl_d_markov_css_buf) == -1) return -1;
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_combs,          NULL, combs);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_combs,          NULL, combs_c);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_root_css,       NULL, root_css_buf);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_markov_css,     NULL, markov_css_buf);
         }
         else if (user_options_extra->attack_kern == ATTACK_KERN_BF)
         {
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_bfs,        NULL, &device_param->opencl_d_bfs)            == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_bfs,        NULL, &device_param->opencl_d_bfs_c)          == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_tm,         NULL, &device_param->opencl_d_tm_c)           == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_root_css,   NULL, &device_param->opencl_d_root_css_buf)   == -1) return -1;
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_markov_css, NULL, &device_param->opencl_d_markov_css_buf) == -1) return -1;
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_bfs,            NULL, bfs);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_bfs,            NULL, bfs_c);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_tm,             NULL, tm_c);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_root_css,       NULL, root_css_buf);
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_markov_css,     NULL, markov_css_buf);
         }
       }
 
       if (size_esalts)
       {
-        if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_esalts, NULL, &device_param->opencl_d_esalt_bufs) == -1) return -1;
+        HC_OCL_CREATEBUFFER(hashcat_ctx, size_esalts,           NULL, esalt_bufs);
 
-        if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_esalt_bufs, CL_TRUE, 0, size_esalts, hashes->esalts_buf, 0, NULL, NULL) == -1) return -1;
+        if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_esalt_bufs,      CL_TRUE, 0, size_esalts,     hashes->esalts_buf,      0, NULL, NULL) == -1) return -1;
       }
 
       if (hashconfig->st_hash != NULL)
       {
-        if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_st_digests_buf,  CL_FALSE, 0, size_st_digests,         hashes->st_digests_buf,  0, NULL, NULL) == -1) return -1;
-        if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_st_salts_buf,    CL_FALSE, 0, size_st_salts,           hashes->st_salts_buf,    0, NULL, NULL) == -1) return -1;
+        if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_st_digests_buf,  CL_TRUE, 0, size_st_digests, hashes->st_digests_buf,  0, NULL, NULL) == -1) return -1;
+        if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_st_salts_buf,    CL_TRUE, 0, size_st_salts,   hashes->st_salts_buf,    0, NULL, NULL) == -1) return -1;
 
         if (size_esalts)
         {
-          if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY, size_st_esalts, NULL, &device_param->opencl_d_st_esalts_buf) == -1) return -1;
+          HC_OCL_CREATEBUFFER(hashcat_ctx, size_st_esalts,      NULL, st_esalts_buf);
 
-          if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_st_esalts_buf, CL_TRUE, 0, size_st_esalts, hashes->st_esalts_buf, 0, NULL, NULL) == -1) return -1;
+          if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_st_esalts_buf, CL_TRUE, 0, size_st_esalts,  hashes->st_esalts_buf,   0, NULL, NULL) == -1) return -1;
         }
       }
 
@@ -16680,12 +16680,12 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_opencl == true)
     {
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_pws,      NULL, &device_param->opencl_d_pws_buf)      == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_pws_amp,  NULL, &device_param->opencl_d_pws_amp_buf)  == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_pws_comp, NULL, &device_param->opencl_d_pws_comp_buf) == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_ONLY,   size_pws_idx,  NULL, &device_param->opencl_d_pws_idx)      == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_tmps,     NULL, &device_param->opencl_d_tmps)         == -1) return -1;
-      if (hc_clCreateBuffer (hashcat_ctx, device_param->opencl_context, CL_MEM_READ_WRITE,  size_hooks,    NULL, &device_param->opencl_d_hooks)        == -1) return -1;
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_pws,      NULL, pws_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_pws_amp,  NULL, pws_amp_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_pws_comp, NULL, pws_comp_buf);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_pws_idx,  NULL, pws_idx);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_tmps,     NULL, tmps);
+      HC_OCL_CREATEBUFFER(hashcat_ctx, size_hooks,    NULL, hooks);
 
       if (run_opencl_kernel_bzero (hashcat_ctx, device_param, device_param->opencl_d_pws_buf,       device_param->size_pws)      == -1) return -1;
       if (run_opencl_kernel_bzero (hashcat_ctx, device_param, device_param->opencl_d_pws_amp_buf,   device_param->size_pws_amp)  == -1) return -1;

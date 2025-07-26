@@ -75,9 +75,9 @@ typedef struct bcrypt_tmp
 
 typedef struct hmac_b64_salt
 {
-  u32 string_salt[6];
-  u32 string_salt_char_len;
-  u32 string_salt_word_len;
+  u32 string_salt_buf[16];
+  u32 string_salt_len;
+
 } hmac_b64_salt_t;
 
 // http://www.schneier.com/code/constants.txt
@@ -502,28 +502,11 @@ KERNEL_FQ KERNEL_FA void m30601_init (KERN_ATTR_TMPS_ESALT (bcrypt_tmp_t, hmac_b
 
   if (gid >= GID_CNT) return;
 
-  u32 pw[64] = { 0 };
-  const u32 pw_len = pws[gid].pw_len;
-
-  for (u32 i = 0, idx = 0; i < pw_len; i += 4, idx += 1)
-  {
-    pw[idx] = hc_swap32_S (pws[gid].i[idx]);
-  }
-
-  const u32 string_salt_len = esalt_bufs[DIGESTS_OFFSET_HOST].string_salt_word_len;
-
-  u32 s[8] = { 0 };
-
-  for (u32 i = 0, idx = 0; i < esalt_bufs[DIGESTS_OFFSET_HOST].string_salt_char_len; i += 4, idx += 1)
-  {
-    s[idx] = hc_swap32_S (esalt_bufs[DIGESTS_OFFSET_HOST].string_salt[idx]);
-  }
-
   sha256_hmac_ctx_t ctx0;
 
-  sha256_hmac_init (&ctx0, s, string_salt_len);
+  sha256_hmac_init_global_swap (&ctx0, esalt_bufs[DIGESTS_OFFSET_HOST].string_salt_buf, esalt_bufs[DIGESTS_OFFSET_HOST].string_salt_len);
 
-  sha256_hmac_update (&ctx0, pw, pw_len);
+  sha256_hmac_update_global_swap (&ctx0, pws[gid].i, pws[gid].pw_len);
 
   sha256_hmac_final (&ctx0);
 

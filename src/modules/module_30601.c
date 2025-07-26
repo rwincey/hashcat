@@ -63,19 +63,19 @@ typedef struct bcrypt_tmp
 
 } bcrypt_tmp_t;
 
+typedef struct hmac_b64_salt
+{
+  u32 string_salt_buf[16];
+  u32 string_salt_len;
+
+} hmac_b64_salt_t;
+
 u64 module_tmp_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const u64 tmp_size = (const u64) sizeof (bcrypt_tmp_t);
 
   return tmp_size;
 }
-
-typedef struct hmac_b64_salt
-{
-  u32 string_salt[6];
-  u32 string_salt_char_len;
-  u32 string_salt_word_len;
-} hmac_b64_salt_t;
 
 u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
@@ -230,12 +230,9 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   const int hash_len = token.len[3];
 
   // Parse salt for hmac sha256
-  bool parse_rc = false;
-  esalt->string_salt_char_len  = salt_len;
-  parse_rc = generic_salt_decode (hashconfig, salt_pos, salt_len, (u8 *) esalt->string_salt, (int *) &esalt->string_salt_char_len);
-  if (parse_rc == false) return (PARSER_SALT_LENGTH);
+  bool parse_rc = generic_salt_decode (hashconfig, salt_pos, salt_len, (u8 *) esalt->string_salt_buf, (int *) &esalt->string_salt_len);
 
-  esalt->string_salt_word_len = 6;
+  if (parse_rc == false) return (PARSER_SALT_LENGTH);
 
   // Parse salt for bcrypt
   salt->salt_len  = 16;

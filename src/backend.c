@@ -11777,6 +11777,13 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
             device_param->kernel_threads_min = fixed_local_size;
             device_param->kernel_threads_max = fixed_local_size;
           }
+          else if (sscanf (jit_build_options, "-D FORCED_THREAD_COUNT=%u", &fixed_local_size) == 1)
+          {
+            // FORCED_THREAD_COUNT is the same as FIXED_LOCAL_SIZE, but has no impact on the kernel jit
+
+            device_param->kernel_threads_min = fixed_local_size;
+            device_param->kernel_threads_max = fixed_local_size;
+          }
           else
           {
             // kernels specific minimum needs to be set so that self-test wont fail

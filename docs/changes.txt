@@ -185,8 +185,10 @@
 - Backend: Splitting backend_ctx_devices_init into smaller runtime-specific functions
 - Backend: Updated OpenCL/CUDA/HIP/Metal API's
 - Backend: Updated filename chksum format to prevent invalid cache on Apple Silicon when switching arch
+- Backend: Updated references of hcmalloc_aligned and hcfree_aligned to the new memory defined functions
 - Benchmark: Updated benchmark_deep.pl with OS detection, Apple cache cleaning way and other minor changes
 - Brain: Added sanity check and corresponding error message for invalid --brain-port values
+- Bridge: Updated references of hcmalloc_aligned and hcfree_aligned to the new memory defined functions
 - Building: Support building windows binaries on macOS using MinGW
 - Debug: Added -g to build_options if DEBUG >= 1 (only with HIP and OpenCL)
 - Dependencies: Added sse2neon v1.8.0 (commit 658eeac)
@@ -206,6 +208,9 @@
 - Makefile: prevent make failure with Apple Silicon in case of partial rebuild
 - Makefile: updated MACOSX_DEPLOYMENT_TARGET to 15.0
 - MetaMask: update extraction tool to support MetaMask Mobile wallets
+- Memory: added hc_alloc_aligned and hc_free_aligned
+- Memory: renamed hcmalloc_aligned and hcfree_aligned to hcmalloc_bridge_aligned and hcfree_bridge_aligned
+- Metal Backend: Added hc_mtlFinish
 - Metal Backend: added support to 2D/3D Compute
 - Metal Backend: added workaround to prevent 'Infinite Loop' bug when build kernels
 - Metal Backend: added workaround to set the true Processor value in Metal devices on Apple Intel
@@ -216,6 +221,7 @@
 - Metal Backend: improved memory management
 - Metal Backend: fixed memory leaks
 - Metal Backend: parallelize pipeline state object (PSO) compilation internally
+- Metal Backend: Updated hc_mtlCreateBuffer
 - Modules: Added OPTS_TYPE_PT_BASE58 in 28501 28502 28503 28504 28505 28506 30901 30902 30903 30904 30905 30906
 - Modules: Added module_unstable_warning for 22500, update module_unstable_warning for 10700
 - Modules: Added support for non-zero IVs for -m 6800 (Lastpass). Also added `tools/lastpass2hashcat.py`
@@ -223,6 +229,7 @@
 - Modules: Updated module_unstable_warning
 - Open Document Format: Added support for small documents with content length < 1024
 - OpenCL Backend: added workaround to set device_available_memory from CUDA/HIP alias device
+- OpenCL Backend: Added hc_clCreateBuffer wrapper: hc_clCreateBuffer_pre
 - OpenCL Backend: using CL_TRUE with all hc_clEnqueueWriteBuffer() call
 - OpenCL Backend: using HC_OCL_CREATEBUFFER macro for buffer allocation and openclMemoryFlags array to configure the memory flags
 - Rules: Add support to character class rules

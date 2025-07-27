@@ -226,6 +226,8 @@ int  hc_mtlSetCommandEncoderArg             (void *hashcat_ctx, mtl_command_enco
 
 int  hc_mtlEncodeComputeCommand             (void *hashcat_ctx, mtl_command_encoder metal_command_encoder, mtl_command_buffer metal_command_buffer, const unsigned int work_dim, const size_t global_work_size[3], const size_t local_work_size[3], double *ms);
 
+int  hc_mtlFinish                           (void *hashcat_ctx, mtl_command_queue command_queue);
+
 #endif // __APPLE__
 
 #endif // HC_EXT_METAL_H

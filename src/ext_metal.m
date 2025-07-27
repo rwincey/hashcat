@@ -936,18 +936,27 @@ int hc_mtlCreateBuffer (void *hashcat_ctx, mtl_device_id metal_device, size_t si
     // we are on Apple Silicon, nothing to do ;)
   }
 
-  if (ptr == NULL)
+  if (ptr != NULL)
   {
-    mem->buf_ptr = [metal_device newBufferWithLength: size options: bufferOptions];
+    if (bufferOptions != MTLResourceStorageModeShared)
+    {
+      event_log_error (hashcat_ctx, "%s(): bufferOptions must be Shared when using unified memory", __func__);
+
+      return -1;
+    }
+
+    // using unified memory
+
+    mem->buf_ptr = [metal_device newBufferWithBytesNoCopy: ptr length: size options: bufferOptions deallocator: nil];
   }
   else
   {
-    mem->buf_ptr = [metal_device newBufferWithBytes: ptr length: size options: bufferOptions];
+    mem->buf_ptr = [metal_device newBufferWithLength: size options: bufferOptions];
   }
 
   if (mem->buf_ptr == nil)
   {
-    event_log_error (hashcat_ctx, "%s(): %s failed (size: %zu)", __func__, (ptr == NULL) ? "newBufferWithLength" : "newBufferWithBytes", size);
+    event_log_error (hashcat_ctx, "%s(): %s failed (size: %zu)", __func__, (ptr == NULL) ? "newBufferWithLength" : "newBufferWithBytesNoCopy", size);
 
     return -1;
   }
@@ -1637,6 +1646,7 @@ int hc_mtlSetCommandEncoderArg (void *hashcat_ctx, mtl_command_encoder metal_com
   }
 
   // host_data can be objective-c object (so use nil) or C pointer (so use NULL)
+
   if (mem == nil && host_data == nil)
   {
     event_log_error (hashcat_ctx, "%s(): invalid mem/host_data", __func__);
@@ -1730,6 +1740,7 @@ int hc_mtlEncodeComputeCommand (void *hashcat_ctx, mtl_command_encoder metal_com
   }];
 
   [metal_command_buffer commit];
+
   [metal_command_buffer waitUntilCompleted];
 
   return 0;
@@ -1890,4 +1901,29 @@ int hc_mtlCreateLibraryWithSource (void *hashcat_ctx, mtl_device_id metal_device
   }
 
   return -1;
+}
+
+int hc_mtlFinish (void *hashcat_ctx, mtl_command_queue command_queue)
+{
+  if (command_queue == nil)
+  {
+    event_log_error (hashcat_ctx, "%s(): metal command queue is invalid", __func__);
+
+    return -1;
+  }
+
+  id<MTLCommandBuffer> command_buffer = [command_queue commandBuffer];
+
+  if (command_buffer == nil)
+  {
+    event_log_error (hashcat_ctx, "%s(): failed to create a new command buffer", __func__);
+
+    return -1;
+  }
+
+  [command_buffer commit];
+
+  [command_buffer waitUntilCompleted];
+
+  return 0;
 }

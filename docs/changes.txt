@@ -183,6 +183,7 @@
 - Backend Info: Added --machine-readable format
 - Backend: Added workaround to get rid of internal runtimes memory leaks
 - Backend: Splitting backend_ctx_devices_init into smaller runtime-specific functions
+- Backend: Splitting backend_session_begin into smaller runtime-specific functions
 - Backend: Updated OpenCL/CUDA/HIP/Metal API's
 - Backend: Updated filename chksum format to prevent invalid cache on Apple Silicon when switching arch
 - Brain: Added sanity check and corresponding error message for invalid --brain-port values

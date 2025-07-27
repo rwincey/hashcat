@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use Math::BigInt;
 
-sub module_constraints { [[0, 256], [-1, -1], [0, 32], [-1, -1], [0, 32]] }
+sub module_constraints { [[0, 256], [-1, -1], [0, 64], [-1, -1], [-1, -1]] }
 
 my $u64_width = Math::BigInt->new ("0x10000000000000000"); # 2**64
 

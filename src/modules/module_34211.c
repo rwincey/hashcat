@@ -49,7 +49,7 @@ u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED con
 {
   const bool optimized_kernel = (hashconfig->opti_type & OPTI_TYPE_OPTIMIZED_KERNEL);
 
-  const u32 pw_max = (optimized_kernel == true) ? 32 : PW_MAX;
+  const u32 pw_max = (optimized_kernel == true) ? 64 : PW_MAX;
 
   return pw_max;
 }

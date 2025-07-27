@@ -80,7 +80,7 @@ void *hc_alloc_aligned (size_t alignment, size_t size)
     return NULL;
   }
 
-  #elif defined(_WIN32)
+  #elif defined(_WIN)
 
   ptr = _aligned_malloc (size, alignment);
 
@@ -106,7 +106,7 @@ void hc_free_aligned (void **ptr)
 {
   if (ptr == NULL || *ptr == NULL) return;
 
-  #if defined(_WIN32)
+  #if defined(_WIN)
 
   _aligned_free (*ptr);
 

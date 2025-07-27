@@ -5156,20 +5156,31 @@ int backend_ctx_init (hashcat_ctx_t *hashcat_ctx)
       event_log_warning (hashcat_ctx, "You are probably missing the CUDA, HIP or OpenCL runtime installation.");
       event_log_warning (hashcat_ctx, NULL);
 
-      #if defined (__linux__)
-      event_log_warning (hashcat_ctx, "* AMD GPUs on Linux require this driver:");
-      event_log_warning (hashcat_ctx, "  \"AMDGPU\" (21.50 or later) and \"ROCm\" (5.0 or later)");
-      #elif defined (_WIN)
-      event_log_warning (hashcat_ctx, "* AMD GPUs on Windows require this driver:");
-      event_log_warning (hashcat_ctx, "  \"AMD Adrenalin Edition\" (23.7.2 or later) and \"AMD HIP SDK\" (23.Q3 or later)");
+      #if defined (__APPLE__)
+      event_log_error (hashcat_ctx, "ATTENTION! No OpenCL, Metal, HIP or CUDA compatible platform found.");
+      #else
+      event_log_error (hashcat_ctx, "ATTENTION! No OpenCL, HIP or CUDA compatible platform found.");
       #endif
 
-      event_log_warning (hashcat_ctx, "* Intel CPUs require this runtime:");
-      event_log_warning (hashcat_ctx, "  \"OpenCL Runtime for Intel Core and Intel Xeon Processors\" (16.1.1 or later)");
+      event_log_warning (hashcat_ctx, "You are probably missing the OpenCL, CUDA or HIP runtime installation.");
+      event_log_warning (hashcat_ctx, NULL);
 
-      event_log_warning (hashcat_ctx, "* NVIDIA GPUs require this runtime and/or driver (both):");
-      event_log_warning (hashcat_ctx, "  \"NVIDIA Driver\" (440.64 or later)");
-      event_log_warning (hashcat_ctx, "  \"CUDA Toolkit\" (9.0 or later)");
+      #if defined (__linux__)
+      event_log_warning (hashcat_ctx, "* AMD GPUs on Linux require this driver:");
+      event_log_warning (hashcat_ctx, "  \"AMD Radeon Software for Linux\" with \"ROCm\"");
+      #elif defined (_WIN)
+      event_log_warning (hashcat_ctx, "* AMD GPUs on Windows require this driver:");
+      event_log_warning (hashcat_ctx, "  \"AMD Adrenalin Edition\" and \"AMD HIP SDK\"");
+      #endif
+
+      event_log_warning (hashcat_ctx, "* Intel and AMD CPUs require this runtime:");
+      event_log_warning (hashcat_ctx, "  \"Intel CPU Runtime for OpenCL\" or PoCL");
+
+      event_log_warning (hashcat_ctx, "* Intel GPUs require this driver:");
+      event_log_warning (hashcat_ctx, "  \"Intel Graphics Compute Runtime\" aka NEO");
+
+      event_log_warning (hashcat_ctx, "* NVIDIA GPUs require this runtime and driver:");
+      event_log_warning (hashcat_ctx, "  \"NVIDIA CUDA Toolkit\" (both runtime and driver included)");
       event_log_warning (hashcat_ctx, NULL);
 
       return -1;
@@ -5509,18 +5520,20 @@ int backend_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
     #if defined (__linux__)
     event_log_warning (hashcat_ctx, "* AMD GPUs on Linux require this driver:");
-    event_log_warning (hashcat_ctx, "  \"AMDGPU\" (21.50 or later) and \"ROCm\" (5.0 or later)");
+    event_log_warning (hashcat_ctx, "  \"AMD Radeon Software for Linux\" with \"ROCm\"");
     #elif defined (_WIN)
     event_log_warning (hashcat_ctx, "* AMD GPUs on Windows require this driver:");
-    event_log_warning (hashcat_ctx, "  \"AMD Adrenalin Edition\" (23.7.2 or later) and \"AMD HIP SDK\" (23.Q3 or later)");
+    event_log_warning (hashcat_ctx, "  \"AMD Adrenalin Edition\" and \"AMD HIP SDK\"");
     #endif
 
-    event_log_warning (hashcat_ctx, "* Intel CPUs require this runtime:");
-    event_log_warning (hashcat_ctx, "  \"OpenCL Runtime for Intel Core and Intel Xeon Processors\" (16.1.1 or later)");
+    event_log_warning (hashcat_ctx, "* Intel and AMD CPUs require this runtime:");
+    event_log_warning (hashcat_ctx, "  \"Intel CPU Runtime for OpenCL\" or PoCL");
 
-    event_log_warning (hashcat_ctx, "* NVIDIA GPUs require this runtime and/or driver (both):");
-    event_log_warning (hashcat_ctx, "  \"NVIDIA Driver\" (440.64 or later)");
-    event_log_warning (hashcat_ctx, "  \"CUDA Toolkit\" (9.0 or later)");
+    event_log_warning (hashcat_ctx, "* Intel GPUs require this driver:");
+    event_log_warning (hashcat_ctx, "  \"Intel Graphics Compute Runtime\" aka NEO");
+
+    event_log_warning (hashcat_ctx, "* NVIDIA GPUs require this runtime and driver:");
+    event_log_warning (hashcat_ctx, "  \"NVIDIA CUDA Toolkit\" (both runtime and driver included)");
     event_log_warning (hashcat_ctx, NULL);
 
     hcfree (backend_ctx->devices_param);
@@ -5950,15 +5963,17 @@ static void backend_ctx_devices_init_cuda (hashcat_ctx_t *hashcat_ctx, int *virt
             }
           }
 
-          if (device_param->kernel_exec_timeout != 0)
-          {
-            if ((user_options->quiet == false) && (is_virtualized == false))
-            {
-              event_log_advice (hashcat_ctx, "* Device #%u: WARNING! Kernel exec timeout is not disabled.", device_id + 1);
-              event_log_advice (hashcat_ctx, "             This may cause \"CL_OUT_OF_RESOURCES\" or related errors.");
-              event_log_advice (hashcat_ctx, "             To disable the timeout, see: https://hashcat.net/q/timeoutpatch");
-            }
-          }
+          // v7: all our kernels should stay within watchdog range, this is no longer mandatory
+
+          // if (device_param->kernel_exec_timeout != 0)
+          // {
+          //   if ((user_options->quiet == false) && (is_virtualized == false))
+          //   {
+          //     event_log_advice (hashcat_ctx, "* Device #%u: WARNING! Kernel exec timeout is not disabled.", device_id + 1);
+          //     event_log_advice (hashcat_ctx, "             This may cause \"CL_OUT_OF_RESOURCES\" or related errors.");
+          //     event_log_advice (hashcat_ctx, "             To disable the timeout, see: https://hashcat.net/q/timeoutpatch");
+          //   }
+          // }
         }
 
         // activate device moved below, at end
@@ -6454,15 +6469,15 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
             }
           }
 
-          if (device_param->kernel_exec_timeout != 0)
-          {
-            if ((user_options->quiet == false) && (is_virtualized == false))
-            {
-              event_log_advice (hashcat_ctx, "* Device #%u: WARNING! Kernel exec timeout is not disabled.", device_id + 1);
-              event_log_advice (hashcat_ctx, "             This may cause \"CL_OUT_OF_RESOURCES\" or related errors.");
-              event_log_advice (hashcat_ctx, "             To disable the timeout, see: https://hashcat.net/q/timeoutpatch");
-            }
-          }
+          // if (device_param->kernel_exec_timeout != 0)
+          // {
+          //   if ((user_options->quiet == false) && (is_virtualized == false))
+          //   {
+          //     event_log_advice (hashcat_ctx, "* Device #%u: WARNING! Kernel exec timeout is not disabled.", device_id + 1);
+          //     event_log_advice (hashcat_ctx, "             This may cause \"CL_OUT_OF_RESOURCES\" or related errors.");
+          //     event_log_advice (hashcat_ctx, "             To disable the timeout, see: https://hashcat.net/q/timeoutpatch");
+          //   }
+          // }
         }
 
         // activate device moved below, at end
@@ -7625,38 +7640,25 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
         if (opencl_platform_vendor_id == VENDOR_ID_POCL)
         {
-          char *pocl_version_ptr = strstr (opencl_platform_version, "pocl ");
+          bool pocl_skip = false;
+
+          char *pocl_version_ptr = strstr (opencl_platform_version, "PoCL ");
           char *llvm_version_ptr = strstr (opencl_platform_version, "LLVM ");
 
           if ((pocl_version_ptr != NULL) && (llvm_version_ptr != NULL))
           {
-            bool pocl_skip = false;
-
             int pocl_maj = 0;
             int pocl_min = 0;
 
-            int pocl_bug_whitespace_on_path = 0;
-            int pocl_bug_kernel_compiling_failure = 0;
-
-            const int res1 = sscanf (pocl_version_ptr, "pocl %d.%d", &pocl_maj, &pocl_min);
+            const int res1 = sscanf (pocl_version_ptr, "PoCL %d.%d", &pocl_maj, &pocl_min);
 
             if (res1 == 2)
             {
               const int pocl_version = (pocl_maj * 100) + pocl_min;
 
-              if (pocl_version < 109)
+              if (pocl_version < 500)
               {
-                if (strchr (folder_config->cpath_real, ' ') != NULL)
-                {
-                  pocl_skip = true;
-                  pocl_bug_whitespace_on_path = 1;
-                }
-
-                if (pocl_version < 105)
-                {
-                  pocl_skip = true;
-                  pocl_bug_kernel_compiling_failure = 1;
-                }
+                pocl_skip = true;
               }
             }
 
@@ -7669,37 +7671,30 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
             {
               const int llvm_version = (llvm_maj * 100) + llvm_min;
 
-              if (llvm_version < 900)
+              if (llvm_version < 1000)
               {
                 pocl_skip = true;
               }
             }
+          }
+          else
+          {
+            pocl_skip = true;
+          }
 
-            if (pocl_skip == true)
+          if (pocl_skip == true)
+          {
+            if (user_options->force == false)
             {
-              if (user_options->force == false)
+              event_log_error (hashcat_ctx, "* Device #%u: Outdated PoCL OpenCL runtime detected!", device_id + 1);
+
+              if (user_options->quiet == false)
               {
-                event_log_error (hashcat_ctx, "* Device #%u: Outdated POCL OpenCL driver detected!", device_id + 1);
-
-                if (user_options->quiet == false)
-                {
-                  if (pocl_bug_kernel_compiling_failure == 1)
-                  {
-                    event_log_warning (hashcat_ctx, "This OpenCL driver may fail kernel compilation or produce false negatives.");
-                  }
-
-                  if (pocl_bug_whitespace_on_path == 1)
-                  {
-                    event_log_warning (hashcat_ctx, "Consider moving hashcat to a path with no spaces if you want to use this POCL version.");
-                  }
-
-                  event_log_warning (hashcat_ctx, "We recommend using a version of POCL >= 1.9");
-                  event_log_warning (hashcat_ctx, "You can use --force to override, but do not report related errors.");
-                  event_log_warning (hashcat_ctx, NULL);
-                }
-
-                device_param->skipped = true;
+                event_log_warning (hashcat_ctx, "You can use --force to override, but do not report related errors.");
+                event_log_warning (hashcat_ctx, NULL);
               }
+
+              device_param->skipped = true;
             }
           }
         }
@@ -8189,14 +8184,12 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
         {
           if ((user_options->force == false) && (user_options->backend_info == 0))
           {
+            bool warn_and_skip = false;
+
             if (opencl_device_type & CL_DEVICE_TYPE_CPU)
             {
               if (device_param->opencl_platform_vendor_id == VENDOR_ID_INTEL_SDK)
               {
-                bool intel_warn = false;
-
-                // Intel OpenCL runtime 18
-
                 int opencl_driver1 = 0;
                 int opencl_driver2 = 0;
                 int opencl_driver3 = 0;
@@ -8206,36 +8199,11 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
                 if (res18 == 4)
                 {
-                  // so far all versions 18 are ok
+                  if (opencl_driver1 < 2020) warn_and_skip = true;
                 }
                 else
                 {
-                  // Intel OpenCL runtime 16
-
-                  float opencl_version = 0;
-                  int   opencl_build   = 0;
-
-                  const int res16 = sscanf (device_param->opencl_device_version, "OpenCL %f (Build %d)", &opencl_version, &opencl_build);
-
-                  if (res16 == 2)
-                  {
-                    if (opencl_build < 25) intel_warn = true;
-                  }
-                }
-
-                if (intel_warn == true)
-                {
-                  event_log_error (hashcat_ctx, "* Device #%u: Outdated or broken Intel OpenCL runtime '%s' detected!", device_id + 1, device_param->opencl_driver_version);
-
-                  event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported runtime.");
-                  event_log_warning (hashcat_ctx, "See hashcat.net for the officially supported Intel OpenCL runtime.");
-                  event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
-                  event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
-                  event_log_warning (hashcat_ctx, NULL);
-
-                  device_param->skipped = true;
-
-                  continue;
+                  warn_and_skip = true;
                 }
               }
             }
@@ -8243,46 +8211,23 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
             {
               if (device_param->opencl_platform_vendor_id == VENDOR_ID_AMD)
               {
-                bool amd_warn = true;
+                int opencl_driver1 = 0;
+                int opencl_driver2 = 0;
 
-                #if defined (__linux__)
-                // AMDGPU-PRO Driver 16.40 and higher
-                if (strtoul (device_param->opencl_driver_version, NULL, 10) >= 2117) amd_warn = false;
-                // AMDGPU-PRO Driver 16.50 is known to be broken
-                if (strtoul (device_param->opencl_driver_version, NULL, 10) == 2236) amd_warn = true;
-                // AMDGPU-PRO Driver 16.60 is known to be broken
-                if (strtoul (device_param->opencl_driver_version, NULL, 10) == 2264) amd_warn = true;
-                // AMDGPU-PRO Driver 17.10 is known to be broken
-                if (strtoul (device_param->opencl_driver_version, NULL, 10) == 2348) amd_warn = true;
-                // AMDGPU-PRO Driver 17.20 (2416) is fine, doesn't need check will match >= 2117
-                #elif defined (_WIN)
-                // AMD Radeon Software 14.9 and higher, should be updated to 15.12
-                if (strtoul (device_param->opencl_driver_version, NULL, 10) >= 1573) amd_warn = false;
-                #else
-                // we have no information about other os
-                if (amd_warn == true) amd_warn = false;
-                #endif
+                const int res18 = sscanf (device_param->opencl_driver_version, "%d.%d", &opencl_driver1, &opencl_driver2);
 
-                if (amd_warn == true)
+                if (res18 == 2)
                 {
-                  event_log_error (hashcat_ctx, "* Device #%u: Outdated or broken AMD driver '%s' detected!", device_id + 1, device_param->opencl_driver_version);
-
-                  event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported driver.");
-                  event_log_warning (hashcat_ctx, "See hashcat.net for officially supported AMD drivers.");
-                  event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
-                  event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
-                  event_log_warning (hashcat_ctx, NULL);
-
-                  device_param->skipped = true;
-
-                  continue;
+                  if (opencl_driver1 <  3000) warn_and_skip = true;
+                }
+                else
+                {
+                  warn_and_skip = true;
                 }
               }
 
               if (device_param->opencl_platform_vendor_id == VENDOR_ID_NV)
               {
-                int nv_warn = true;
-
                 int version_maj = 0;
                 int version_min = 0;
 
@@ -8290,43 +8235,11 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
 
                 if (r == 2)
                 {
-                  // nvidia 441.x looks ok
-
-                  if (version_maj == 440)
-                  {
-                    if (version_min >= 64)
-                    {
-                      nv_warn = false;
-                    }
-                  }
-                  else
-                  {
-                    // unknown version scheme, probably new driver version
-
-                    nv_warn = false;
-                  }
+                  if (version_maj < 500) warn_and_skip = true;
                 }
                 else
                 {
-                  // unknown version scheme, probably new driver version
-
-                  nv_warn = false;
-                }
-
-                if (nv_warn == true)
-                {
-                  event_log_warning (hashcat_ctx, "* Device #%u: Outdated or broken NVIDIA driver '%s' detected!", device_id + 1, device_param->opencl_driver_version);
-                  event_log_warning (hashcat_ctx, NULL);
-
-                  event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported driver.");
-                  event_log_warning (hashcat_ctx, "See hashcat's homepage for officially supported NVIDIA drivers.");
-                  event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
-                  event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
-                  event_log_warning (hashcat_ctx, NULL);
-
-                  device_param->skipped = true;
-
-                  continue;
+                  warn_and_skip = true;
                 }
 
                 if (device_param->sm_major < 5)
@@ -8339,15 +8252,15 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
                   }
                 }
 
-                if (device_param->kernel_exec_timeout != 0)
-                {
-                  if ((user_options->quiet == false) && (is_virtualized == false))
-                  {
-                    event_log_warning (hashcat_ctx, "* Device #%u: WARNING! Kernel exec timeout is not disabled.", device_id + 1);
-                    event_log_warning (hashcat_ctx, "             This may cause \"CL_OUT_OF_RESOURCES\" or related errors.");
-                    event_log_warning (hashcat_ctx, "             To disable the timeout, see: https://hashcat.net/q/timeoutpatch");
-                  }
-                }
+                // if (device_param->kernel_exec_timeout != 0)
+                // {
+                //   if ((user_options->quiet == false) && (is_virtualized == false))
+                //   {
+                //     event_log_warning (hashcat_ctx, "* Device #%u: WARNING! Kernel exec timeout is not disabled.", device_id + 1);
+                //     event_log_warning (hashcat_ctx, "             This may cause \"CL_OUT_OF_RESOURCES\" or related errors.");
+                //     event_log_warning (hashcat_ctx, "             To disable the timeout, see: https://hashcat.net/q/timeoutpatch");
+                //   }
+                // }
               }
 
               #if defined (__APPLE__)
@@ -8392,51 +8305,39 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
                     }
                     else
                     {
-                      event_log_error (hashcat_ctx, "* Device #%u: Outdated or broken Apple OpenCL driver '%s' detected!", device_id + 1, device_param->opencl_driver_version);
-
-                      event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported driver.");
-                      event_log_warning (hashcat_ctx, "See hashcat.net for officially supported Apple OpenCL drivers.");
-                      event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
-                      event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
-                      event_log_warning (hashcat_ctx, NULL);
-
-                      device_param->skipped = true;
-
-                      continue;
+                      warn_and_skip = true;
                     }
                   }
                   else
                   {
-                    event_log_error (hashcat_ctx, "* Device #%u: Outdated or broken Apple OpenCL driver '%s' detected!", device_id + 1, device_param->opencl_driver_version);
-
-                    event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported driver.");
-                    event_log_warning (hashcat_ctx, "See hashcat.net for officially supported Apple OpenCL drivers.");
-                    event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
-                    event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
-                    event_log_warning (hashcat_ctx, NULL);
-
-                    device_param->skipped = true;
-
-                    continue;
+                    warn_and_skip = true;
                   }
-
+                }
+                else
+                {
+                  warn_and_skip = true;
                 }
               }
               else
               {
-                event_log_error (hashcat_ctx, "* Device #%u: Outdated or broken Apple OpenCL driver '%s' detected!", device_id + 1, device_param->opencl_driver_version);
-
-                event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported driver.");
-                event_log_warning (hashcat_ctx, "See hashcat.net for officially supported Apple OpenCL drivers.");
-                event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
-                event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
-                event_log_warning (hashcat_ctx, NULL);
-
-                device_param->skipped = true;
-
-                continue;
+                warn_and_skip = true;
               }
               #endif // __APPLE__
+            }
+
+            if (warn_and_skip == true)
+            {
+              event_log_error (hashcat_ctx, "* Device #%u: Outdated or broken Intel OpenCL runtime '%s' detected!", device_id + 1, device_param->opencl_driver_version);
+
+              event_log_warning (hashcat_ctx, "You are STRONGLY encouraged to use the officially supported runtime.");
+              event_log_warning (hashcat_ctx, "See hashcat.net for the officially supported Intel OpenCL runtime.");
+              event_log_warning (hashcat_ctx, "See also: https://hashcat.net/faq/wrongdriver");
+              event_log_warning (hashcat_ctx, "You can use --force to override this, but do not report related errors.");
+              event_log_warning (hashcat_ctx, NULL);
+
+              device_param->skipped = true;
+
+              continue;
             }
           }
 

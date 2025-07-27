@@ -186,6 +186,7 @@
 - Backend: Updated OpenCL/CUDA/HIP/Metal API's
 - Backend: Updated filename chksum format to prevent invalid cache on Apple Silicon when switching arch
 - Backend: Updated references of hcmalloc_aligned and hcfree_aligned to the new memory defined functions
+- Benchmark: Updated benchmark_deep.pl with OS detection, Apple cache cleaning way and other minor changes
 - Brain: Added sanity check and corresponding error message for invalid --brain-port values
 - Bridge: Updated references of hcmalloc_aligned and hcfree_aligned to the new memory defined functions
 - Building: Support building windows binaries on macOS using MinGW

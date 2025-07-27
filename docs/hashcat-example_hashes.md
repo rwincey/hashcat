@@ -556,6 +556,9 @@ All manual changes will be overwritten!
 | `33800` | `WBB4 (Woltlab Burning Board) Plugin [bcrypt(bcrypt($pass))]` | `$2a$08$hashcatohohohohohohohegk6PN.SFkoXxDIkacAGKFN9AF8nx.Hi` |
 | `33900` | `Citrix NetScaler (PBKDF2-HMAC-SHA256)` | `5567243c55099b6b10a714a350db53beea8be6ac9c247fd40fea7e96d206a9f11fd1c45735556ac2004138640de206d0e1522607ab3c3f92816156d2d7845068e` |
 | `34000` | `Argon2` | `$argon2id$v=19$m=65536,t=3,p=1$FBMjI4RJBhIykCgol1KEJA$2ky5GAdhT1kH4kIgPN/oERE3Taiy43vNN70a3HpiKQU` |
+| `34200` | `MurmurHash64A` | `ef3014941bf1102d:837163b2348dfae1` |
+| `34201` | `MurmurHash64A (zero seed)` | `73f8142b4326d36a` |
+| `34211` | `MurmurHash64A truncated (zero seed)` | `73f8142b` |
 | `70000` | `argon2id [Bridged: reference implementation + tunings]` | `$argon2id$v=19$m=65536,t=3,p=1$FBMjI4RJBhIykCgol1KEJA$2ky5GAdhT1kH4kIgPN/oERE3Taiy43vNN70a3HpiKQU` |
 | `70100` | `scrypt [Bridged: Scrypt-Jane ROMix]` | `SCRYPT:16384:8:1:OTEyNzU0ODg=:Cc8SPjRH1hFQhuIPCdF51uNGtJ2aOY/isuoMlMUsJ8c=` |
 | `70200` | `scrypt [Bridged: Scrypt-Yescrypt]` | `SCRYPT:16384:8:1:OTEyNzU0ODg=:Cc8SPjRH1hFQhuIPCdF51uNGtJ2aOY/isuoMlMUsJ8c=` |

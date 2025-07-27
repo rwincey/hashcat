@@ -8,6 +8,11 @@
 use strict;
 use warnings;
 
+use File::Path qw(make_path);
+
+my $startTime        = time();
+my $workdir          = "test_benchmarkDeep_$startTime";
+
 my $nvidia_cache     = "~/.nv";
 my $amd_cache        = "~/.AMD";
 my $hashcat_path     = ".";
@@ -18,33 +23,60 @@ my $workload_profile = 3;
 my $runtime          = 11;
 my $sleep_sec        = 13;
 my $default_mask     = "?a?a?a?a?a?a?a";
-my $result           = "result.txt";
+my $result           = "$workdir/result.txt";
 my $old_hashcat      = 0; # requires to have ran with new hashcat before to create the hashfiles
 my $repeats          = 0;
 my $cpu_benchmark    = 0;
 
-print "\nHardware preparations... You may need to adjust some settings and probably can ignore some of the error\n\n";
-
-system ("echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor");
-
-if ($cpu_benchmark == 1)
+unless (-d $workdir)
 {
-  system ("sudo echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo"); ## for CPU benchmark Intel
-  system ("sudo echo 0 > /sys/devices/system/cpu/cpufreq/boost");         ## for CPU benchmark AMD
-}
-else
-{
-  #system ("rocm-smi --resetprofile --resetclocks --resetfans");
-  #system ("rocm-smi --setfan 100% --setperflevel high");
-
-  system ("nvidia-settings -a GPUPowerMizerMode=1 -a GPUFanControlState=1 -a GPUTargetFanSpeed=100");
+  make_path($workdir) or die "Unable to create '$workdir': $!";
 }
 
-print "\n\nStarting...\n\n";
+print "\n[$workdir] > Hardware preparations... You may need to adjust some settings and probably can ignore some of the error\n\n";
 
-system ("rm -rf $nvidia_cache");
-system ("rm -rf $amd_cache");
+if ($^O eq 'linux')
+{
+  system ("echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor");
+
+  if ($cpu_benchmark == 1)
+  {
+    system ("sudo echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo"); ## for CPU benchmark Intel
+    system ("sudo echo 0 > /sys/devices/system/cpu/cpufreq/boost");         ## for CPU benchmark AMD
+  }
+  else
+  {
+    #system ("rocm-smi --resetprofile --resetclocks --resetfans");
+    #system ("rocm-smi --setfan 100% --setperflevel high");
+
+    system ("nvidia-settings -a GPUPowerMizerMode=1 -a GPUFanControlState=1 -a GPUTargetFanSpeed=100");
+  }
+
+  system ("rm -rf $nvidia_cache");
+  system ("rm -rf $amd_cache");
+}
+elsif ($^O eq 'darwin')
+{
+  open(my $stderr_orig, '>&', STDERR) or die "Can't dup STDERR: $!";
+
+  open(STDERR, '>', '/dev/null') or die "Can't redirect STDERR: $!";
+
+  chomp(my $temp_dir  = `getconf DARWIN_USER_TEMP_DIR`);
+  chomp(my $cache_dir = `getconf DARWIN_USER_CACHE_DIR`);
+
+  # cleanup OpenCL cache
+  system("find \"$temp_dir\" -mindepth 1 -exec rm -rf {} +");
+  # cleanup OpenCL/Metal cache
+  system("rm -rf \"$cache_dir/com.apple.metalfe/*\"");
+  # cleanup Metal cache
+  system("rm -rf \"$cache_dir/com.apple.metal/*\"");
+
+  open(STDERR, '>&', $stderr_orig) or die "Can't restore STDERR: $!";
+}
+
 system ("rm -rf $kernels_cache");
+
+print "\n\n[$workdir] > Starting...\n\n";
 
 my @hash_types_selection =
 (
@@ -379,6 +411,8 @@ for my $hash_type (@hash_types)
 
   my $mask = $default_mask;
 
+  my $filepath = "$workdir/tmp.hash.$hash_type";
+
   if ($old_hashcat == 0)
   {
     my $module = get_module ($hash_type);
@@ -386,7 +420,7 @@ for my $hash_type (@hash_types)
     my $st_hash   = $module->{"st_hash"};
     my $is_binary = $module->{"is_binary"};
 
-    open (OUT, ">", "tmp.hash.$hash_type") or die;
+    open (OUT, ">", $filepath) or die;
 
     if ($is_binary)
     {
@@ -406,7 +440,7 @@ for my $hash_type (@hash_types)
   (
     $hashcat_bin, "-D2",
     "--quiet",
-    "tmp.hash.$hash_type",
+    $filepath,
     "--keep-guessing",
     "--self-test-disable",
     "--markov-disable",
@@ -435,13 +469,13 @@ for my $hash_type (@hash_types)
     push (@command, "--backend-devices", $device);
   }
 
-  print "Executing command: ", join (" ", @command), "\n";
+  print "[$workdir] > Executing command: ", join (" ", @command), "\n";
 
   my $final_speed = 0;
 
   for (my $i = 0; $i <= $repeats; $i++)
   {
-    printf ("Run #%d\n", $i);
+    printf ("[$workdir] > Run #%d\n", $i);
 
     open (IN, "-|", @command, "--runtime", 1);
     close (IN);
@@ -493,6 +527,16 @@ for my $hash_type (@hash_types)
   open (OUT, ">>", $result) or die;
   print OUT $final_speed, "\n";
   close (OUT);
+
+  my $endTime = time();
+  my $elapsed = $endTime - $startTime;
+
+  my $days    = int($elapsed / 86400);
+  my $hours   = int(($elapsed % 86400) / 3600);
+  my $minutes = int(($elapsed % 3600) / 60);
+  my $seconds = $elapsed % 60;
+
+  printf("\n\n[$workdir] > All tests done in: %d days, %02d hours, %02d minutes, %02d seconds\n", $days, $hours, $minutes, $seconds);
 }
 
 sub get_module

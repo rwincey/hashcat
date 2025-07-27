@@ -27,7 +27,8 @@ function usage()
   echo ""
   echo "-t / --target-type <arg>            : set Target Type (default: all. supported: single, multi)"
   echo ""
-  echo "-V / --vector-width <arg>           : set Vector Width (default: all. supported: 1, 2, 4, 8, 16)"
+  echo "-V / --vector-width <arg>           : set Vector Width or a list of comma-separated Vector Widths"
+  echo "                                      (default: all. supported: 1, 2, 4, 8, 16)"
   echo "     --vector-width-min <arg>       : set min vector-width (default: 1)"
   echo "     --vector-width-max <arg>       : set max vector-width (default: 16)"
   echo ""
@@ -290,11 +291,21 @@ while [[ $# -gt 0 ]]; do
 
             if [[ "$optarg" == "all" ]]; then
               :
-            elif [[ "$optarg" =~ ^(1|2|4|8|16)$ ]]; then
-              VECTOR_WIDTH="$optarg"
             else
-              echo "Invalid vector width: $optarg"
-              usage
+              VECTOR_WIDTH=""
+              VECTOR_WIDTHS=""
+
+              IFS=',' read -ra INPUT_VECTOR_WIDTHS <<< "$optarg"
+              for vec in "${INPUT_VECTOR_WIDTHS[@]}"; do
+                if [[ "$vec" =~ ^(1|2|4|8|16)$ ]]; then
+                  VECTOR_WIDTHS+=" $vec"
+                else
+                  echo "Invalid Vector width: $vec"
+                  usage
+                fi
+              done
+
+              VECTOR_WIDTHS="$(echo "$VECTOR_WIDTHS" | xargs)"  # Trim leading/trailing spaces
             fi
 
             [[ "$shift_inline" -eq 0 ]] && shift
@@ -513,7 +524,14 @@ if [ ${FORCE} -eq 1 ]; then
 fi
 
 if [ $METAL_BACKEND -eq 1 ]; then
-  VECTOR_WIDTHS="1 2 4"
+  VECTOR_WIDTHS_FILTER=""
+  for v in $VECTOR_WIDTHS; do
+    if [ "$v" -le 4 ]; then
+      VECTOR_WIDTHS_FILTER="$VECTOR_WIDTHS_FILTER$v "
+    fi
+  done
+
+  VECTOR_WIDTHS="$(echo "$VECTOR_WIDTHS_FILTER" | xargs)"
 
   if [ $VECTOR_WIDTH_MAX -gt 4 ]; then
     VECTOR_WIDTH_MAX=4
@@ -668,9 +686,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
         for vector_width in ${VECTOR_WIDTHS}; do
 
-          if [ $VECTOR_WIDTH != "all" ]; then
-            if [ $VECTOR_WIDTH -ne $vector_width ]; then continue; fi
-          else
+          if [ "$VECTOR_WIDTH" == "all" ]; then
             if [ ${vector_width} -lt ${VECTOR_WIDTH_MIN} ]; then continue; fi
             if [ ${vector_width} -gt ${VECTOR_WIDTH_MAX} ]; then continue; fi
           fi

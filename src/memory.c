@@ -71,7 +71,7 @@ void *hc_alloc_aligned (size_t alignment, size_t size)
 {
   void *ptr = NULL;
 
-  #if defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__)
+  #if defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined (__CYGWIN__) || defined (__MSYS__)
 
   if (posix_memalign (&ptr, alignment, size) != 0)
   {

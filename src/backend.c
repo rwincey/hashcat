@@ -16638,7 +16638,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     if (hashconfig->bridge_type)
     {
-      void *h_tmps = hcmalloc_aligned (device_param->size_tmps, 64);
+      void *h_tmps = hcmalloc_bridge_aligned (device_param->size_tmps, 64);
 
       device_param->h_tmps = h_tmps;
     }
@@ -16967,7 +16967,7 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->skipped == true) continue;
 
-    hcfree_aligned (device_param->h_tmps);
+    hcfree_bridge_aligned (device_param->h_tmps);
     hcfree (device_param->pws_comp);
     hcfree (device_param->pws_idx);
     hcfree (device_param->pws_pre_buf);
@@ -17457,8 +17457,8 @@ int backend_session_update_mp (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_opencl == true)
     {
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_FALSE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE,  0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_TRUE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE, 0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
 
       if (hc_clFlush (hashcat_ctx, device_param->opencl_command_queue) == -1) return -1;
     }
@@ -17513,8 +17513,8 @@ int backend_session_update_mp_rl (hashcat_ctx_t *hashcat_ctx, const u32 css_cnt_
 
     if (device_param->is_opencl == true)
     {
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_FALSE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE,  0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_TRUE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE, 0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
 
       if (hc_clFlush (hashcat_ctx, device_param->opencl_command_queue) == -1) return -1;
     }

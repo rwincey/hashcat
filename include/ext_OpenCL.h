@@ -123,11 +123,11 @@ static const cl_mem_flags openclMemoryFlags[OCL_BUFFER_CNT] =
   [opencl_d_kernel_param_memoryFlags] = CL_MEM_READ_ONLY
 };
 
-#define HC_OCL_CREATEBUFFER(ctx, size, ptr, buf_name)                                 \
-  do {                                                                                \
-    if (hc_clCreateBuffer(ctx, device_param->opencl_context,                          \
-                          openclMemoryFlags[opencl_d_##buf_name##_memoryFlags], size, \
-                          ptr, &device_param->opencl_d_##buf_name) == -1) return -1;  \
+#define HC_OCL_CREATEBUFFER(ctx, size, ptr, buf_name)                                     \
+  do {                                                                                    \
+    if (hc_clCreateBuffer_pre(ctx, device_param->opencl_context,                          \
+                              openclMemoryFlags[opencl_d_##buf_name##_memoryFlags], size, \
+                              ptr, &device_param->opencl_d_##buf_name) == -1) return -1;  \
   } while (0)
 
 #define CL_PLATFORMS_MAX 16
@@ -239,6 +239,7 @@ int hc_clGetDeviceInfo           (void *hashcat_ctx, cl_device_id device, cl_dev
 int hc_clCreateContext           (void *hashcat_ctx, const cl_context_properties *properties, cl_uint num_devices, const cl_device_id *devices, void (CL_CALLBACK *pfn_notify) (const char *errinfo, const void *private_info, size_t cb, void *user_data), void *user_data, cl_context *context);
 int hc_clCreateCommandQueue      (void *hashcat_ctx, cl_context context, cl_device_id device, cl_command_queue_properties properties, cl_command_queue *command_queue);
 int hc_clCreateBuffer            (void *hashcat_ctx, cl_context context, cl_mem_flags flags, size_t size, void *host_ptr, cl_mem *mem);
+int hc_clCreateBuffer_pre        (void *hashcat_ctx, cl_context context, cl_mem_flags flags, size_t size, void *host_ptr, cl_mem *mem);
 int hc_clCreateProgramWithSource (void *hashcat_ctx, cl_context context, cl_uint count, const char **strings, const size_t *lengths, cl_program *program);
 int hc_clCreateProgramWithBinary (void *hashcat_ctx, cl_context context, cl_uint num_devices, const cl_device_id *device_list, const size_t *lengths, const unsigned char **binaries, cl_int *binary_status, cl_program *program);
 int hc_clBuildProgram            (void *hashcat_ctx, cl_program program, cl_uint num_devices, const cl_device_id *device_list, const char *options, void (CL_CALLBACK *pfn_notify) (cl_program program, void *user_data), void *user_data);

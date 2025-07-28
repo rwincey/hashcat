@@ -22,18 +22,25 @@ u64 argon2_module_tmp_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_U
   return tmp_size;
 }
 
-u64 get_largest_memory_block_count (const hashes_t *hashes)
+u64 get_largest_memory_block_count (MAYBE_UNUSED const hashconfig_t *hashconfig, const hashes_t *hashes)
 {
   argon2_options_t *options    = (argon2_options_t *) hashes->esalts_buf;
   argon2_options_t *options_st = (argon2_options_t *) hashes->st_esalts_buf;
 
-  u64 largest_memory_block_count = (options_st == NULL) ? options->memory_block_count : options_st->memory_block_count;
+  u64 largest_memory_block_count = 0;
+
+  if (((hashconfig->opts_type & OPTS_TYPE_SELF_TEST_DISABLE) == 0) && (options_st != NULL))
+  {
+    largest_memory_block_count = options_st->memory_block_count;
+  }
+  else
+  {
+    largest_memory_block_count = options->memory_block_count;
+  }
 
   for (u32 i = 0; i < hashes->salts_cnt; i++)
   {
-    largest_memory_block_count = MAX (largest_memory_block_count, options->memory_block_count);
-
-    options++;
+    largest_memory_block_count = MAX (largest_memory_block_count, options[i].memory_block_count);
   }
 
   return largest_memory_block_count;
@@ -43,7 +50,7 @@ const char *argon2_module_extra_tuningdb_block (MAYBE_UNUSED const hashconfig_t 
 {
   hc_device_param_t *device_param = &backend_ctx->devices_param[device_id];
 
-  const u32 memory_block_count = get_largest_memory_block_count (hashes);
+  const u64 memory_block_count = get_largest_memory_block_count (hashconfig, hashes);
 
   const u64 size_per_accel = ARGON2_BLOCK_SIZE * memory_block_count;
 
@@ -88,6 +95,8 @@ const char *argon2_module_extra_tuningdb_block (MAYBE_UNUSED const hashconfig_t 
     if (new_device_name[i] == ' ') new_device_name[i] = '_';
   }
 
+  kernel_accel_new = MIN (kernel_accel_new, KERNEL_ACCEL_MAX);
+
   lines_pos += snprintf (lines_buf + lines_pos, lines_sz - lines_pos, "%s * %u 1 %u A\n", new_device_name, user_options->hash_mode, kernel_accel_new);
 
   hcfree (new_device_name);
@@ -97,7 +106,7 @@ const char *argon2_module_extra_tuningdb_block (MAYBE_UNUSED const hashconfig_t 
 
 u64 argon2_module_extra_buffer_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hashes_t *hashes, MAYBE_UNUSED const hc_device_param_t *device_param)
 {
-  const u32 memory_block_count = get_largest_memory_block_count (hashes);
+  const u64 memory_block_count = get_largest_memory_block_count (hashconfig, hashes);
 
   const u64 size_per_accel = ARGON2_BLOCK_SIZE * memory_block_count;
 
@@ -166,8 +175,20 @@ char *argon2_module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconf
   argon2_options_t *options    = (argon2_options_t *) hashes->esalts_buf;
   argon2_options_t *options_st = (argon2_options_t *) hashes->st_esalts_buf;
 
-  const u32 memory_block_count = (options_st->memory_block_count) ? options_st->memory_block_count : options->memory_block_count;
-  const u32 parallelism        = (options_st->parallelism)        ? options_st->parallelism        : options->parallelism;
+  u64 memory_block_count = 0;
+  u64 parallelism = 0;
+
+  if (((hashconfig->opts_type & OPTS_TYPE_SELF_TEST_DISABLE) == 0) && (options_st != NULL))
+  {
+    memory_block_count = options_st->memory_block_count;
+    parallelism        = options_st->parallelism;
+  }
+  else
+  {
+    memory_block_count = options->memory_block_count;
+    parallelism        = options->parallelism;
+  }
+
 
   bool all_same_memory_block_count = true;
   bool all_same_parallelism        = true;
@@ -181,12 +202,12 @@ char *argon2_module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconf
 
   if (all_same_memory_block_count == true)
   {
-    build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-D ARGON2_TMP_ELEM=%u ", memory_block_count);
+    build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-D ARGON2_TMP_ELEM=%" PRIu64 " ", memory_block_count);
   }
 
   if (all_same_parallelism == true)
   {
-    build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-D ARGON2_PARALLELISM=%u ", parallelism);
+    build_options_len += snprintf (build_options_buf + build_options_len, build_options_sz - build_options_len, "-D ARGON2_PARALLELISM=%" PRIu64 " ", parallelism);
   }
 
   return build_options_buf;

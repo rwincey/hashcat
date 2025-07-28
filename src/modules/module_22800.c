@@ -1,5 +1,5 @@
 /**
- * Hashcat module for Simpla CMS (hash mode 32800)
+ * Hashcat module for Simpla CMS (hash mode 22800)
  * Implements: md5($salt.$pass.md5($pass))
  * Author: CyberGladius
  * License: MIT
@@ -20,7 +20,7 @@
  static const u32   DGST_SIZE      = DGST_SIZE_4_4;
  static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_HASH_SALTED;
 static const char *HASH_NAME      = "Simpla CMS - md5($salt.$pass.md5($pass))";
-static const u64   KERN_TYPE      = 32800;
+static const u64   KERN_TYPE      = 22800;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_PRECOMPUTE_INIT
                                   | OPTI_TYPE_EARLY_SKIP;

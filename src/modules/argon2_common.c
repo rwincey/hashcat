@@ -166,13 +166,13 @@ char *argon2_module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconf
   argon2_options_t *options    = (argon2_options_t *) hashes->esalts_buf;
   argon2_options_t *options_st = (argon2_options_t *) hashes->st_esalts_buf;
 
-  const u32 memory_block_count = (options->memory_block_count) ? options->memory_block_count : options_st->memory_block_count;
-  const u32 parallelism        = (options->parallelism)        ? options->parallelism        : options_st->parallelism;
+  const u32 memory_block_count = (options_st->memory_block_count) ? options_st->memory_block_count : options->memory_block_count;
+  const u32 parallelism        = (options_st->parallelism)        ? options_st->parallelism        : options->parallelism;
 
   bool all_same_memory_block_count = true;
   bool all_same_parallelism        = true;
 
-  for (u32 i = 1; i < hashes->salts_cnt; i++)
+  for (u32 i = 0; i < hashes->salts_cnt; i++)
   {
     if (memory_block_count != options[i].memory_block_count) all_same_memory_block_count = false;
 

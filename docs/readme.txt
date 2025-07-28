@@ -12,7 +12,7 @@ hashcat v6.2.6
 
 AMD GPUs on Linux require "AMD Radeon Software for Linux" with "ROCm"
 AMD GPUs on Windows require "AMD Adrenalin Edition" and "AMD HIP SDK"
-Intel and AMD CPUs require "Intel CPU Runtime for OpenCL"
+Intel and AMD CPUs require "Intel CPU Runtime for OpenCL" or PoCL
 Intel GPUs require "Intel Graphics Compute Runtime" aka NEO
 NVIDIA GPUs require "NVIDIA CUDA Toolkit"
 

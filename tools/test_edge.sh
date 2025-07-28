@@ -46,6 +46,8 @@ function usage()
   echo ""
   echo "     --allow-all-attacks            : Do not skip attack types other than Straight with hash types with attack exec outside kernel"
   echo ""
+  echo "     --allow-self-tests             : Do not skip self tests"
+  echo ""
   echo "-f / --force                        : run hashcat using --force"
   echo ""
   echo "-v / --verbose                      : show debug messages (supported: -v or -vv)"
@@ -94,8 +96,9 @@ METAL_BACKEND=0
 METAL_COMPILER_RUNTIME=120
 BACKEND_DEVICES_KEEPFREE=0
 ALL_ATTACKS=0
+SELF_TEST_DISABLE=1
 
-OPTS="--quiet --potfile-disable --hwmon-disable --self-test-disable --machine-readable --logfile-disable"
+OPTS="--quiet --potfile-disable --hwmon-disable --machine-readable --logfile-disable"
 
 SKIP_HASH_TYPES="" #2000 2500 2501 16800 16801 99999 32000"
 SKIP_HASH_TYPES_METAL="21800"
@@ -144,6 +147,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --allow-all-attacks)
       ALL_ATTACKS=1
+      shift
+      ;;
+    --allow-self-tests)
+      SELF_TEST_DISABLE=0
       shift
       ;;
     --vector-width-min)
@@ -517,6 +524,10 @@ fi
 if [[ "$VECTOR_WIDTH" != "all" && ( "$VECTOR_WIDTH_MIN" -ne 1 || "$VECTOR_WIDTH_MAX" -ne 16 ) ]]; then
   echo "Error: cannot set --vector-width and --vector-width-min/--vector-width-max"
   usage
+fi
+
+if [ ${SELF_TEST_DISABLE} -eq 1 ]; then
+  OPTS="${OPTS} --self-test-disable"
 fi
 
 if [ ${FORCE} -eq 1 ]; then

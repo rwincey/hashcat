@@ -6966,7 +6966,10 @@ static void backend_ctx_devices_init_metal (hashcat_ctx_t *hashcat_ctx, MAYBE_UN
 
 static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *virthost, int *virthost_finder, int *backend_devices_idx, int *bridge_link_device)
 {
+  #if defined (__linux__)
   const folder_config_t *folder_config = hashcat_ctx->folder_config;
+  #endif
+
   const bridge_ctx_t    *bridge_ctx    = hashcat_ctx->bridge_ctx;
         backend_ctx_t   *backend_ctx   = hashcat_ctx->backend_ctx;
         user_options_t  *user_options  = hashcat_ctx->user_options;

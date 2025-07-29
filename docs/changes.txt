@@ -143,6 +143,7 @@
 - Fixed bug in input_tokenizer when TOKEN_ATTR_FIXED_LENGTH is used and refactor modules
 - Fixed bug in module_constraints and kernel for hash-mode 7800
 - Fixed bug in module_constraints and kernel for hash-mode 7801
+- Fixed bugs in 3090x kernels which produced false positives
 - Fixed build failed for 10700 optimized with Apple Metal
 - Fixed build failed for 13772 and 13773 with Apple Metal
 - Fixed build failed for 18400 with Apple Metal
@@ -251,6 +252,7 @@
 - Unit tests: Updated install_modules.sh with Crypt::Argon2
 - Unit tests: Updated install_modules.sh with Crypt::Passwd::XS, to test suite works also on Apple (ex: 1800)
 - Unit tests: Updated install_modules.sh, test.pl and some test modules (1000, 16000, 31300, 31500, 31600) by removing Text:Iconv and using Encode instead
+- Unit tests: Updated test_edge.sh, introducing clean_cache function and fix for 20510 module
 - User Options: Added error message when mixing --username and --show to warn users of exponential delay
 - User Options: added --metal-compiler-runtime option
 - User Options: assigned -H to --hash-info

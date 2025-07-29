@@ -83,8 +83,12 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
 
   argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST_BID];
 
+  #ifdef IS_APPLE
+  // it doesn't work on Apple, so we won't set it up
+  #else
   #ifdef ARGON2_PARALLELISM
   options.parallelism = ARGON2_PARALLELISM;
+  #endif
   #endif
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, bd4);

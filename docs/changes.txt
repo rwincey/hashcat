@@ -137,6 +137,7 @@
 - Fixed bug in 26900 module_hash_encode
 - Fixed bug in 29600 module OPTS_TYPE setting
 - Fixed bug in 32600 by adding missing module_jit_build_options
+- Fixed bug in 34000 with Metal and OpenCL on Apple
 - Fixed bug in Hardware Monitor: prevent disable if ADL fail
 - Fixed bug in grep out-of-memory workaround on Unit Test
 - Fixed bug in inc_rp_optimized.cl on Apple Intel with Metal

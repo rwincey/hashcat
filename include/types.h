@@ -2119,6 +2119,7 @@ typedef struct hm_attrs
   bool throttle_get_supported;
   bool utilization_get_supported;
   bool memoryused_get_supported;
+  bool power_get_supported;
 
 } hm_attrs_t;
 

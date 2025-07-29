@@ -97,9 +97,12 @@ KERNEL_FQ void m22800_mxx (KERN_ATTR_BASIC ())
 
     // Update with salt
     md5_update (&ctx, s, salt_len);
-    // Update with the password combination
-    md5_update (&ctx, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
 
+    // Update with the password combination using global functions
+    md5_update_global (&ctx, pws[gid].i, pws[gid].pw_len);
+    md5_update_global (&ctx, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
+
+    // Update with the hexadecimal MD5 result
     u32 w0[4];
     u32 w1[4];
     u32 w2[4];
@@ -224,11 +227,14 @@ KERNEL_FQ void m22800_sxx (KERN_ATTR_BASIC ())
 
     md5_init (&ctx);
 
-    // Update with salt
+       // Update with salt
     md5_update (&ctx, s, salt_len);
-    // Update with the password combination
-    md5_update (&ctx, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
 
+    // Update with the password combination
+    md5_update_global (&ctx, pws[gid].i, pws[gid].pw_len);
+    md5_update_global (&ctx, combs_buf[il_pos].i, combs_buf[il_pos].pw_len);
+
+    // Update with the hexadecimal MD5 result
     u32 w0[4];
     u32 w1[4];
     u32 w2[4];

@@ -48,6 +48,8 @@ function usage()
   echo ""
   echo "     --allow-self-tests             : Do not skip self tests"
   echo ""
+  echo "     --skip-clean-cache             : Skip cleaning the kernel caches before starting the tests"
+  echo ""
   echo "-f / --force                        : run hashcat using --force"
   echo ""
   echo "-v / --verbose                      : show debug messages (supported: -v or -vv)"
@@ -65,6 +67,34 @@ function is_in_array()
   done
 
   return 1
+}
+
+function clean_cache()
+{
+  echo "! cleaning cache ..."
+
+  OS=$1
+
+  if [ "$OS" == "Darwin" ]; then
+    temp_dir=$(getconf DARWIN_USER_TEMP_DIR)
+    cache_dir=$(getconf DARWIN_USER_CACHE_DIR)
+
+    if [ -d "$temp_dir/homed" ]; then
+      find $temp_dir -mindepth 1 -exec rm -rf {} + 2>/dev/null
+    fi
+
+    if [ -d "$cache_dir/com.apple.metalfe" ]; then
+      rm -rf $cache_dir/com.apple.metalfe
+    fi
+
+    if [ -d "$cache_dir/com.apple.metal" ]; then
+      rm -rf $cache_dir/com.apple.metal
+    fi
+  fi
+
+  if [ -d "kernels" ]; then
+    rm -rf kernels/*
+  fi
 }
 
 export LC_CTYPE=C
@@ -97,6 +127,7 @@ METAL_COMPILER_RUNTIME=120
 BACKEND_DEVICES_KEEPFREE=0
 ALL_ATTACKS=0
 SELF_TEST_DISABLE=1
+CLEAN_CACHE_DISABLE=0
 
 OPTS="--quiet --potfile-disable --hwmon-disable --machine-readable --logfile-disable"
 
@@ -151,6 +182,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --allow-self-tests)
       SELF_TEST_DISABLE=0
+      shift
+      ;;
+    --skip-clean-cache)
+      CLEAN_CACHE_DISABLE=1
       shift
       ;;
     --vector-width-min)
@@ -557,6 +592,10 @@ if [ $BACKEND_DEVICES_KEEPFREE -gt 0 ]; then
   OPTS="${OPTS} --backend-devices-keepfree ${BACKEND_DEVICES_KEEPFREE}"
 fi
 
+if [ $CLEAN_CACHE_DISABLE -eq 0 ]; then
+  clean_cache $UNAME
+fi
+
 if [ ${VERBOSE} -ge 1 ]; then
   echo "Global hashcat options selected: ${OPTS}"
 fi
@@ -731,7 +770,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
               x="echo -n '${word}'"
 
-              if [ "${hash_type}" == "20510" ]; then
+              if [ ${hash_type} -eq 20510 ]; then
                 word_compare="echo -n '${word}'"
                 x="echo -n '${word}' | cut -b7-"
               fi
@@ -745,6 +784,13 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               fi
 
               word=$(eval $x)
+
+              if [ ${hash_type} -eq 20510 ]; then
+                if [ "$word_len" -le 6 ] && [ "${#word}" -eq 0 ] && { [ "$attack_type" -eq 3 ] || [ "$attack_type" -eq 6 ] || [ "$attack_type" -eq 7 ]; }; then
+                 echo "[ ${OUTD} ] > Skipping Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Target-Type multi (word len <= 6 not allowed with attack-type 3, 6 and 7)" | tee -a ${OUTD}/test_edge.details.log
+                 continue
+                fi
+              fi
 
               if [ ${VERBOSE} -ge 1 ]; then
                 echo "[ ${OUTD} ] > Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Salt '${salt}', Hash ${hash}" | tee -a ${OUTD}/test_edge.details.log

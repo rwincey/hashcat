@@ -10,7 +10,10 @@
 #include M2S(INCLUDE_PATH/inc_common.cl)
 #include M2S(INCLUDE_PATH/inc_hash_blake2b.cl)
 #include M2S(INCLUDE_PATH/inc_hash_argon2.cl)
+#include M2S(INCLUDE_PATH/inc_hash_sha1.cl)
 #include M2S(INCLUDE_PATH/inc_hash_sha256.cl)
+#include M2S(INCLUDE_PATH/inc_hash_sha512.cl)
+#include M2S(INCLUDE_PATH/inc_hash_ripemd160.cl)
 #include M2S(INCLUDE_PATH/inc_cipher_aes.cl)
 #endif
 
@@ -99,7 +102,7 @@ typedef struct luks_tmp
 
 #define MAX_ENTROPY 7.0
 
-KERNEL_FQ void m34100_init (_KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
+KERNEL_FQ void m34100_init (KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
 {
   const u64 gid = get_global_id (0);
 
@@ -125,7 +128,7 @@ KERNEL_FQ void m34100_init (_KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
   argon2_init (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
-KERNEL_FQ void m34100_loop (_KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
+KERNEL_FQ void m34100_loop (KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
 {
   const u64 gid = get_global_id (0);
   const u64 bid = get_group_id (0);
@@ -162,8 +165,12 @@ KERNEL_FQ void m34100_loop (_KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
 
   argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST_BID].options;
 
+  #ifdef IS_APPLE
+  // it doesn't work on Apple, so we won't set it up
+  #else
   #ifdef ARGON2_PARALLELISM
   options.parallelism = ARGON2_PARALLELISM;
+  #endif
   #endif
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, bd4);
@@ -192,7 +199,7 @@ KERNEL_FQ void m34100_loop (_KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
   }
 }
 
-KERNEL_FQ void m34100_comp (_KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
+KERNEL_FQ void m34100_comp (KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
 {
   const u64 gid = get_global_id (0);
   const u64 lid = get_local_id (0);

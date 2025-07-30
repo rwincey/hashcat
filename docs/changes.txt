@@ -202,11 +202,15 @@
 - Documents: Updated BUILD.md and added BUILD_macOS.md (containing instructions for building windows binaries on macOS)
 - Filehandling: Solved TODOs in hc_fstat()
 - HIP Backend: Avoid deprecated functions
+- Hardware Monitor: Added current power consumption indicator (only supported on Apple)
+- Hardware Monitor: Added hm_get_power_* primitives (only supported on Apple)
+- Hardware Monitor: Renamed src/ext_iokit.c to src/ext_iokit.m
 - Hardware Monitor: Splitting hwmon_ctx_init function into smaller library-specific functions
 - Hardware Monitor: avoid sprintf in src/ext_iokit.c
 - Hash-Info: show more details using -HH
 - Help: show supported hash-modes only with -hh
 - Kernel: Renamed multiple defines in CAST cipher to fit expected naming convention of the C++ language standard
+- Makefile: Added -lIOReport into LFLAGS_NATIVE for Apple and moved ext_iokit into OBJS_METAL
 - Makefile: prevent make failure with Apple Silicon in case of partial rebuild
 - Makefile: updated MACOSX_DEPLOYMENT_TARGET to 15.0
 - MetaMask: update extraction tool to support MetaMask Mobile wallets

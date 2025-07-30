@@ -2720,6 +2720,22 @@ void status_display_machine_readable (hashcat_ctx_t *hashcat_ctx)
     printf ("%d\t", util);
   }
 
+  printf ("POWER\t");
+
+  for (int device_id = 0; device_id < hashcat_status->device_info_cnt; device_id++)
+  {
+    const device_info_t *device_info = hashcat_status->device_info_buf + device_id;
+
+    if (device_info->skipped_dev == true) continue;
+    if (device_info->skipped_warning_dev == true) continue;
+
+    // ok, little cheat here again...
+
+    const int64_t power = hm_get_power_with_devices_idx (hashcat_ctx, device_id);
+
+    printf("%" PRId64 "\t", power);
+  }
+
   fwrite (EOL, strlen (EOL), 1, stdout);
 
   fflush (stdout);
@@ -2863,12 +2879,13 @@ void status_display_status_json (hashcat_ctx_t *hashcat_ctx)
 
     printf (" \"speed\": %" PRIu64 ",", (u64) (device_info->hashes_msec_dev * 1000));
 
-    const int temp = hm_get_temperature_with_devices_idx (hashcat_ctx, device_id);
-    const int util = hm_get_utilization_with_devices_idx (hashcat_ctx, device_id);
-    const int fanspeed = hm_get_fanspeed_with_devices_idx (hashcat_ctx, device_id);
-    const int corespeed = hm_get_corespeed_with_devices_idx (hashcat_ctx, device_id);
+    const int temp        = hm_get_temperature_with_devices_idx (hashcat_ctx, device_id);
+    const int util        = hm_get_utilization_with_devices_idx (hashcat_ctx, device_id);
+    const int fanspeed    = hm_get_fanspeed_with_devices_idx (hashcat_ctx, device_id);
+    const int corespeed   = hm_get_corespeed_with_devices_idx (hashcat_ctx, device_id);
     const int memoryspeed = hm_get_memoryspeed_with_devices_idx (hashcat_ctx, device_id);
-    const int buslanes = hm_get_buslanes_with_devices_idx (hashcat_ctx, device_id);
+    const int buslanes    = hm_get_buslanes_with_devices_idx (hashcat_ctx, device_id);
+    const int64_t power   = hm_get_power_with_devices_idx (hashcat_ctx, device_id);
 
     printf (" \"temp\": %d,", temp);
     printf (" \"util\": %d,", util);
@@ -2876,6 +2893,7 @@ void status_display_status_json (hashcat_ctx_t *hashcat_ctx)
     printf (" \"corespeed\": %d,", corespeed);
     printf (" \"memoryspeed\": %d,", memoryspeed);
     printf (" \"buslanes\": %d }", buslanes);
+    printf (" \"power\": %" PRId64 " }", power);
   }
 
   printf (" ],");

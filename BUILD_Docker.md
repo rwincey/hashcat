@@ -64,5 +64,6 @@ You can also build it yourself if you chain build and runtime together.
 docker build -f docker/BinaryPackage.ubuntu20 -t hashcat-binaries .
 docker build -f docker/runtime.cuda.ubuntu24.withbuild -t hashcat-binaries .
 docker run --rm --gpus=all -it hashcat bash
+root@docker:~/# cd hashcat-6.2.6
 root@docker:~/hashcat-6.2.6# ./hashcat.bin --help
 ```

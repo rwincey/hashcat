@@ -341,7 +341,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   options->type                = ARGON2_TYPE_ID;
   options->version             = ARGON2_VERSION_13;
   options->iterations          = iter;
-  options->parallelism         = par; 
+  options->parallelism         = par;
   options->memory_usage_in_kib = mem;
   options->segment_length      = MAX (2, (mem / (ARGON2_SYNC_POINTS * par)));
   options->lane_length         = options->segment_length * ARGON2_SYNC_POINTS;

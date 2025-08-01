@@ -319,7 +319,7 @@ def extract_version2(file):
 
     keyslots_cnt = len(json_header['keyslots'])
     if keyslots_cnt == 0:
-      raise ValueError("no keyslots founds")
+        raise ValueError("no keyslots founds")
 
     # extract first sector of the segment for entropy check
     segment_offset = int(json_header['segments']['0']['offset'])

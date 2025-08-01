@@ -159,6 +159,7 @@
 - Fixed incompatible pointer types (salt1 and salt2 buf) in 3730 a3 kernel
 - Fixed incorrect plaintext check for 25400 and 26610. Increased plaintext check to 32 bytes to prevent false positives.
 - Fixed keys extraction in luks2hashcat - now extracts all active keys
+- Fixed keys extraction in luks2hashcat - now extracts all LUKS2 keyslots
 - Fixed maximum password length in module/test_module of hash-mode 2400
 - Fixed maximum password length in module/test_module of hash-mode 2410
 - Fixed memory leaks in tuning_db_init in tuningdb.c

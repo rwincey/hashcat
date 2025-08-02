@@ -1,3 +1,22 @@
+* changes v7.0.0 -> v7.x.X
+
+##
+## New Algorithms
+##
+
+## Endpoint
+
+- Added hash-mode: SAP CODVN H (PWDSALTEDHASH) isSHA512
+- Added hash-mode: sm3crypt $sm3$, SM3 (Unix)
+
+##
+## Improvements
+##
+
+## User Interaction Improvements
+
+- Changed hash-category for hash-modes 25600, 25800, 28400 and 30600 to HASH_CATEGORY_RAW_HASH_SALTED
+
 * changes v6.2.6 -> v7.0.0
 
 ##
@@ -146,7 +165,7 @@
 - Added JSON format support for backend-info, hash-info, status-screen, progress-info, speed-info, and outfiles
 - Added --increment-inverse option
 - Added new charset files: Romanian, Russian
-- Added support for using --debug-mode in attack-mode 9 (Association Attack) 
+- Added support for using --debug-mode in attack-mode 9 (Association Attack)
 - Added display of password length mininum and maximum in the Kernel.Feature status line
 - Added new feature (-Y) that creates N virtual instances for each device in your system at the cost of N times the device memory consumption
 - Added new feature (--bypass-delay / --bypass-threshold) that skips an attack if it does not produce enough cracks per $timeframe
@@ -218,7 +237,7 @@
 - Added: veracrypt2hashcat.py
 - Added: virtualbox2hashcat.py
 - Added: vmwarevmx2hashcat.py
-- Promoted extraction tools to be installed alongside hashcat when installing system-wide 
+- Promoted extraction tools to be installed alongside hashcat when installing system-wide
 
 ##
 ## Improvements
@@ -240,7 +259,7 @@
 - Fixed existing rules to work correctly with the new Purge (@) rule handling
 - Updated -j / -k validation to check for ':' instead of NULL
 - Optimized the following rule files: generated.rule, generated2.rule, dive.rule, T0XlCv2.rule, T0XlC-insert_00-99_1950-2050_toprules_0_F.rule, T0XlC-insert_space_and_special_0_F.rule, d3ad0ne.rule
-- Added new rule files: T0XlC_3_rule.rule, T0XlC_insert_HTML_entities_0_Z.rule, T0XlCv2.rule, stacking58.rule, top10_2025.rule 
+- Added new rule files: T0XlC_3_rule.rule, T0XlC_insert_HTML_entities_0_Z.rule, T0XlCv2.rule, stacking58.rule, top10_2025.rule
 
 ## Existing Plugin and Crypto Library Improvements
 
@@ -307,7 +326,7 @@
 - User Options: assigned -H to --hash-info; added detailed output using -HH
 - Notify users on startup when backend runtimes and devices are initialized
 - Implemented feature request to show non-default session names early at startup
-- Warn users that the potfile will not be used during Association Attack mode 
+- Warn users that the potfile will not be used during Association Attack mode
 
 ##
 ## Performance
@@ -333,7 +352,7 @@
 
 - Refactored memory management for compute device and host from scratch
 - Added automatic downtune support
-- Improved free memory detection using low-level API 
+- Improved free memory detection using low-level API
 
 ##
 ## Bugs
@@ -503,7 +522,7 @@
 
 - Added hc_uint4_t to scrypt to work around an Intel OpenCL alignment bug. Intel's runtime does not support vector datatypes mapped to global memory, though they work with local variables
 - Revisited all module_unstable_warning entries across all plugins and synchronized them with the current state of driver versions at release time (most warnings have been removed)
-- Improved benchmark stability: hashcat no longer creates and destroys context and command queues for each device when switching hash-modes. This avoids GPU memory leaks with clCreateContext, especially on NVIDIA OpenCL 
+- Improved benchmark stability: hashcat no longer creates and destroys context and command queues for each device when switching hash-modes. This avoids GPU memory leaks with clCreateContext, especially on NVIDIA OpenCL
 
 ## Documents
 

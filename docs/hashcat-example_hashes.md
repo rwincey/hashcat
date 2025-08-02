@@ -561,6 +561,8 @@ All manual changes will be overwritten!
 | `34200` | `MurmurHash64A` | `ef3014941bf1102d:837163b2348dfae1` |
 | `34201` | `MurmurHash64A (zero seed)` | `73f8142b4326d36a` |
 | `34211` | `MurmurHash64A truncated (zero seed)` | `73f8142b` |
+| `35000` | `SAP CODVN H (PWDSALTEDHASH) isSHA512` | `{x-isSHA512, 15000}YZH/V2T7zlQMGeWLBarm5Oi3qV9Y8ByXQijD28+bjtLdo7YssXaUBkxMXbS3l4yVlYw97tvYj+vu/L37sg1reDEzODQ4MDY1NzQ1NjQ=` |
+| `35100` | `sm3crypt $sm3$, SM3 (Unix)` | `$sm3$KTTUB40dW4mRyRFd$ul2xLiIY3FJtbo8sv1R93sAYCkxQCH/6rmS1kD5vJYA` |
 | `70000` | `argon2id [Bridged: reference implementation + tunings]` | `$argon2id$v=19$m=65536,t=3,p=1$FBMjI4RJBhIykCgol1KEJA$2ky5GAdhT1kH4kIgPN/oERE3Taiy43vNN70a3HpiKQU` |
 | `70100` | `scrypt [Bridged: Scrypt-Jane ROMix]` | `SCRYPT:16384:8:1:OTEyNzU0ODg=:Cc8SPjRH1hFQhuIPCdF51uNGtJ2aOY/isuoMlMUsJ8c=` |
 | `70200` | `scrypt [Bridged: Scrypt-Yescrypt]` | `SCRYPT:16384:8:1:OTEyNzU0ODg=:Cc8SPjRH1hFQhuIPCdF51uNGtJ2aOY/isuoMlMUsJ8c=` |

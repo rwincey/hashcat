@@ -6,6 +6,7 @@
 
 ## Endpoint
 
+- Added hash-mode: Cisco-ISE Hashed Password (SHA256)
 - Added hash-mode: SAP CODVN H (PWDSALTEDHASH) isSHA512
 - Added hash-mode: sm3crypt $sm3$, SM3 (Unix)
 

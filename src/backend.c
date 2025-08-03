@@ -5387,6 +5387,9 @@ int backend_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
         const int CL_rc = hc_clGetDeviceIDs (hashcat_ctx, opencl_platform, CL_DEVICE_TYPE_ALL, DEVICES_MAX, opencl_platform_devices, &opencl_platform_devices_cnt);
 
+        // they conflict with hip/cuda AND with opencl devices
+        if (opencl_platform_vendor_id == VENDOR_ID_MICROSOFT) opencl_platform_devices_cnt = 0;
+
         if (CL_rc == -1)
         {
           // Special handling for CL_DEVICE_NOT_FOUND, see: https://github.com/hashcat/hashcat/issues/2455

@@ -18,6 +18,12 @@
 
 - Changed hash-category for hash-modes 25600, 25800, 28400 and 30600 to HASH_CATEGORY_RAW_HASH_SALTED
 
+##
+## Technical
+##
+
+- Backend: Splitting backend_session_begin into smaller runtime-specific functions
+
 * changes v6.2.6 -> v7.0.0
 
 ##

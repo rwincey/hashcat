@@ -566,6 +566,20 @@ int hc_clCreateCommandQueue (void *hashcat_ctx, cl_context context, cl_device_id
   return 0;
 }
 
+// extended version of hc_clCreateBuffer
+
+int hc_clCreateBuffer_ext (void *hashcat_ctx, cl_context context, cl_mem_flags flags, size_t size, void *host_ptr, cl_mem *mem)
+{
+  if (host_ptr != NULL)
+  {
+    // using unified memory
+
+    flags |= CL_MEM_USE_HOST_PTR;
+  }
+
+  return hc_clCreateBuffer (hashcat_ctx, context, flags, size, host_ptr, mem);
+}
+
 int hc_clCreateBuffer (void *hashcat_ctx, cl_context context, cl_mem_flags flags, size_t size, void *host_ptr, cl_mem *mem)
 {
   backend_ctx_t *backend_ctx = ((hashcat_ctx_t *) hashcat_ctx)->backend_ctx;

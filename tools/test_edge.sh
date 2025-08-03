@@ -27,7 +27,8 @@ function usage()
   echo ""
   echo "-t / --target-type <arg>            : set Target Type (default: all. supported: single, multi)"
   echo ""
-  echo "-V / --vector-width <arg>           : set Vector Width (default: all. supported: 1, 2, 4, 8, 16)"
+  echo "-V / --vector-width <arg>           : set Vector Width or a list of comma-separated Vector Widths"
+  echo "                                      (default: all. supported: 1, 2, 4, 8, 16)"
   echo "     --vector-width-min <arg>       : set min vector-width (default: 1)"
   echo "     --vector-width-max <arg>       : set max vector-width (default: 16)"
   echo ""
@@ -44,6 +45,10 @@ function usage()
   echo "     --backend-devices-keepfree     : Keep specified percentage of device memory free (default: disabled. supported: from 1 to 100)"
   echo ""
   echo "     --allow-all-attacks            : Do not skip attack types other than Straight with hash types with attack exec outside kernel"
+  echo ""
+  echo "     --allow-self-tests             : Do not skip self tests"
+  echo ""
+  echo "     --skip-clean-cache             : Skip cleaning the kernel caches before starting the tests"
   echo ""
   echo "-f / --force                        : run hashcat using --force"
   echo ""
@@ -62,6 +67,34 @@ function is_in_array()
   done
 
   return 1
+}
+
+function clean_cache()
+{
+  echo "! cleaning cache ..."
+
+  OS=$1
+
+  if [ "$OS" == "Darwin" ]; then
+    temp_dir=$(getconf DARWIN_USER_TEMP_DIR)
+    cache_dir=$(getconf DARWIN_USER_CACHE_DIR)
+
+    if [ -d "$temp_dir/homed" ]; then
+      find $temp_dir -mindepth 1 -exec rm -rf {} + 2>/dev/null
+    fi
+
+    if [ -d "$cache_dir/com.apple.metalfe" ]; then
+      rm -rf $cache_dir/com.apple.metalfe
+    fi
+
+    if [ -d "$cache_dir/com.apple.metal" ]; then
+      rm -rf $cache_dir/com.apple.metal
+    fi
+  fi
+
+  if [ -d "kernels" ]; then
+    rm -rf kernels/*
+  fi
 }
 
 export LC_CTYPE=C
@@ -93,8 +126,10 @@ METAL_BACKEND=0
 METAL_COMPILER_RUNTIME=120
 BACKEND_DEVICES_KEEPFREE=0
 ALL_ATTACKS=0
+SELF_TEST_DISABLE=1
+CLEAN_CACHE_DISABLE=0
 
-OPTS="--quiet --potfile-disable --hwmon-disable --self-test-disable --machine-readable --logfile-disable"
+OPTS="--quiet --potfile-disable --hwmon-disable --machine-readable --logfile-disable"
 
 SKIP_HASH_TYPES="" #2000 2500 2501 16800 16801 99999 32000"
 SKIP_HASH_TYPES_METAL="21800"
@@ -143,6 +178,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --allow-all-attacks)
       ALL_ATTACKS=1
+      shift
+      ;;
+    --allow-self-tests)
+      SELF_TEST_DISABLE=0
+      shift
+      ;;
+    --skip-clean-cache)
+      CLEAN_CACHE_DISABLE=1
       shift
       ;;
     --vector-width-min)
@@ -290,11 +333,21 @@ while [[ $# -gt 0 ]]; do
 
             if [[ "$optarg" == "all" ]]; then
               :
-            elif [[ "$optarg" =~ ^(1|2|4|8|16)$ ]]; then
-              VECTOR_WIDTH="$optarg"
             else
-              echo "Invalid vector width: $optarg"
-              usage
+              VECTOR_WIDTH=""
+              VECTOR_WIDTHS=""
+
+              IFS=',' read -ra INPUT_VECTOR_WIDTHS <<< "$optarg"
+              for vec in "${INPUT_VECTOR_WIDTHS[@]}"; do
+                if [[ "$vec" =~ ^(1|2|4|8|16)$ ]]; then
+                  VECTOR_WIDTHS+=" $vec"
+                else
+                  echo "Invalid Vector width: $vec"
+                  usage
+                fi
+              done
+
+              VECTOR_WIDTHS="$(echo "$VECTOR_WIDTHS" | xargs)"  # Trim leading/trailing spaces
             fi
 
             [[ "$shift_inline" -eq 0 ]] && shift
@@ -508,12 +561,23 @@ if [[ "$VECTOR_WIDTH" != "all" && ( "$VECTOR_WIDTH_MIN" -ne 1 || "$VECTOR_WIDTH_
   usage
 fi
 
+if [ ${SELF_TEST_DISABLE} -eq 1 ]; then
+  OPTS="${OPTS} --self-test-disable"
+fi
+
 if [ ${FORCE} -eq 1 ]; then
   OPTS="${OPTS} --force"
 fi
 
 if [ $METAL_BACKEND -eq 1 ]; then
-  VECTOR_WIDTHS="1 2 4"
+  VECTOR_WIDTHS_FILTER=""
+  for v in $VECTOR_WIDTHS; do
+    if [ "$v" -le 4 ]; then
+      VECTOR_WIDTHS_FILTER="$VECTOR_WIDTHS_FILTER$v "
+    fi
+  done
+
+  VECTOR_WIDTHS="$(echo "$VECTOR_WIDTHS_FILTER" | xargs)"
 
   if [ $VECTOR_WIDTH_MAX -gt 4 ]; then
     VECTOR_WIDTH_MAX=4
@@ -526,6 +590,10 @@ fi
 
 if [ $BACKEND_DEVICES_KEEPFREE -gt 0 ]; then
   OPTS="${OPTS} --backend-devices-keepfree ${BACKEND_DEVICES_KEEPFREE}"
+fi
+
+if [ $CLEAN_CACHE_DISABLE -eq 0 ]; then
+  clean_cache $UNAME
 fi
 
 if [ ${VERBOSE} -ge 1 ]; then
@@ -668,9 +736,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
         for vector_width in ${VECTOR_WIDTHS}; do
 
-          if [ $VECTOR_WIDTH != "all" ]; then
-            if [ $VECTOR_WIDTH -ne $vector_width ]; then continue; fi
-          else
+          if [ "$VECTOR_WIDTH" == "all" ]; then
             if [ ${vector_width} -lt ${VECTOR_WIDTH_MIN} ]; then continue; fi
             if [ ${vector_width} -gt ${VECTOR_WIDTH_MAX} ]; then continue; fi
           fi
@@ -704,7 +770,7 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
 
               x="echo -n '${word}'"
 
-              if [ "${hash_type}" == "20510" ]; then
+              if [ ${hash_type} -eq 20510 ]; then
                 word_compare="echo -n '${word}'"
                 x="echo -n '${word}' | cut -b7-"
               fi
@@ -718,6 +784,13 @@ for hash_type in $(ls tools/test_modules/*.pm | cut -d'm' -f3 | cut -d'.' -f1 | 
               fi
 
               word=$(eval $x)
+
+              if [ ${hash_type} -eq 20510 ]; then
+                if [ "$word_len" -le 6 ] && [ "${#word}" -eq 0 ] && { [ "$attack_type" -eq 3 ] || [ "$attack_type" -eq 6 ] || [ "$attack_type" -eq 7 ]; }; then
+                 echo "[ ${OUTD} ] > Skipping Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Vector-Width ${vector_width}, Target-Type multi (word len <= 6 not allowed with attack-type 3, 6 and 7)" | tee -a ${OUTD}/test_edge.details.log
+                 continue
+                fi
+              fi
 
               if [ ${VERBOSE} -ge 1 ]; then
                 echo "[ ${OUTD} ] > Hash-Type ${hash_type}, Attack-Type ${attack_type}, Kernel-Type ${kernel_type}, Test ID ${i}, Word len ${word_len}, Salt len ${salt_len}, Word '${word}', Salt '${salt}', Hash ${hash}" | tee -a ${OUTD}/test_edge.details.log

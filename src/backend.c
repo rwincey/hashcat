@@ -5387,6 +5387,9 @@ int backend_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
         const int CL_rc = hc_clGetDeviceIDs (hashcat_ctx, opencl_platform, CL_DEVICE_TYPE_ALL, DEVICES_MAX, opencl_platform_devices, &opencl_platform_devices_cnt);
 
+        // they conflict with hip/cuda AND with opencl devices
+        if (opencl_platform_vendor_id == VENDOR_ID_MICROSOFT) opencl_platform_devices_cnt = 0;
+
         if (CL_rc == -1)
         {
           // Special handling for CL_DEVICE_NOT_FOUND, see: https://github.com/hashcat/hashcat/issues/2455
@@ -6966,7 +6969,10 @@ static void backend_ctx_devices_init_metal (hashcat_ctx_t *hashcat_ctx, MAYBE_UN
 
 static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *virthost, int *virthost_finder, int *backend_devices_idx, int *bridge_link_device)
 {
+  #if defined (__linux__)
   const folder_config_t *folder_config = hashcat_ctx->folder_config;
+  #endif
+
   const bridge_ctx_t    *bridge_ctx    = hashcat_ctx->bridge_ctx;
         backend_ctx_t   *backend_ctx   = hashcat_ctx->backend_ctx;
         user_options_t  *user_options  = hashcat_ctx->user_options;
@@ -16590,7 +16596,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
 
     if (hashconfig->bridge_type)
     {
-      void *h_tmps = hcmalloc_aligned (device_param->size_tmps, 64);
+      void *h_tmps = hcmalloc_bridge_aligned (device_param->size_tmps, 64);
 
       device_param->h_tmps = h_tmps;
     }
@@ -16919,7 +16925,7 @@ void backend_session_destroy (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->skipped == true) continue;
 
-    hcfree_aligned (device_param->h_tmps);
+    hcfree_bridge_aligned (device_param->h_tmps);
     hcfree (device_param->pws_comp);
     hcfree (device_param->pws_idx);
     hcfree (device_param->pws_pre_buf);
@@ -17409,8 +17415,8 @@ int backend_session_update_mp (hashcat_ctx_t *hashcat_ctx)
 
     if (device_param->is_opencl == true)
     {
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_FALSE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE,  0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_TRUE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE, 0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
 
       if (hc_clFlush (hashcat_ctx, device_param->opencl_command_queue) == -1) return -1;
     }
@@ -17465,8 +17471,8 @@ int backend_session_update_mp_rl (hashcat_ctx_t *hashcat_ctx, const u32 css_cnt_
 
     if (device_param->is_opencl == true)
     {
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_FALSE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
-      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE,  0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_root_css_buf,   CL_TRUE, 0, device_param->size_root_css,   mask_ctx->root_css_buf,   0, NULL, NULL) == -1) return -1;
+      if (hc_clEnqueueWriteBuffer (hashcat_ctx, device_param->opencl_command_queue, device_param->opencl_d_markov_css_buf, CL_TRUE, 0, device_param->size_markov_css, mask_ctx->markov_css_buf, 0, NULL, NULL) == -1) return -1;
 
       if (hc_clFlush (hashcat_ctx, device_param->opencl_command_queue) == -1) return -1;
     }

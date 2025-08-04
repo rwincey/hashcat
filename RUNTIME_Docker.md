@@ -41,8 +41,7 @@ Here is an example for nvidia on ubuntu:
 docker build -f docker/BinaryPackage.ubuntu20 -t hashcat-binaries .
 docker build -f docker/runtime.cuda.ubuntu24.withbuild -t hashcat .
 docker run --rm --gpus=all -it hashcat bash
-root@docker:~/# cd hashcat-6.2.6
-root@docker:~/hashcat-6.2.6# ./hashcat.bin --help
+root@docker:~/hashcat# ./hashcat.bin --help
 ```
 
 

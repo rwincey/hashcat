@@ -17,12 +17,15 @@
 ## User Interaction Improvements
 
 - Changed hash-category for hash-modes 25600, 25800, 28400 and 30600 to HASH_CATEGORY_RAW_HASH_SALTED
+- Update default benchmark selection for -b and benchmark_deep.pl
 
 ##
 ## Technical
 ##
 
 - Backend: Splitting backend_session_begin into smaller runtime-specific functions
+- Backend: Work around JiT compiler issue in AMD OpenCL on Windows in UTF8->UTF16 conversion
+- Backend: Switch AMD OpenCL path to generic fallback and add HIP device check for Windows
 
 * changes v6.2.6 -> v7.0.0
 

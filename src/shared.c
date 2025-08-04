@@ -1712,13 +1712,31 @@ bool get_free_memory (u64 *free_mem)
 
   #else
 
-  struct sysinfo info;
+  // get MemAvailable from /proc/meminfo instead of sysinfo.freeram
 
-  if (sysinfo (&info) != 0) return false;
+  FILE *fp = fopen("/proc/meminfo", "r");
 
-  *free_mem = (u64) info.freeram * info.mem_unit;
+  if (!fp) false;
 
-  return true;
+  char line[256] = { 0 };
+
+  u64 memAvailable_kb = 0;
+
+  while (fgets (line, sizeof (line), fp))
+  {
+    if (sscanf(line, "MemAvailable: %" SCNu64 " kB", &memAvailable_kb) == 1)
+    {
+      fclose(fp);
+
+      *free_mem = (memAvailable_kb * 1024);
+
+      return true;
+    }
+  }
+
+  fclose (fp);
+
+  return false;
 
   #endif
 }

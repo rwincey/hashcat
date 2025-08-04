@@ -6235,6 +6235,30 @@ static void backend_ctx_devices_init_hip (hashcat_ctx_t *hashcat_ctx, int *virth
 
       device_param->gcnArchName = strdup (prop.gcnArchName);
 
+      // to recheck: -b -m 1000 is enough
+
+      #if defined (_WIN) || defined (__CYGWIN__)
+      int gcnarch = 0;
+
+      bool gcnskip = false;
+
+      if (sscanf (device_param->gcnArchName, "gfx%d", &gcnarch) == 1)
+      {
+        if (gcnarch < 1000) gcnskip = true;
+      }
+      else
+      {
+        gcnskip = true;
+      }
+
+      if ((user_options->force == false) && (gcnskip == true))
+      {
+        event_log_error (hashcat_ctx, "* Device #%u: This HIP version does not support this device on Windows. Falling back to OpenCL. Use --force to override.", device_id + 1);
+
+        device_param->skipped = true;
+      }
+      #endif
+
       // regsPerBlock
 
       if (hc_hipGetDeviceProperties (hashcat_ctx, &prop, hip_device) == -1)
@@ -7057,24 +7081,27 @@ static void backend_ctx_devices_init_opencl (hashcat_ctx_t *hashcat_ctx, int *vi
         device_param->use_opencl20 = false;
         device_param->use_opencl30 = false;
 
-        int opencl_version_min = 0;
         int opencl_version_maj = 0;
+        int opencl_version_min = 0;
 
-        if (sscanf (opencl_platform_version, "OpenCL %d.%d", &opencl_version_min, &opencl_version_maj) == 2)
+        if (sscanf (opencl_platform_version, "OpenCL %d.%d", &opencl_version_maj, &opencl_version_min) == 2)
         {
-          if ((opencl_version_min == 1) && (opencl_version_maj == 1))
+          if (opencl_version_maj == 1)
           {
             device_param->use_opencl11 = true;
           }
-          else if ((opencl_version_min == 1) && (opencl_version_maj == 2))
+
+          if ((opencl_version_maj == 1) && (opencl_version_min == 2))
           {
             device_param->use_opencl12 = true;
           }
-          else if ((opencl_version_min == 2) && (opencl_version_maj == 0))
+
+          if (opencl_version_maj == 2)
           {
             device_param->use_opencl20 = true;
           }
-          else if ((opencl_version_min == 3) && (opencl_version_maj == 0))
+
+          if (opencl_version_maj == 3)
           {
             device_param->use_opencl30 = true;
           }

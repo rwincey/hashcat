@@ -18,7 +18,7 @@ There will be different dockerfiles for different platforms in the syntax "docke
 
 Also there are two options available to build the image:
 
-1. With the official binaires (docker/runtime.PLATFORM.OS)
+## 1. With the official binaires (docker/runtime.PLATFORM.OS)
 
 This will download the version specified in the dockerfile from the official website and use it.
 
@@ -31,7 +31,7 @@ root@docker:~/hashcat# ./hashcat.bin --help
 ```
 
    
-2. Build the binaires yourself (docker/runtime.PLATFORM.OS.withbuild)
+## 2. Build the binaires yourself (docker/runtime.PLATFORM.OS.withbuild)
 
 This will require the official build container to already be built (with the tag hashcat-binaries) successfully and will pull the hashcat from it.
 

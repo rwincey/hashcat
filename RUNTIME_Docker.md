@@ -33,7 +33,7 @@ root@docker:~/hashcat# ./hashcat.bin --help
    
 ## 2. Build the binaires yourself (docker/runtime.PLATFORM.OS.withbuild)
 
-This will require the official build container to already be built (with the tag hashcat-binaries) successfully and will pull the hashcat from it.
+This will require the official build container to already be built (with the tag hashcat-binaries) successfully and will pull hashcat from it.
 
 Here is an example for nvidia on ubuntu:
 
@@ -43,5 +43,4 @@ docker build -f docker/runtime.cuda.ubuntu24.withbuild -t hashcat .
 docker run --rm --gpus=all -it hashcat bash
 root@docker:~/hashcat# ./hashcat.bin --help
 ```
-
 

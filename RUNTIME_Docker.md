@@ -11,6 +11,8 @@ For nvidia go here https://docs.nvidia.com/datacenter/cloud-native/container-too
 
 For AMD go here https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/docker.html
 
+TBD Intel
+
 
 ### Building and Runtime ###
 

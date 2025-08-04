@@ -14,7 +14,9 @@ For AMD go here https://rocm.docs.amd.com/projects/install-on-linux/en/latest/ho
 
 ### Building and Runtime ###
 
-There will be different dockerfiles for different platforms in the syntax "docker/runtime.PLATFORM.OS".
+There will be different dockerfiles for different platforms in the syntax "docker/runtime.PLATFORM.OS", each of which only works on that specific platform and requires the host to have the prequesists installed.
+
+Currently there are only dockerfiles for cuda available (docker/runtime.cuda.OS), more will follow.
 
 Also there are two options available to build the image:
 

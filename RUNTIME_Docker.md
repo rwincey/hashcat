@@ -3,7 +3,7 @@
 
 ## Prequesists ##
 
-If you want to run hashcat with your gpus inside docker you first need to install the appropriate container runtime.
+If you want to run hashcat with your gpus inside docker you first need to install the appropriate container runtime to allow for gpu-passthrough and install usually the latest driver on the host.
 
 ### NVidia ### 
 

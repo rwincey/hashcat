@@ -1,22 +1,22 @@
 /**
  * based on mode 3200
- * 
- * 
+ *
+ *
  * related tickets/issues
- * 
+ *
  * https://github.com/hashcat/hashcat/issues/73
- * support to recover Woltlab Burning Board 4.x hashes #73 
+ * support to recover Woltlab Burning Board 4.x hashes #73
  * (closed without implementation)
- * 
+ *
  * https://github.com/hashcat/hashcat/issues/2788
- * Bcrypt(Bcrypt($Pass)) Kernel Support #2788 
- * 
- * 
+ * Bcrypt(Bcrypt($Pass)) Kernel Support #2788
+ *
+ *
  * john the ripper
- * 
+ *
  * https://github.com/openwall/john/issues/2413
- * Add support for Woltlab Burning Board 4.x hashes #2413 
- * 
+ * Add support for Woltlab Burning Board 4.x hashes #2413
+ *
  */
 
 #include "common.h"
@@ -33,7 +33,7 @@ static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_4_6;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_FORUM_SOFTWARE;
-static const char *HASH_NAME      = "WBB4 (Woltlab Burning Board) Plugin [bcrypt(bcrypt($pass))]";
+static const char *HASH_NAME      = "WBB4 (Woltlab Burning Board) [bcrypt(bcrypt($pass))]";
 static const u64   KERN_TYPE      = 33800;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
@@ -75,7 +75,7 @@ typedef struct bcrypt_tmp
   u32 S1[256];
   u32 S2[256];
   u32 S3[256];
-  
+
 } bcrypt_tmp_t;
 
 u32 module_pw_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
@@ -175,7 +175,7 @@ char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig, MAY
         // there's no official way to query for this value.
 
         const u32 fixed_local_size = device_param->kernel_dynamic_local_mem_size_memset / 4096;
-        
+
         hc_asprintf (&jit_build_options, "-D FIXED_LOCAL_SIZE=%u -D DYNAMIC_LOCAL", fixed_local_size);
       }
       else
@@ -186,7 +186,7 @@ char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig, MAY
       }
     }
   }
-  
+
   return jit_build_options;
 }
 
@@ -262,7 +262,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   base64_decode (bf64_to_int, (const u8 *) hash_pos, hash_len, tmp_buf);
 
   memcpy (digest, tmp_buf, 24);
-  
+
   digest[0] = byte_swap_32 (digest[0]);
   digest[1] = byte_swap_32 (digest[1]);
   digest[2] = byte_swap_32 (digest[2]);

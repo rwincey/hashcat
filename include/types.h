@@ -3253,7 +3253,6 @@ typedef struct hc_token
 
 typedef enum hash_category
 {
-  HASH_CATEGORY_UNDEFINED               = 0,
   HASH_CATEGORY_RAW_HASH                = 1,
   HASH_CATEGORY_RAW_HASH_SALTED         = 2,
   HASH_CATEGORY_RAW_HASH_AUTHENTICATED  = 3,
@@ -3277,7 +3276,8 @@ typedef enum hash_category
   HASH_CATEGORY_IMS                     = 21,
   HASH_CATEGORY_CRYPTOCURRENCY_WALLET   = 22,
   HASH_CATEGORY_FBE                     = 23,
-  HASH_CATEGORY_APPLICATION_DATABASE    = 24
+  HASH_CATEGORY_APPLICATION_DATABASE    = 24,
+  HASH_CATEGORY_UNDEFINED               = -1,
 } hash_category_t;
 
 // hash specific

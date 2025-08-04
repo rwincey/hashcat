@@ -1,11 +1,11 @@
 # Building and running container with Docker
 
 
-### Prequesists ###
+## Prequesists ##
 
 If you want to run hashcat with your gpus inside docker you first need to install the appropriate container runtime.
 
-## NVidia ## 
+### NVidia ### 
 
 To enable your docker deamon to support gpu passthrough go here https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 
@@ -13,17 +13,17 @@ To enable your docker deamon to support gpu passthrough go here https://docs.nvi
 
 Also make sure to install the latest cuda on your host system.
 
-## AMD ##
+### AMD ###
 
 For AMD go here https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/docker.html
 
 
-## Intel ## 
+### Intel ### 
 
 TBD
 
 
-### Building and Runtime ###
+## Building and Runtime ##
 
 There will be different dockerfiles for different platforms in the syntax "docker/runtime.PLATFORM.OS", each of which only works on that specific platform and requires the host to have the prequesists installed.
 

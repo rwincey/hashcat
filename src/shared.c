@@ -1710,6 +1710,38 @@ bool get_free_memory (u64 *free_mem)
 
   return true;
 
+  #elif defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__)
+
+  size_t len;
+
+  u64 pagesize = 0, free_pages = 0, cache_pages = 0, inactive_pages = 0;
+
+  len = sizeof (pagesize);
+
+  if (sysctlbyname ("hw.pagesize", &pagesize, &len, NULL, 0) == -1) return false;
+
+  len = sizeof (free_pages);
+
+  if (sysctlbyname ("vm.stats.vm.v_free_count", &free_pages, &len, NULL, 0) == -1) return false;
+
+  #if defined(__OpenBSD__) || defined(__FreeBSD__)
+
+  len = sizeof (cache_pages);
+
+  if (sysctlbyname ("vm.stats.vm.v_cache_count", &cache_pages, &len, NULL, 0) == -1) return false;
+
+  #endif // __OpenBSD__ || __FreeBSD__
+
+  len = sizeof (inactive_pages);
+
+  if (sysctlbyname ("vm.stats.vm.v_inactive_count", &inactive_pages, &len, NULL, 0) == -1) return false;
+
+  u64 total_pages = free_pages + cache_pages + inactive_pages;
+
+  *free_mem = (u64) (total_pages * pagesize);
+
+  return true;
+
   #else
 
   // Get MemAvailable from /proc/meminfo instead of sysinfo()

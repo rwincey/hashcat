@@ -37,6 +37,7 @@
 ## Technical
 ##
 
+- Device Memory: Do not disable hwmon interface by default in speed_only and progress_only mode.
 - Backend: Move common functions from blowfish modules to blowfish_common.c
 - Backend: Splitting backend_session_begin into smaller runtime-specific functions
 - Backend: Switch AMD OpenCL path to generic fallback and add HIP device check for Windows

@@ -375,11 +375,11 @@ endif # FreeBSD
 ifeq ($(UNAME),OpenBSD)
 ifndef PORTNAME
 CFLAGS_NATIVE           := $(CFLAGS)
-CFLAGS_NATIVE           += -I /ram/usr/local/include
-#CFLAGS_NATIVE           += -I /usr/local/include
+#CFLAGS_NATIVE           += -I /ram/usr/local/include
+CFLAGS_NATIVE           += -I /usr/local/include
 LFLAGS_NATIVE           := $(LFLAGS)
-LFLAGS_NATIVE           += -L /ram/usr/local/lib
-#LFLAGS_NATIVE           += -L /usr/local/lib
+#LFLAGS_NATIVE           += -L /ram/usr/local/lib
+LFLAGS_NATIVE           += -L /usr/local/lib
 LFLAGS_NATIVE           += -lpthread
 LFLAGS_NATIVE           += -lm
 LFLAGS_NATIVE           += -liconv

@@ -16,6 +16,7 @@ USE_SYSTEM_OPENCL       ?= 0
 USE_SYSTEM_XXHASH       ?= 0
 ## do not change, requires some hacks
 USE_SYSTEM_UNRAR        ?= 0
+MAINTAINER_MODE         ?= 0
 
 ##
 ## Detect Operating System

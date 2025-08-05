@@ -16286,7 +16286,7 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       if (device_param->is_cuda   == true) local_size_bytes = cuda_query_max_local_size_bytes   (hashcat_ctx, device_param);
       if (device_param->is_hip    == true) local_size_bytes = hip_query_max_local_size_bytes    (hashcat_ctx, device_param);
       if (device_param->is_opencl == true) local_size_bytes = opencl_query_max_local_size_bytes (hashcat_ctx, device_param);
-      #if defined(__APPLE__)
+      #if defined (__APPLE__)
       if (device_param->is_metal  == true) local_size_bytes = metal_query_max_local_size_bytes  (hashcat_ctx, device_param);
       #endif
     }

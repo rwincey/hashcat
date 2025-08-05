@@ -44,8 +44,7 @@
 - Backend: Switch AMD OpenCL path to generic fallback and add HIP device check for Windows
 - Backend: Work around JiT compiler issue in AMD OpenCL on Windows in UTF8->UTF16 conversion
 - Host Memory: Update method to query free memory on Linux to /proc/meminfo
-- Host Memory: Add method to query free memory on OpenBSD, FreeBDS and NetBSD using sysctlbyname
-- Makefile: Add the missing check for OpenBSD in the Makefile
+- Updated *BSD support (OpenBSD, NetBSD, FreeBSD, DragonflyBSD)
 
 * changes v6.2.6 -> v7.0.0
 

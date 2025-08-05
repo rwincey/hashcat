@@ -459,7 +459,8 @@ void SetConsoleWindowSize (const int x)
 }
 #endif
 
-#if defined (__FreeBSD__) || defined (__NetBSD__) || defined (__linux__) || defined (__CYGWIN__)
+#if defined (__OpenBSD__)   || (__FreeBSD__)       || defined (__NetBSD__) || \
+    defined (__DragonFly__) || defined (__linux__) || defined (__CYGWIN__)
 static struct termios savemodes;
 static int havemodes = 0;
 
@@ -622,11 +623,11 @@ int tty_fix (void)
 
 bool is_stdout_terminal (void)
 {
-#if defined(_WIN)
+  #if defined (_WIN)
   return _isatty(_fileno (stdout));
-#else
+  #else
   return isatty (fileno (stdout));
-#endif
+  #endif
 }
 
 void compress_terminal_line_length (char *out_buf, const size_t keep_from_beginning, const size_t keep_from_end)
@@ -1325,7 +1326,33 @@ void backend_info (hashcat_ctx_t *hashcat_ctx)
 
     char *hw_model_buf = NULL;
 
-    #if !defined (__linux__) && !defined (__CYGWIN__) && !defined (__MSYS__)
+    #if defined (__OpenBSD__)
+
+    int mib[2] = {CTL_HW, HW_MACHINE};
+
+    size_t hw_model_len = 0;
+
+    // First get length of the result string
+
+    if (sysctl (mib, 2, NULL, &hw_model_len, NULL, 0) == 0 && hw_model_len > 0)
+    {
+      hw_model_buf = (char *) hcmalloc (hw_model_len);
+
+      if (sysctl (mib, 2, hw_model_buf, &hw_model_len, NULL, 0) != 0)
+      {
+        hcfree (hw_model_buf);
+
+        hw_model_buf = NULL;
+
+        hw_model_len = 0;
+      }
+      else
+      {
+        rc_sysctl = true;
+      }
+    }
+
+    #elif !defined (__linux__) && !defined (__CYGWIN__) && !defined (__MSYS__)
 
     size_t hw_model_len = 0;
 
@@ -3694,7 +3721,7 @@ void status_display (hashcat_ctx_t *hashcat_ctx)
 
   if (hwmon_ctx->enabled == true)
   {
-    #if defined(__APPLE__)
+    #if defined (__APPLE__)
     bool first_dev = true;
     #endif
 
@@ -3704,7 +3731,7 @@ void status_display (hashcat_ctx_t *hashcat_ctx)
 
       if (device_info0->hwmon_dev)
       {
-        #if defined(__APPLE__)
+        #if defined (__APPLE__)
         if (first_dev && strlen (device_info0->hwmon_fan_dev) > 0)
         {
           event_log_info (hashcat_ctx, "Hardware.Mon.SMC.: %s", device_info0->hwmon_fan_dev);
@@ -3728,7 +3755,7 @@ void status_display (hashcat_ctx_t *hashcat_ctx)
 
         if (device_info->hwmon_dev == NULL) continue;
 
-        #if defined(__APPLE__)
+        #if defined (__APPLE__)
         if (first_dev && strlen (device_info->hwmon_fan_dev) > 0)
         {
           event_log_info (hashcat_ctx, "Hardware.Mon.SMC.: %s", device_info->hwmon_fan_dev);

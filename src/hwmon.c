@@ -504,7 +504,7 @@ int hm_get_fanpolicy_with_devices_idx (hashcat_ctx_t *hashcat_ctx, const int bac
   return -1;
 }
 
-#if defined(__APPLE__)
+#if defined (__APPLE__)
 int hm_get_fanspeed_apple (hashcat_ctx_t *hashcat_ctx, char *fan_speed_buf)
 {
   hwmon_ctx_t *hwmon_ctx = hashcat_ctx->hwmon_ctx;
@@ -798,7 +798,7 @@ int hm_get_utilization_with_devices_idx (hashcat_ctx_t *hashcat_ctx, const int b
     }
   }
 
-  #if defined(__APPLE__)
+  #if defined (__APPLE__)
   if (backend_ctx->devices_param[backend_device_idx].is_metal == true || backend_ctx->devices_param[backend_device_idx].is_opencl == true)
   {
     if (backend_ctx->devices_param[backend_device_idx].opencl_platform_vendor_id == VENDOR_ID_APPLE)
@@ -1846,7 +1846,7 @@ int hwmon_ctx_init (hashcat_ctx_t *hashcat_ctx)
     }
   }
 
-  #if defined(__APPLE__)
+  #if defined (__APPLE__)
   if (backend_ctx->need_iokit == true)
   {
     hwmon_ctx->hm_iokit = (IOKIT_PTR *) hcmalloc (sizeof (IOKIT_PTR));
@@ -1888,7 +1888,7 @@ int hwmon_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
   hwmon_ctx_init_sysfs_cpu (hashcat_ctx, hm_adapters_sysfs_cpu, backend_devices_cnt);
 
-  #if defined(__APPLE__)
+  #if defined (__APPLE__)
   if (backend_ctx->need_iokit == true)
   {
     hwmon_ctx->hm_iokit = (IOKIT_PTR *) hcmalloc (sizeof (IOKIT_PTR));
@@ -2002,7 +2002,7 @@ int hwmon_ctx_init (hashcat_ctx_t *hashcat_ctx)
     {
       if (device_param->opencl_device_type & CL_DEVICE_TYPE_CPU)
       {
-        #if defined(__APPLE__)
+        #if defined (__APPLE__)
         if (device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE)
         {
           if (hwmon_ctx->hm_iokit)
@@ -2041,7 +2041,7 @@ int hwmon_ctx_init (hashcat_ctx_t *hashcat_ctx)
 
       if (device_param->opencl_device_type & CL_DEVICE_TYPE_GPU)
       {
-        #if defined(__APPLE__)
+        #if defined (__APPLE__)
         if (device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE)
         {
           if (hwmon_ctx->hm_iokit)

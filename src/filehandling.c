@@ -86,7 +86,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
   {
     oflag = O_WRONLY | O_CREAT | O_APPEND;
 
-    #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    #if defined (MSDOS) || defined (OS2) || defined (WIN32) || defined (_WIN32) || defined (__CYGWIN__)
     if (strncmp (mode, "ab", 2) == 0) oflag |= O_BINARY;
     #endif
   }
@@ -95,7 +95,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
     oflag = O_RDONLY;
     fmode = -1;
 
-    #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    #if defined (MSDOS) || defined (OS2) || defined (WIN32) || defined (_WIN32) || defined (__CYGWIN__)
     if (strncmp (mode, "rb", 2) == 0) oflag |= O_BINARY;
     #endif
   }
@@ -103,7 +103,7 @@ bool hc_fopen (HCFILE *fp, const char *path, const char *mode)
   {
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 
-    #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    #if defined (MSDOS) || defined (OS2) || defined (WIN32) || defined (_WIN32) || defined (__CYGWIN__)
     if (strncmp (mode, "wb", 2) == 0) oflag |= O_BINARY;
     #endif
   }
@@ -315,7 +315,7 @@ bool hc_fopen_raw (HCFILE *fp, const char *path, const char *mode)
   {
     oflag = O_WRONLY | O_CREAT | O_APPEND;
 
-    #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    #if defined (MSDOS) || defined (OS2) || defined (WIN32) || defined (_WIN32) || defined (__CYGWIN__)
     if (strncmp (mode, "ab", 2) == 0) oflag |= O_BINARY;
     #endif
   }
@@ -324,7 +324,7 @@ bool hc_fopen_raw (HCFILE *fp, const char *path, const char *mode)
     oflag = O_RDONLY;
     fmode = -1;
 
-    #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    #if defined (MSDOS) || defined (OS2) || defined (WIN32) || defined (_WIN32) || defined (__CYGWIN__)
     if (strncmp (mode, "rb", 2) == 0) oflag |= O_BINARY;
     #endif
   }
@@ -332,7 +332,7 @@ bool hc_fopen_raw (HCFILE *fp, const char *path, const char *mode)
   {
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 
-    #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    #if defined (MSDOS) || defined (OS2) || defined (WIN32) || defined (_WIN32) || defined (__CYGWIN__)
     if (strncmp (mode, "wb", 2) == 0) oflag |= O_BINARY;
     #endif
   }
@@ -431,7 +431,7 @@ size_t hc_fread (void *ptr, size_t size, size_t nmemb, HCFILE *fp)
     u64 len = (u64) size * nmemb;
     u64 pos = 0;
 
-    #if defined(_WIN) && !defined(_WIN64)
+    #if defined (_WIN) && !defined (_WIN64)
     /* check 2 GB limit with 32 bit build */
     if (len >= INT32_MAX) return n;
     #endif
@@ -462,7 +462,7 @@ size_t hc_fread (void *ptr, size_t size, size_t nmemb, HCFILE *fp)
     SRes res = SZ_OK;
     xzfile_t *xfp = fp->xfp;
 
-    #if defined(_WIN) && !defined(_WIN64)
+    #if defined (_WIN) && !defined (_WIN64)
     /* check 2 GB limit with 32 bit build */
     if (outLen >= INT32_MAX) return n;
     #endif

@@ -2095,7 +2095,7 @@ int hashcat_get_status (hashcat_ctx_t *hashcat_ctx, hashcat_status_t *hashcat_st
     device_info->exec_msec_dev                  = status_get_exec_msec_dev                  (hashcat_ctx, device_id);
     device_info->speed_sec_dev                  = status_get_speed_sec_dev                  (hashcat_ctx, device_id);
     device_info->guess_candidates_dev           = status_get_guess_candidates_dev           (hashcat_ctx, device_id);
-    #if defined(__APPLE__)
+    #if defined (__APPLE__)
     device_info->hwmon_fan_dev                  = status_get_hwmon_fan_dev                  (hashcat_ctx);
     #endif
     device_info->hwmon_dev                      = status_get_hwmon_dev                      (hashcat_ctx, device_id);

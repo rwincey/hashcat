@@ -25,9 +25,11 @@
 ## Technical
 ##
 
+- Backend: Move common functions from blowfish modules to blowfish_common.c
 - Backend: Splitting backend_session_begin into smaller runtime-specific functions
-- Backend: Work around JiT compiler issue in AMD OpenCL on Windows in UTF8->UTF16 conversion
 - Backend: Switch AMD OpenCL path to generic fallback and add HIP device check for Windows
+- Backend: Work around JiT compiler issue in AMD OpenCL on Windows in UTF8->UTF16 conversion
+- Kernel: Move common code from kernels to inc_cipher_blowfish.c/.h
 - Shared: with get_free_memory() on Linux, get MemAvailable from /proc/meminfo instead of using sysinfo.freeram
 
 * changes v6.2.6 -> v7.0.0

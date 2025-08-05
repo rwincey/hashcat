@@ -870,6 +870,24 @@ DECLSPEC u64x hl32_to_64 (const u32x a, const u32x b)
   return r;
 }
 
+DECLSPEC u32 u16_bin_to_u32_hex_lsn (const u32 v)
+{
+  const u32 v0 = (v >> 0) & 15;
+  const u32 v1 = (v >> 4) & 15;
+
+  return ((v0 < 10) ? '0' + v0 : 'a' - 10 + v0) << 8
+       | ((v1 < 10) ? '0' + v1 : 'a' - 10 + v1) << 0;
+}
+
+DECLSPEC u32 u16_bin_to_u32_hex_msn (const u32 v)
+{
+  const u32 v0 = (v >> 4) & 15;
+  const u32 v1 = (v >> 0) & 15;
+
+  return ((v0 < 10) ? '0' + v0 : 'a' - 10 + v0) << 8
+       | ((v1 < 10) ? '0' + v1 : 'a' - 10 + v1) << 0;
+}
+
 // bit rotates
 //
 // For HC_CPU_OPENCL_EMU_H we dont need to care about vector functions

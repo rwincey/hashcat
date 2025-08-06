@@ -6,7 +6,7 @@
 SHARED                  ?= 0
 DEBUG                   := 0
 PRODUCTION              := 0
-PRODUCTION_VERSION      := v6.2.6
+PRODUCTION_VERSION      := v7.0.0
 ENABLE_CUBIN            ?= 1
 ENABLE_BRAIN            ?= 1
 ENABLE_UNRAR            ?= 1
@@ -16,6 +16,7 @@ USE_SYSTEM_OPENCL       ?= 0
 USE_SYSTEM_XXHASH       ?= 0
 ## do not change, requires some hacks
 USE_SYSTEM_UNRAR        ?= 0
+MAINTAINER_MODE         ?= 0
 
 ##
 ## Detect Operating System

@@ -111,6 +111,24 @@ int hip_init (void *hashcat_ctx)
       } \
     } while (0)
 
+  #define HC_LOAD_FUNC_HIP_FALLBACK(ptr,name,hipname,hipname2,type,libname,noerr) \
+    do { \
+      ptr->name = (type) hc_dlsym ((ptr)->lib, #hipname); \
+      if (!(ptr)->name) ptr->name = (type) hc_dlsym ((ptr)->lib, #hipname2); \
+      if ((noerr) != -1) { \
+        if (!(ptr)->name) { \
+          if ((noerr) == 1) { \
+            event_log_error (hashcat_ctx, "%s is missing from %s shared library.", #name, #libname); \
+            return -1; \
+          } \
+          if ((noerr) != 1) { \
+            event_log_warning (hashcat_ctx, "%s is missing from %s shared library.", #name, #libname); \
+            return 0; \
+          } \
+        } \
+      } \
+    } while (0)
+
   // finding the right symbol is a PITA, because of the _v2 suffix
   // a good reference is cuda.h itself
   // this needs to be verified for each new cuda release
@@ -162,7 +180,7 @@ int hip_init (void *hashcat_ctx)
   HC_LOAD_FUNC_HIP (hip, hipStreamCreateWithFlags,  hipStreamCreateWithFlags,     HIP_HIPSTREAMCREATEWITHFLAGS,   HIP, 1);
   HC_LOAD_FUNC_HIP (hip, hipStreamDestroy,          hipStreamDestroy,             HIP_HIPSTREAMDESTROY,           HIP, 1);
   HC_LOAD_FUNC_HIP (hip, hipStreamSynchronize,      hipStreamSynchronize,         HIP_HIPSTREAMSYNCHRONIZE,       HIP, 1);
-  HC_LOAD_FUNC_HIP (hip, hipGetDeviceProperties,    hipGetDevicePropertiesR0600,  HIP_HIPGETDEVICEPROPERTIES,     HIP, 1);
+  HC_LOAD_FUNC_HIP_FALLBACK (hip, hipGetDeviceProperties,    hipGetDevicePropertiesR0600,  hipGetDeviceProperties, HIP_HIPGETDEVICEPROPERTIES,     HIP, 1);
   HC_LOAD_FUNC_HIP (hip, hipModuleOccupancyMaxActiveBlocksPerMultiprocessor, hipModuleOccupancyMaxActiveBlocksPerMultiprocessor, HIP_HIPMODULEOCCUPANCYMAXACTIVEBLOCKSPERMULTIPROCESSOR, HIP, 1);
 
   return 0;

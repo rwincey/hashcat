@@ -71,7 +71,8 @@ void *hc_alloc_aligned (size_t alignment, size_t size)
 {
   void *ptr = NULL;
 
-  #if defined(__linux__) || defined(__APPLE__) || defined(__FreeBSD__) || defined (__CYGWIN__) || defined (__MSYS__)
+  #if defined (__linux__)   || defined (__APPLE__)     || defined (__OpenBSD__) || defined (__NetBSD__) || \
+      defined (__FreeBSD__) || defined (__DragonFly__) || defined (__CYGWIN__)  || defined (__MSYS__)
 
   if (posix_memalign (&ptr, alignment, size) != 0)
   {
@@ -80,7 +81,7 @@ void *hc_alloc_aligned (size_t alignment, size_t size)
     return NULL;
   }
 
-  #elif defined(_WIN)
+  #elif defined (_WIN)
 
   ptr = _aligned_malloc (size, alignment);
 
@@ -106,7 +107,7 @@ void hc_free_aligned (void **ptr)
 {
   if (ptr == NULL || *ptr == NULL) return;
 
-  #if defined(_WIN)
+  #if defined (_WIN)
 
   _aligned_free (*ptr);
 

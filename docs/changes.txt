@@ -48,7 +48,8 @@
 - Backend: Switch AMD OpenCL path to generic fallback and add HIP device check for Windows
 - Backend: Work around JiT compiler issue in AMD OpenCL on Windows in UTF8->UTF16 conversion
 - Device Memory: Do not disable hwmon interface by default in speed-only and progress-only mode
-- Host Memory: Update method to query free memory on Linux using /proc/meminfo
+- Host Memory: Update method to query free memory on Linux, NetBSD and FreeBSD using /proc/meminfo
+- Host: Add initial support for OpenBSD and DragonflyBSD
 
 ##
 ## Bugs

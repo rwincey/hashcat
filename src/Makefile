@@ -32,7 +32,7 @@ UNAME                   := $(patsubst MSYS_NT-%,MSYS2,$(UNAME))
 UNAME                   := $(patsubst MINGW32_NT-%,MSYS2,$(UNAME))
 UNAME                   := $(patsubst MINGW64_NT-%,MSYS2,$(UNAME))
 
-ifeq (,$(filter $(UNAME),Linux FreeBSD NetBSD Darwin CYGWIN MSYS2))
+ifeq (,$(filter $(UNAME),Linux OpenBSD FreeBSD NetBSD DragonFly Darwin CYGWIN MSYS2))
 $(error "! Your Operating System ($(UNAME)) is not supported by this Makefile")
 endif
 
@@ -92,9 +92,15 @@ endif
 IS_AARCH64              := $(shell [ "$$(arch 2>/dev/null)" = "aarch64" ] && echo 1 || echo 0)
 IS_ARM                  := $(or $(filter 1,$(IS_APPLE_SILICON)),$(filter 1,$(IS_AARCH64)))
 
-ifneq (,$(filter $(UNAME),FreeBSD NetBSD))
+ifneq (,$(filter $(UNAME),FreeBSD NetBSD DragonFly))
 CC                      := cc
 CXX                     := c++
+SED                     := gsed
+endif
+
+ifneq (,$(filter $(UNAME),OpenBSD))
+CC                      := egcc
+CXX                     := eg++
 SED                     := gsed
 endif
 
@@ -237,7 +243,9 @@ ifeq ($(UNAME),Darwin)
 CFLAGS_UNRAR            += -std=c++14
 endif
 ifneq ($(CC),clang)
+ifneq ($(UNAME),FreeBSD)
 CFLAGS_UNRAR            += -Wno-class-memaccess
+endif
 CFLAGS_UNRAR            += -Wno-misleading-indentation
 CFLAGS_UNRAR            += -Wno-format-overflow
 else
@@ -332,7 +340,11 @@ endif
 # unrar
 ifeq ($(ENABLE_UNRAR),1)
 CFLAGS                  += -I$(DEPS_UNRAR_PATH)
+ifeq ($(UNAME),OpenBSD)
+LFLAGS                  += -lc++
+else
 LFLAGS                  += -lstdc++
+endif
 endif
 
 ##
@@ -349,20 +361,38 @@ LFLAGS_NATIVE           += -lrt
 LFLAGS_NATIVE           += -lm
 endif # Linux
 
-ifeq ($(UNAME),FreeBSD)
+ifneq (,$(filter $(UNAME),FreeBSD DragonFly))
 ifndef PORTNAME
 CFLAGS_NATIVE           := $(CFLAGS)
 LFLAGS_NATIVE           := $(LFLAGS)
+LFLAGS_NATIVE           += -L /usr/local/lib
 LFLAGS_NATIVE           += -lpthread
 LFLAGS_NATIVE           += -lm
 LFLAGS_NATIVE           += -liconv
 endif
 endif # FreeBSD
 
+ifeq ($(UNAME),OpenBSD)
+ifndef PORTNAME
+CFLAGS_NATIVE           := $(CFLAGS)
+#CFLAGS_NATIVE           += -I /ram/usr/local/include
+CFLAGS_NATIVE           += -I /usr/local/include
+LFLAGS_NATIVE           := $(LFLAGS)
+#LFLAGS_NATIVE           += -L /ram/usr/local/lib
+LFLAGS_NATIVE           += -L /usr/local/lib
+LFLAGS_NATIVE           += -lpthread
+LFLAGS_NATIVE           += -lm
+LFLAGS_NATIVE           += -liconv
+endif
+endif # OpenBSD
+
 ifeq ($(UNAME),NetBSD)
 CFLAGS_NATIVE           := $(CFLAGS)
+CFLAGS_NATIVE           += -I /usr/pkg/include
 LFLAGS_NATIVE           := $(LFLAGS)
+LFLAGS_NATIVE           += -L /usr/pkg/lib
 LFLAGS_NATIVE           += -lpthread
+LFLAGS_NATIVE           += -liconv
 endif # NetBSD
 
 ifeq ($(UNAME),Darwin)
@@ -545,10 +575,10 @@ distclean: clean
 # allow (whitelist) "make install" only on unix-based systems (also disallow cygwin/msys)
 
 ifneq ($(findstring install,$(MAKECMDGOALS)),)
-  ifeq (,$(filter $(UNAME),Linux FreeBSD Darwin NetBSD))
+  ifeq (,$(filter $(UNAME),Linux FreeBSD OpenBSD NetBSD DragonFly Darwin))
     define ERROR_INSTALL_DISALLOWED
 ! The 'install' target is not allowed on this operating system ($(UNAME)). \
-Only Linux, FreeBSD, NetBSD and Darwin can use the 'install' target
+Only Linux, FreeBSD, OpenBSD, NetBSD, DragonFly and Darwin can use the 'install' target
     endef
 
     $(error $(ERROR_INSTALL_DISALLOWED))

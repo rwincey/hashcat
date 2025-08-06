@@ -2092,7 +2092,7 @@ char *status_get_brain_link_send_bytes_sec_dev (const hashcat_ctx_t *hashcat_ctx
 }
 #endif
 
-#if defined(__APPLE__)
+#if defined (__APPLE__)
 char *status_get_hwmon_fan_dev (const hashcat_ctx_t *hashcat_ctx)
 {
   status_ctx_t *status_ctx = hashcat_ctx->status_ctx;

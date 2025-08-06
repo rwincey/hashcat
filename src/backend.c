@@ -13481,57 +13481,48 @@ int backend_session_begin (hashcat_ctx_t *hashcat_ctx)
       // We need this because we can't trust CUDA/HIP to give us the real free device memory
       // The only way to do so is through low level APIs
 
-      for (int i = 0; i < 10; i++)
+      const u64 used_bytes = hm_get_memoryused_with_devices_idx (hashcat_ctx, device_id);
+
+      if (used_bytes)
       {
-        const u64 used_bytes = hm_get_memoryused_with_devices_idx (hashcat_ctx, device_id);
+        const u64 new_left = device_param->device_global_mem - used_bytes;
 
-        if (used_bytes)
+        if (used_bytes > (device_param->device_global_mem * 0.15))
         {
-          if ((used_bytes > (3ULL * 1024 * 1024 * 1024))
-           || (used_bytes > (device_param->device_global_mem * 0.5)))
-          {
-            event_log_warning (hashcat_ctx, "* Device #%u: Memory usage is too high: %" PRIu64 "/%" PRIu64 ", waiting...", device_id + 1, used_bytes, device_param->device_global_mem);
-
-            sleep (1);
-
-            continue;
-          }
-
-          device_param->device_available_mem = MIN (device_param->device_available_mem, device_param->device_global_mem - used_bytes);
-
-          break;
+          event_log_warning (hashcat_ctx, "* Device #%u: High memory usage by desktop or other apps detected: %" PRIu64 "/%" PRIu64, device_id + 1, used_bytes, device_param->device_global_mem);
+          event_log_warning (hashcat_ctx, "             Performance is capped at %.2f%%", ((double) new_left / device_param->device_global_mem) * 100);
         }
-        else
+
+        device_param->device_available_mem = MIN (device_param->device_available_mem, new_left);
+      }
+      else
+      {
+        if (user_options->hwmon == false)
         {
-          if (user_options->hwmon == false)
+          if (user_options->machine_readable == false)
           {
-            if (user_options->machine_readable == false)
-            {
-              event_log_warning (hashcat_ctx, "* Device #%u: The hardware monitor was disabled, but it is the only reliable method to query actual free memory.", device_id + 1);
-              event_log_warning (hashcat_ctx, "             Falling back to --backend-devices-keepfree method.");
-              event_log_warning (hashcat_ctx, NULL);
-            }
+            event_log_warning (hashcat_ctx, "* Device #%u: The hardware monitor was disabled, but it is the only reliable method to query actual free memory.", device_id + 1);
+            event_log_warning (hashcat_ctx, "             Falling back to --backend-devices-keepfree method.");
+            event_log_warning (hashcat_ctx, NULL);
+          }
+        }
+
+        if (user_options->backend_devices_keepfree == 0)
+        {
+          const u64 device_available_mem_sav = device_param->device_available_mem;
+
+          const u64 device_available_mem_new = device_available_mem_sav - (device_available_mem_sav * 0.34);
+
+          if (user_options->machine_readable == false)
+          {
+            event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
+            event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
+            event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
+            event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
+            event_log_warning (hashcat_ctx, NULL);
           }
 
-          if (user_options->backend_devices_keepfree == 0)
-          {
-            const u64 device_available_mem_sav = device_param->device_available_mem;
-
-            const u64 device_available_mem_new = device_available_mem_sav - (device_available_mem_sav * 0.34);
-
-            if (user_options->machine_readable == false)
-            {
-              event_log_warning (hashcat_ctx, "* Device #%u: This system does not offer any reliable method to query actual free memory. Estimated base: %" PRIu64, device_id + 1, device_available_mem_sav);
-              event_log_warning (hashcat_ctx, "             Assuming normal desktop activity, reducing estimate by 34%%: %" PRIu64, device_available_mem_new);
-              event_log_warning (hashcat_ctx, "             This can hurt performance drastically, especially on memory-heavy algorithms.");
-              event_log_warning (hashcat_ctx, "             You can adjust this percentage using --backend-devices-keepfree");
-              event_log_warning (hashcat_ctx, NULL);
-            }
-
-            device_param->device_available_mem = device_available_mem_new;
-          }
-
-          break;
+          device_param->device_available_mem = device_available_mem_new;
         }
       }
 

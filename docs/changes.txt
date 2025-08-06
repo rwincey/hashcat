@@ -33,6 +33,7 @@
 
 - Change hash-category for hash-modes 25600, 25800, 28400 and 30600 to HASH_CATEGORY_RAW_HASH_SALTED
 - Update default benchmark selection for --benchmark and tools/benchmark_deep.pl
+- Warn instead of waiting on high GPU memory usage
 
 ## Existing Plugin and Crypto Library Improvements
 

@@ -28,7 +28,7 @@ typedef enum hc_luks_hash_type
   HC_LUKS_HASH_TYPE_SHA512    = 3,
   HC_LUKS_HASH_TYPE_RIPEMD160 = 4,
   HC_LUKS_HASH_TYPE_WHIRLPOOL = 5,
-  HC_LUKS_HASH_TYPE_ARGON2ID  = 6,
+  HC_LUKS_HASH_TYPE_ARGON2    = 6,
 
 } hc_luks_hash_type_t;
 
@@ -254,7 +254,7 @@ KERNEL_FQ void m34100_comp (KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
   CONSTANT_AS u32a *s_te3 = te3;
   CONSTANT_AS u32a *s_te4 = te4;
 
-  #endif 
+  #endif
 
   if (gid >= GID_CNT) return;
 

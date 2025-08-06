@@ -2970,7 +2970,7 @@ void status_display_status_json (hashcat_ctx_t *hashcat_ctx)
       printf (" \"fanspeed\": %d,", fanspeed);
       printf (" \"corespeed\": %d,", corespeed);
       printf (" \"memoryspeed\": %d,", memoryspeed);
-      printf (" \"buslanes\": %d }", buslanes);
+      printf (" \"buslanes\": %d,", buslanes);
       printf (" \"power\": %" PRId64 " }", power);
     }
   }

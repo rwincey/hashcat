@@ -21,7 +21,7 @@ static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_4_16;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_FDE;
-static const char *HASH_NAME      = "LUKS v2 argon2id + SHA-256 + AES";
+static const char *HASH_NAME      = "LUKS v2 argon2 + SHA-256 + AES";
 static const u64   KERN_TYPE      = 34100;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
@@ -66,7 +66,7 @@ typedef enum hc_luks_hash_type
   HC_LUKS_HASH_TYPE_SHA512    = 3,
   HC_LUKS_HASH_TYPE_RIPEMD160 = 4,
   HC_LUKS_HASH_TYPE_WHIRLPOOL = 5,
-  HC_LUKS_HASH_TYPE_ARGON2ID  = 6,
+  HC_LUKS_HASH_TYPE_ARGON2    = 6,
 
 } hc_luks_hash_type_t;
 
@@ -153,7 +153,8 @@ typedef struct argon2_options
 
 #include "argon2_common.c"
 
-static const char *SIGNATURE_LUKS = "$luks$2$argon2id$sha256$aes$";
+static const char *SIGNATURE_LUKS_ARGON2I  = "$luks$2$argon2i$sha256$aes$";
+static const char *SIGNATURE_LUKS_ARGON2ID = "$luks$2$argon2id$sha256$aes$";
 
 u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
@@ -180,13 +181,15 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   token.token_cnt  = 9;
 
-  token.signatures_cnt    = 1;
-  token.signatures_buf[0] = SIGNATURE_LUKS;
+  token.signatures_cnt    = 2;
+  token.signatures_buf[0] = SIGNATURE_LUKS_ARGON2I;
+  token.signatures_buf[1] = SIGNATURE_LUKS_ARGON2ID;
 
   // signature with pbkdf, hash and cipher type
-  token.len[0]     = 28;
-  token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
-                   | TOKEN_ATTR_VERIFY_SIGNATURE;
+  token.len_min[0] = 27;
+  token.len_max[0] = 28;
+  token.sep[0]     = 0;
+  token.attr[0]    = TOKEN_ATTR_VERIFY_SIGNATURE;
 
   // cipher mode
   token.sep[1]     = '$';
@@ -200,19 +203,19 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
                    | TOKEN_ATTR_VERIFY_DIGIT;
 
-  // argon2id - memory usage in KB (m)
+  // argon2 - memory usage in KB (m)
   token.len_min[3] = 3;
   token.len_max[3] = 12;
   token.sep[3]     = ',';
   token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH;
 
-  // argon2id - iterations (t)
+  // argon2 - iterations (t)
   token.len_min[4] = 3;
   token.len_max[4] = 5;
   token.sep[4]     = ',';
   token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH;
 
-  // argon2id - parallelism (p)
+  // argon2 - parallelism (p)
   token.len_min[5] = 3;
   token.len_max[5] = 5;
   token.sep[5]     = '$';
@@ -243,7 +246,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   // hash type
 
-  luks->hash_type = HC_LUKS_HASH_TYPE_ARGON2ID;
+  luks->hash_type = HC_LUKS_HASH_TYPE_ARGON2;
 
   // cipher type
 
@@ -308,7 +311,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   salt->salt_len = hex_decode (salt_pos, LUKS_SALT_HEX_LEN, (u8 *) salt->salt_buf);
 
-  // argon2id - memory usage in KB (m)
+  // argon2 - memory usage in KB (m)
 
   const u8 *mem_pos = token.buf[3];
 
@@ -316,7 +319,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   if (mem < 1) return (PARSER_HASH_VALUE);
 
-  // argon2id - iterations (t)
+  // argon2 - iterations (t)
 
   const u8 *iter_pos  = token.buf[4];
 
@@ -326,7 +329,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   salt->salt_iter = iter * ARGON2_SYNC_POINTS;
 
-  // argon2id - parallelism (p)
+  // argon2 - parallelism (p)
 
   const u8 *par_pos = token.buf[5];
 
@@ -336,9 +339,16 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   salt->salt_dimy = par;
 
-  // argon2id options
+  // argon2 options
 
-  options->type                = ARGON2_TYPE_ID;
+  const int sig_len = token.len[0];
+  const u8 *sig_pos = token.buf[0];
+
+       if (memcmp (SIGNATURE_LUKS_ARGON2I,  sig_pos, sig_len) == 0) options->type = 1;
+  else if (memcmp (SIGNATURE_LUKS_ARGON2ID, sig_pos, sig_len) == 0) options->type = 2;
+  else
+    return (PARSER_SIGNATURE_UNMATCHED);
+
   options->version             = ARGON2_VERSION_13;
   options->iterations          = iter;
   options->parallelism         = par;
@@ -375,6 +385,16 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 {
   const argon2_options_t *options = (argon2_options_t *) esalt_buf;
   const luks_t           *luks    = &options->luks;
+
+  // argon2 typ
+
+  const char *signature = NULL;
+
+  switch (options->type)
+  {
+    case 1: signature = SIGNATURE_LUKS_ARGON2I;  break;
+    case 2: signature = SIGNATURE_LUKS_ARGON2ID; break;
+  }
 
   // cipher mode
 
@@ -423,7 +443,7 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   // output
 
   int line_len = snprintf (line_buf, line_size, "%s%s$%u$m=%u,t=%u,p=%u$%s$%s$%s",
-    SIGNATURE_LUKS,
+    signature,
     cipher_mode,
     key_size,
     options->memory_usage_in_kib,

@@ -31,7 +31,7 @@ Currently there are only dockerfiles for cuda available (docker/runtime.cuda.OS.
 
 Also there are two TYPE options available to build the image:
 
-## 1. With the official binaires (TYPE=release) (docker/runtime.PLATFORM.OS.release)
+## 1. With the official binaries (TYPE=release) (docker/runtime.PLATFORM.OS.release)
 
 This will download the version specified in the dockerfile from the official website and use it.
 
@@ -44,7 +44,7 @@ root@docker:~/hashcat# ./hashcat.bin --help
 ```
 
    
-## 2. Build the binaires yourself (TYPE=beta) (docker/runtime.PLATFORM.OS.beta)
+## 2. Build the binaries yourself (TYPE=beta) (docker/runtime.PLATFORM.OS.beta)
 
 This will require the official build container to already be built (with the tag hashcat-binaries) successfully and will pull hashcat from it.
 

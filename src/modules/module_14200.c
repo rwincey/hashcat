@@ -86,7 +86,7 @@ typedef struct racf_kdfaes
 } racf_kdfaes_t;
 
 static const char *SIGNATURE_RACF_KDFAES = "$racf-kdfaes$";
-/*
+
 u32 module_kernel_accel_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const u32 kernel_accel_min = 16;
@@ -100,7 +100,7 @@ u32 module_kernel_accel_max (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_
 
   return kernel_accel_max;
 }
-*/
+
 u32 module_kernel_loops_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
   const u32 kernel_loops_min = 8;
@@ -373,8 +373,8 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_hook_size                = MODULE_DEFAULT;
   module_ctx->module_jit_build_options        = module_jit_build_options;
   module_ctx->module_jit_cache_disable        = MODULE_DEFAULT;
-  module_ctx->module_kernel_accel_max         = MODULE_DEFAULT; //module_kernel_accel_max;
-  module_ctx->module_kernel_accel_min         = MODULE_DEFAULT; //module_kernel_accel_min;
+  module_ctx->module_kernel_accel_max         = module_kernel_accel_max;
+  module_ctx->module_kernel_accel_min         = module_kernel_accel_min;
   module_ctx->module_kernel_loops_max         = module_kernel_loops_max;
   module_ctx->module_kernel_loops_min         = module_kernel_loops_min;
   module_ctx->module_kernel_threads_max       = MODULE_DEFAULT;

@@ -1712,15 +1712,50 @@ bool get_free_memory (u64 *free_mem)
 
   #else
 
-  struct sysinfo info;
+  // Get MemAvailable from /proc/meminfo instead of sysinfo()
 
-  if (sysinfo (&info) != 0) return false;
+  FILE *fp = fopen ("/proc/meminfo", "r");
 
-  *free_mem = (u64) info.freeram * info.mem_unit;
+  if (fp == NULL)
+  {
+    // fallback
 
-  return true;
+    struct sysinfo info;
+
+    if (sysinfo (&info) != 0) return false;
+
+    const unsigned long freeram = info.freeram;
+    const unsigned long bufferram = info.bufferram;
+    const unsigned long sharedram = info.sharedram;
+
+    const unsigned long totamram = freeram + bufferram + sharedram;
+
+    *free_mem = (u64) totamram * info.mem_unit;
+
+    return true;
+  }
+
+  char line[256] = { 0 };
+
+  u64 memAvailable_kb = 0;
+
+  while (fgets (line, sizeof (line) - 1, fp))
+  {
+    if (sscanf (line, "MemAvailable: %" SCNu64 " kB", &memAvailable_kb) == 1)
+    {
+      fclose (fp);
+
+      *free_mem = (memAvailable_kb * 1024);
+
+      return true;
+    }
+  }
+
+  fclose (fp);
 
   #endif
+
+  return false;
 }
 
 u32 previous_power_of_two (const u32 x)

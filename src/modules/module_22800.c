@@ -18,7 +18,7 @@ static const u32   DGST_POS1      = 3;
 static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 1;
 static const u32   DGST_SIZE      = DGST_SIZE_4_4;
-static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_HASH_SALTED;
+static const u32   HASH_CATEGORY  = HASH_CATEGORY_FORUM_SOFTWARE;
 static const char *HASH_NAME      = "Simpla CMS - md5($salt.$pass.md5($pass))";
 static const u64   KERN_TYPE      = 22800;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
@@ -156,7 +156,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
   module_ctx->module_bridge_name              = MODULE_DEFAULT;
-  module_ctx->module_bridge_type              = MODULE_DEFAULT;  
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

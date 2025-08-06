@@ -90,4 +90,9 @@ Jamie Riden <jamie@blacktraffic.co.uk>
 Dylan Evans <fin3ss3g0d@pm.me> (@fin3ss3g0d)
 * Apache Shiro 1 SHA-512 plugin
 
+Costin Enache <costin@detack.de>
+* RACF KDFAES module
+* IBM AS400 DES and SSHA1 modules
+* Cisco-ISE Hashed Password (SHA256) module
+
 !!! All the package maintainers of hashcat !!!

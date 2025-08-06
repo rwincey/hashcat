@@ -23,7 +23,7 @@ static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_4_8;
 // TODO: not sure about this choice
-static const u32   HASH_CATEGORY  = HASH_CATEGORY_APPLICATION_DATABASE;
+static const u32   HASH_CATEGORY  = HASH_CATEGORY_ARCHIVE;
 static const char *HASH_NAME      = "mega.nz password-protected link (PBKDF2-HMAC-SHA512)";
 static const u64   KERN_TYPE      = 33400;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
@@ -215,7 +215,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = MODULE_DEFAULT;
   module_ctx->module_bridge_name              = MODULE_DEFAULT;
-  module_ctx->module_bridge_type              = MODULE_DEFAULT;  
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

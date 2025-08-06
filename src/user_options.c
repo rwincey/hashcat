@@ -2030,7 +2030,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
 
   if (user_options->hwmon == false)
   {
-    // some algorithm, such as SCRYPT, depend on accurate free memory values
+    // some algorithm, such as SCRYPT and Argon2, depend on accurate free memory values
     // the only way to get them is through low-level APIs such as nvml via hwmon
     // we have --backend-keep-free message now
 
@@ -2064,7 +2064,7 @@ void user_options_preprocess (hashcat_ctx_t *hashcat_ctx)
    || user_options->hash_info         > 0
    || user_options->backend_info      > 0)
   {
-    user_options->hwmon               = false;
+    //user_options->hwmon               = false;
     user_options->left                = false;
     user_options->logfile             = false;
     user_options->spin_damp           = 0;

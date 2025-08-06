@@ -24,6 +24,7 @@
 
 - Building: Add MAINTAINER_MODE flag to disable hardcoded CPU optimization flags
 - Kernel: Move common code from kernels to inc_cipher_blowfish.c/.h
+- Kernel: Move common code from kernels to inc_cipher_des.c/.h
 
 ##
 ## Improvements

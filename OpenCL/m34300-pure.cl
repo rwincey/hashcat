@@ -115,7 +115,7 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
   sha256_final (&ctx);
 
   pw_t pw;
-  pw.pw_len=32;
+  pw.pw_len=32; // output of sha256 is always 32 bytes
   for (size_t i = 0; i < 8; i++) {
     pw.i[i] = hc_swap32_S(ctx.h[i]);
   }

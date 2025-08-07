@@ -114,7 +114,7 @@ jobs:
           echo 'All manual changes will be overwritten!' >> docs/hashcat-example_hashes.md
           echo '| hash-Mode | hash-Name | Example |' >> docs/hashcat-example_hashes.md
           echo '|:-----------|:-----------|:---------------|' >> docs/hashcat-example_hashes.md
-          ./hashcat --example-hashes --machine-readable --quiet | python3 docs/example-hashes_machine-readable2md.py >> docs/hashcat-example_hashes.md
+          ./hashcat --example-hashes --machine-readable --quiet | python3 hashcat-example-hashes_machine-readable2md.py >> docs/hashcat-example_hashes.md
 
       - name: Commit changes to docs
         if: matrix.os_name_lowercase == 'linux' && matrix.shared == 0

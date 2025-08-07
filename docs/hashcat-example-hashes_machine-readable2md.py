@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+# this script is ran automatically; there should be no need to run this manually
+#  used in .github/workflows/build.yml to generate docs/hashcat-example-hashes.md on every commit to master
+# example usage: ./hashcat --example-hashes --machine-readable --quiet | python3 hashcat-example-hashes_machine-readable2md.py >> docs/hashcat-example_hashes.md
+
+
 import sys
 import json
 

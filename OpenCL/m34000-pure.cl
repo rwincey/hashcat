@@ -43,7 +43,7 @@ KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
-  argon2_init (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_block);
+  argon2_init_gg (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
 KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2_options_t))

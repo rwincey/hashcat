@@ -114,7 +114,7 @@ jobs:
           echo 'All manual changes will be overwritten!' >> docs/hashcat-example_hashes.md
           echo '| hash-Mode | hash-Name | Example |' >> docs/hashcat-example_hashes.md
           echo '|:-----------|:-----------|:---------------|' >> docs/hashcat-example_hashes.md
-          ./hashcat --example-hashes --machine-readable --quiet | jq -r 'to_entries[] | "| `" + .key + "` | `" + .value.name + "` | `" + .value.example_hash + "` |"' >> docs/hashcat-example_hashes.md
+           ./hashcat --example-hashes --machine-readable --quiet | python3 docs/example-hashes_machine-readable2md.py >> docs/hashcat-example_hashes.md
           # Replace LUKS v1 hashes, they're too big: Github no longer shows the .md "(Sorry about that, but we can’t show files that are this big right now.)"
           sed -i '/^| `29511` |/s| `\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_aes_cbc-essiv_128.txt \||' docs/hashcat-example_hashes.md
           sed -i '/^| `29512` |/s| `\$luks\$1\$.*|https://hashcat.net/misc/example_hashes/hashcat_luks_sha1_serpent_cbc-plain64_256.txt \||' docs/hashcat-example_hashes.md

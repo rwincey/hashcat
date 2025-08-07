@@ -360,6 +360,7 @@ KERNEL_FQ KERNEL_FA void m14200_init (KERN_ATTR_TMPS_ESALT (racf_kdfaes_tmp_t, r
   data[1] = salt_bufs[SALT_POS_HOST].salt_buf_pc[1];
 
   u32 des_output[2];
+
   _des_crypt_encrypt (des_output, data, Kc, Kd, s_SPtrans);
 
   // set tmps->key

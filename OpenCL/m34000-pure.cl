@@ -25,6 +25,13 @@
 #define COMPARE_S M2S(INCLUDE_PATH/inc_comp_single.cl)
 #define COMPARE_M M2S(INCLUDE_PATH/inc_comp_multi.cl)
 
+typedef struct keepass4
+{
+  argon2_options_t options;
+
+  u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
+  u32 header[64];
+} keepass4_t;
 
 typedef struct argon2_tmp
 {
@@ -32,7 +39,7 @@ typedef struct argon2_tmp
 
 } argon2_tmp_t;
 
-KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2_options_t))
+KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
 {
   const u64 gid = get_global_id (0);
 
@@ -51,7 +58,7 @@ KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
     case 3: V = d_extra3_buf; break;
   }
 
-  const argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST];
+  const argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST].options;
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
@@ -113,7 +120,7 @@ KERNEL_FQ KERNEL_FA void m34000_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
   argon2_init (&pw, &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
-KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2_options_t))
+KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
 {
   const u64 gid = get_global_id (0);
   const u64 bid = get_group_id (0);
@@ -148,7 +155,7 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
     case 3: V = d_extra3_buf; break;
   }
 
-  argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST_BID];
+  argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST_BID].options;
 
   #ifdef IS_APPLE
   // it doesn't work on Apple, so we won't set it up
@@ -184,7 +191,7 @@ KERNEL_FQ KERNEL_FA void m34000_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
   }
 }
 
-KERNEL_FQ KERNEL_FA void m34000_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2_options_t))
+KERNEL_FQ KERNEL_FA void m34000_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
 {
   const u64 gid = get_global_id (0);
 
@@ -203,7 +210,8 @@ KERNEL_FQ KERNEL_FA void m34000_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
     case 3: V = d_extra3_buf; break;
   }
 
-  argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST];
+  keepass4_t keepass4 = esalt_bufs[DIGESTS_OFFSET_HOST];
+  argon2_options_t options = keepass4.options;
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
@@ -215,7 +223,7 @@ KERNEL_FQ KERNEL_FA void m34000_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
 
   sha512_ctx_t ctx;
   sha512_init (&ctx);
-  sha512_update_swap (&ctx, options.masterseed, 32);
+  sha512_update_swap (&ctx, keepass4.masterseed, 32);
   sha512_update_swap (&ctx, out, 32);
   sha512_update_swap (&ctx, pad, 1);
   sha512_final (&ctx);
@@ -258,7 +266,7 @@ KERNEL_FQ KERNEL_FA void m34000_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, argon2
 
   sha256_hmac_ctx_t ctx3;
   sha256_hmac_init_swap (&ctx3, outu32, 64);
-  sha256_hmac_update_swap (&ctx3, options.header, 253);
+  sha256_hmac_update_swap (&ctx3, keepass4.header, 253);
   sha256_hmac_final (&ctx3);
 
   const u32 r0 = hc_swap32_S(ctx3.opad.h[0]);

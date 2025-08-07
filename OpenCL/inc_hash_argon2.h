@@ -153,18 +153,15 @@ typedef struct argon2_options
   u32 type;
   u32 version;
 
-  u32 iterations; //transform rounds
+  u32 iterations;
   u32 parallelism;
   u32 memory_usage_in_kib;
 
   u32 segment_length;
   u32 lane_length;
   u32 memory_block_count;
-
   u32 digest_len;
 
-  u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
-  u32 header[64];
 } argon2_options_t;
 
 typedef struct argon2_pos

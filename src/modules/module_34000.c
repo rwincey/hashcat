@@ -46,16 +46,24 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 
 typedef struct argon2_tmp
 {
-  u32 state[4]; // just something.. why do we need this??
+  u32 state[4]; // just something.. why do we need this? It's always empty
 
 } argon2_tmp_t;
+
+
+typedef struct keepass4
+{
+  u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
+  u32 header[64];
+
+} keepass4_t;
 
 typedef struct argon2_options
 {
   u32 type;
   u32 version;
 
-  u32 iterations; //transform rounds
+  u32 iterations;
   u32 parallelism;
   u32 memory_usage_in_kib;
 
@@ -65,8 +73,8 @@ typedef struct argon2_options
 
   u32 digest_len;
 
-  u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
-  u32 header[64];
+  keepass4_t keepass4;
+
 } argon2_options_t;
 
 #include "argon2_common.c"
@@ -86,6 +94,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   u32 *digest = (u32 *) digest_buf;
 
   argon2_options_t *options  = (argon2_options_t *) esalt_buf;
+  keepass4_t *keepass4  = &options->keepass4;
 
   hc_token_t token;
 
@@ -202,7 +211,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   // 7. masterseed
   const int masterseed_len = token.len[7];
   const u8 *masterseed_pos = token.buf[7];
-  hex_decode ((const u8 *) masterseed_pos, masterseed_len, (u8 *) options->masterseed);
+  hex_decode ((const u8 *) masterseed_pos, masterseed_len, (u8 *) keepass4->masterseed);
 
   // 8. transformseed (salt)
   const int salt_len = token.len[8];
@@ -215,7 +224,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   // 9. header
   const int header_len = token.len[9];
   const u8 *header_pos = token.buf[9];
-  hex_decode ((const u8 *) header_pos, header_len, (u8 *) options->header);
+  hex_decode ((const u8 *) header_pos, header_len, (u8 *) keepass4->header);
 
   // 10. headerhmac (digest): digest/ target hash
   const int digest_len = token.len[10];
@@ -240,10 +249,11 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   u32 *digest = (u32 *) digest_buf;
 
   argon2_options_t *options  = (argon2_options_t *) esalt_buf;
+  keepass4_t *keepass4  = &options->keepass4;
 
   // 7. masterseed
   char masterseed_hex[64] = { 0 };
-  hex_encode( (const u8 *) options->masterseed, 32, (u8 *) masterseed_hex);
+  hex_encode( (const u8 *) keepass4->masterseed, 32, (u8 *) masterseed_hex);
 
   // 8. transformseed (salt)
   char salt_hex[64] = { 0 };
@@ -251,7 +261,7 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   // 9. header
   char header_hex[506] = { 0 };
-  hex_encode( (const u8 *) options->header, 253, (u8 *) header_hex);
+  hex_encode( (const u8 *) keepass4->header, 253, (u8 *) header_hex);
 
   // 10. headerhmac (digest)
   char digest_hex[64] = { 0 };

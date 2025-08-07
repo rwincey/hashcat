@@ -106,7 +106,7 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     pw.i[i] = hc_swap32_S(ctx.h[i]);
   }
 
-  argon2_init (&pw, &salt_bufs[SALT_POS_HOST], &options, argon2_block);
+  argon2_init_pg (&pw, &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
 KERNEL_FQ KERNEL_FA void m34300_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))

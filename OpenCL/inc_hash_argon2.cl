@@ -136,7 +136,7 @@ DECLSPEC void argon2_initial_hash (GLOBAL_AS const pw_t *pw, GLOBAL_AS const sal
 
   for (u32 i = 0, idx = 0; i < pw_len; i += 8, idx += 2)
   {
-    blake2b_update_8 (&ctx, hc_swap32_S(pw->i[idx + 0]), hc_swap32_S(pw->i[idx + 1]), MIN((pw_len - i), 8)); // only difference with inc_hash_argon2.cl
+    blake2b_update_8 (&ctx, pw->i[idx + 0], pw->i[idx + 1], MIN((pw_len - i), 8));
   }
 
   const u32 salt_len = salt->salt_len;

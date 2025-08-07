@@ -48,9 +48,9 @@ def term(ctx):
 
 if __name__ == '__main__':
   ctx = {
-    "salts_buf": bytes(568),
+    "salts_buf": bytes(572),
     "esalts_buf": bytes(131080),
-    "st_salts_buf": bytes(568),
+    "st_salts_buf": bytes(572),
     "st_esalts_buf": bytes(131080),
     "parallelism": 1
   }

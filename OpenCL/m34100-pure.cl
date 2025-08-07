@@ -125,7 +125,7 @@ KERNEL_FQ void m34100_init (KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
-  argon2_init (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_block);
+  argon2_init_gg (&pws[gid], &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
 KERNEL_FQ void m34100_loop (KERN_ATTR_TMPS_ESALT (luks_tmp_t, luks_t))

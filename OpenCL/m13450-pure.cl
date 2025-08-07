@@ -5,7 +5,8 @@
  */
 
 /*
-1. sha256(sha256(password=masterkey)keyfile=none) = argon.in
+Pseudocode:
+1. sha256(sha256(password=masterkey)||keyfile=none) = argon.in //TODO support keyfile
 2. argon2(salt=transformseed, password=argon2.in) = argon2.out
 2. sha512(masterseed||argon2.out||0x01) = final
 3. sha512(0xFFFFFFFFFFFFFFFF||final) = out
@@ -31,6 +32,8 @@ typedef struct keepass4
 
   u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
   u32 header[64];
+
+  //TODO support keyfile
 } keepass4_t;
 
 typedef struct argon2_tmp

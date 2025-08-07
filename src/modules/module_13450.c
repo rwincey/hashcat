@@ -18,7 +18,7 @@ static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_8_16;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
-static const char *HASH_NAME      = "Keepass4";
+static const char *HASH_NAME      = "Keepass4 (no keyfile support)";
 static const u64   KERN_TYPE      = 13450;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
@@ -56,6 +56,7 @@ typedef struct keepass4
   u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
   u32 header[64];
 
+  //TODO support keyfile
 } keepass4_t;
 
 typedef struct argon2_options

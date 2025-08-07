@@ -18,8 +18,8 @@ static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_8_16;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
-static const char *HASH_NAME      = "Argon2";
-static const u64   KERN_TYPE      = 34000;
+static const char *HASH_NAME      = "Keepass4";
+static const u64   KERN_TYPE      = 13450;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
@@ -28,8 +28,7 @@ static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_MP_MULTI_DISABLE;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
 static const char *ST_PASS        = "hashcat";
-static const char *ST_HASH        = "$argon2id$v=19$m=65536,t=3,p=1$FBMjI4RJBhIykCgol1KEJA$2ky5GAdhT1kH4kIgPN/oERE3Taiy43vNN70a3HpiKQU";
-
+static const char *ST_HASH        = "$keepass$*4*620*ef636ddf*1048576*19*2*2e61dd9760a265fd3132a8f99dd66ac22ef6a85bd639bf011ef5f3713490e50b*9f8e12935b439279c42730ad25bdace60096b45d6b18486c586376e3ab1c3b6c*03d9a29a67fb4bb500000400021000000031c1f2e6bf714350be5805216afc5aff03040000000100000004200000002e61dd9760a265fd3132a8f99dd66ac22ef6a85bd639bf011ef5f3713490e50b0b8b00000000014205000000245555494410000000ef636ddf8c29444b91f7a9a403e30a0c0401000000560400000013000000050100000049080000006c0200000000000005010000004d0800000000001000000000000401000000500400000002000000420100000053200000009f8e12935b439279c42730ad25bdace60096b45d6b18486c586376e3ab1c3b6c000710000000f803f0b2bc4b216ba33895047c0ed70900040000000d0a0d0a*ef8e2f3504892686d8dc8991c241bb83cbc5300792e8ab387d7d3cdf3c161129";
 u32         module_attack_exec    (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ATTACK_EXEC;     }
 u32         module_dgst_pos0      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS0;       }
 u32         module_dgst_pos1      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS1;       }
@@ -47,9 +46,17 @@ const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 
 typedef struct argon2_tmp
 {
-  u32 state[4]; // just something
+  u32 state[4]; // just something.. why do we need this? It's always empty
 
 } argon2_tmp_t;
+
+
+typedef struct keepass4
+{
+  u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
+  u32 header[64];
+
+} keepass4_t;
 
 typedef struct argon2_options
 {
@@ -66,13 +73,14 @@ typedef struct argon2_options
 
   u32 digest_len;
 
+  keepass4_t keepass4;
+
 } argon2_options_t;
 
 #include "argon2_common.c"
 
-static const char *SIGNATURE_ARGON2D  = "$argon2d$";
-static const char *SIGNATURE_ARGON2I  = "$argon2i$";
-static const char *SIGNATURE_ARGON2ID = "$argon2id$";
+static const char *SIGNATURE_ARGON2D_UUID  = "ef636ddf";
+static const char *SIGNATURE_ARGON2ID_UUID = "9e298b19";
 
 u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
@@ -86,86 +94,144 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   u32 *digest = (u32 *) digest_buf;
 
   argon2_options_t *options  = (argon2_options_t *) esalt_buf;
+  keepass4_t *keepass4  = &options->keepass4;
 
   hc_token_t token;
 
   memset (&token, 0, sizeof (hc_token_t));
 
-  token.token_cnt  = 7;
+  token.token_cnt  = 11;
 
-  token.signatures_cnt    = 3;
-  token.signatures_buf[0] = SIGNATURE_ARGON2D;
-  token.signatures_buf[1] = SIGNATURE_ARGON2I;
-  token.signatures_buf[2] = SIGNATURE_ARGON2ID;
-
-  token.len_min[0] = 9;
-  token.len_max[0] = 10;
+  // 0. signature
+  token.signatures_cnt    = 1;
+  token.signatures_buf[0] = "$keepass$*";
+  token.len[0]     = 10;
   token.sep[0]     = 0;
   token.attr[0]    = TOKEN_ATTR_VERIFY_SIGNATURE;
 
-  // version
-  token.len[1]     = 4;
-  token.sep[1]     = '$';
-  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH;
+  // 1. keepassDB version
+  token.len[1]     = 1;
+  token.sep[1]     = '*';
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
 
-  // memoryUsageInKib
-  token.len_min[2] = 3;
-  token.len_max[2] = 12;
-  token.sep[2]     = ',';
-  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH;
+  // 2. iterations
+  token.len_min[2] = 1;
+  token.len_max[2] = 5;
+  token.sep[2]     = '*';
+  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
 
-  // iterations
-  token.len_min[3] = 3;
-  token.len_max[3] = 5;
-  token.sep[3]     = ',';
-  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH;
+  // 3. KDF UUID
+  token.len_min[3] = 8;
+  token.len_max[3] = 8;
+  token.sep[3]     = '*';
+  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
-  // parallelism
+  // 4. memoryUsageInBytes
   token.len_min[4] = 3;
-  token.len_max[4] = 5;
-  token.sep[4]     = '$';
-  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH;
+  token.len_max[4] = 12;
+  token.sep[4]     = '*';
+  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
 
-  // salt
-  token.len_min[5] = ((SALT_MIN * 8) / 6) + 0;
-  token.len_max[5] = ((SALT_MAX * 8) / 6) + 3;
-  token.sep[5]     = '$';
-  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH
-                   | TOKEN_ATTR_VERIFY_BASE64A;
+  // 5. Argon version
+  token.len_min[5] = 1;
+  token.len_max[5] = 3;
+  token.sep[5]     = '*';
+  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
 
-  // target hash
-  token.len_min[6] = ((  1 * 8) / 6) + 0;
-  token.len_max[6] = ((128 * 8) / 6) + 3;
-  token.sep[6]     = '$';
-  token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH
-                   | TOKEN_ATTR_VERIFY_BASE64A;
+  // 6. parallelism
+  token.len_min[6] = 1;
+  token.len_max[6] = 3;
+  token.sep[6]     = '*';
+  token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
+
+  // 7. masterseed
+  token.len_min[7] = 64;
+  token.len_max[7] = 64;
+  token.sep[7]     = '*';
+  token.attr[7]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 8. transformseed (salt)
+  token.len_min[8] = 64;
+  token.len_max[8] = 64;
+  token.sep[8]     = '*';
+  token.attr[8]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 9. header
+  token.len_min[9] = 506;
+  token.len_max[9] = 506;
+  token.sep[9]     = '*';
+  token.attr[9]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 10. headerhmac (digest)
+  token.len_min[10] = 64;
+  token.len_max[10] = 64;
+  token.sep[10]     = '*';
+  token.attr[10]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
 
   if (rc_tokenizer != PARSER_OK) return (rc_tokenizer);
 
-  // signature sets argon2 typ
-
+  // 0. signature:
   const int sig_len = token.len[0];
   const u8 *sig_pos = token.buf[0];
+  if (memcmp (token.signatures_buf[0],  sig_pos, sig_len) != 0) return (PARSER_SIGNATURE_UNMATCHED);
 
-  if      (memcmp (SIGNATURE_ARGON2D,  sig_pos, sig_len) == 0) options->type = 0;
-  else if (memcmp (SIGNATURE_ARGON2I,  sig_pos, sig_len) == 0) options->type = 1;
-  else if (memcmp (SIGNATURE_ARGON2ID, sig_pos, sig_len) == 0) options->type = 2;
+  // 1. keepassDB version
+  const u8 *keepassdb_version_pos = token.buf[1];
+  const u32 keepassdb_version = hc_strtoul ((const char *) keepassdb_version_pos, NULL, 10);
+  if (keepassdb_version != 4) return (PARSER_HASH_VALUE); // we don't support anything else than 4
+
+  // 2. iterations
+  const u8 *it_pos  = token.buf[2];
+  options->iterations          = hc_strtoul ((const char *) it_pos, NULL, 10);
+
+  // 3. KDF UUID: sets argon2 type
+  const int kdf_uuid_len = token.len[3];
+  const u8 *kdf_uuid_pos = token.buf[3];
+  const u8 kdf_uuid[8] = {0};
+  hex_decode ((const u8 *) kdf_uuid_pos, kdf_uuid_len, (u8 *) kdf_uuid);
+  if      (memcmp (SIGNATURE_ARGON2D_UUID,  kdf_uuid_pos, kdf_uuid_len) == 0) options->type = 0;
+  else if (memcmp (SIGNATURE_ARGON2ID_UUID, kdf_uuid_pos, kdf_uuid_len) == 0) options->type = 2;
   else
-    return (PARSER_SIGNATURE_UNMATCHED);
+    return (PARSER_HASH_VALUE);
 
-  // argon2id config
-  const u8 *ver_pos = token.buf[1];
-  const u8 *mem_pos = token.buf[2];
-  const u8 *it_pos  = token.buf[3];
-  const u8 *par_pos = token.buf[4];
+  // 4. memoryUsageInBytes
+  const u8 *mem_pos = token.buf[4];
+  options->memory_usage_in_kib = hc_strtoul ((const char *) mem_pos, NULL, 10)/1024; // /1024 to go from bytes to KiB
 
-  options->version             = hc_strtoul ((const char *) ver_pos + 2, NULL, 10);
-  options->memory_usage_in_kib = hc_strtoul ((const char *) mem_pos + 2, NULL, 10);
-  options->iterations          = hc_strtoul ((const char *) it_pos  + 2, NULL, 10);
-  options->parallelism         = hc_strtoul ((const char *) par_pos + 2, NULL, 10);
+  // 5. Argon version
+  const u8 *ver_pos = token.buf[5];
+  options->version             = hc_strtoul ((const char *) ver_pos, NULL, 10);
 
+  // 6. parallelism
+  const u8 *par_pos = token.buf[6];
+  options->parallelism         = hc_strtoul ((const char *) par_pos, NULL, 10);
+
+  // 7. masterseed
+  const int masterseed_len = token.len[7];
+  const u8 *masterseed_pos = token.buf[7];
+  hex_decode ((const u8 *) masterseed_pos, masterseed_len, (u8 *) keepass4->masterseed);
+
+  // 8. transformseed (salt)
+  const int salt_len = token.len[8];
+  const u8 *salt_pos = token.buf[8];
+
+  salt->salt_iter = options->iterations * ARGON2_SYNC_POINTS;
+  salt->salt_dimy = options->parallelism;
+  salt->salt_len = hex_decode ((const u8 *) salt_pos, salt_len, (u8 *) salt->salt_buf);
+
+  // 9. header
+  const int header_len = token.len[9];
+  const u8 *header_pos = token.buf[9];
+  hex_decode ((const u8 *) header_pos, header_len, (u8 *) keepass4->header);
+
+  // 10. headerhmac (digest): digest/ target hash
+  const int digest_len = token.len[10];
+  const u8 *digest_pos = token.buf[10];
+  options->digest_len = hex_decode ((const u8 *) digest_pos, digest_len, (u8 *) digest);
+
+  // check argon2 config
   if (options->version != 19 && options->version != 16) return (PARSER_HASH_VALUE);
   if (options->memory_usage_in_kib < 1) return (PARSER_HASH_VALUE);
   if (options->iterations < 1) return (PARSER_HASH_VALUE);
@@ -175,20 +241,6 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   options->lane_length        = options->segment_length * ARGON2_SYNC_POINTS;
   options->memory_block_count = options->lane_length * options->parallelism;
 
-  // salt
-  const int salt_len = token.len[5];
-  const u8 *salt_pos = token.buf[5];
-
-  salt->salt_iter = options->iterations * ARGON2_SYNC_POINTS;
-  salt->salt_dimy = options->parallelism;
-  salt->salt_len = base64_decode (base64_to_int, (const u8 *) salt_pos, salt_len, (u8 *) salt->salt_buf);
-
-  // digest/ target hash
-  const int digest_len = token.len[6];
-  const u8 *digest_pos = token.buf[6];
-
-  options->digest_len = base64_decode (base64_to_int, (const u8 *) digest_pos, digest_len, (u8 *) digest);
-
   return (PARSER_OK);
 }
 
@@ -197,40 +249,46 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   u32 *digest = (u32 *) digest_buf;
 
   argon2_options_t *options  = (argon2_options_t *) esalt_buf;
+  keepass4_t *keepass4  = &options->keepass4;
 
-  // salt
-  char base64_salt[512] = { 0 };
-  int len1 = base64_encode (int_to_base64, (const u8 *) salt->salt_buf, salt->salt_len, (u8 *) base64_salt);
+  // 7. masterseed
+  char masterseed_hex[64] = { 0 };
+  hex_encode( (const u8 *) keepass4->masterseed, 32, (u8 *) masterseed_hex);
 
-  for (int i = len1 - 1; i >=0; i--) if (base64_salt[i] == '=') base64_salt[i] = 0;
+  // 8. transformseed (salt)
+  char salt_hex[64] = { 0 };
+  hex_encode( (const u8 *) salt->salt_buf, 32, (u8 *) salt_hex);
 
-  // digest
-  char base64_digest[512] = { 0 };
-  int len2 = base64_encode (int_to_base64, (const u8 *) digest, options->digest_len, (u8 *) base64_digest);
+  // 9. header
+  char header_hex[506] = { 0 };
+  hex_encode( (const u8 *) keepass4->header, 253, (u8 *) header_hex);
 
-  for (int i = len2 - 1; i >=0; i--) if (base64_digest[i] == '=') base64_digest[i] = 0;
+  // 10. headerhmac (digest)
+  char digest_hex[64] = { 0 };
+  hex_encode( (const u8 *) digest, 32, (u8 *) digest_hex);
 
-  // out
-
-  const char *signature = NULL;
-
+  const char *argon_uuid = NULL;
   switch (options->type)
   {
-    case 0: signature = SIGNATURE_ARGON2D;  break;
-    case 1: signature = SIGNATURE_ARGON2I;  break;
-    case 2: signature = SIGNATURE_ARGON2ID; break;
+    case 0: argon_uuid = SIGNATURE_ARGON2D_UUID;  break;
+    case 2: argon_uuid = SIGNATURE_ARGON2ID_UUID; break;
   }
 
   u8 *out_buf = (u8 *) line_buf;
 
-  const int out_len = snprintf ((char *) out_buf, line_size, "%sv=%d$m=%d,t=%d,p=%d$%s$%s",
-    signature,
-    options->version,
-    options->memory_usage_in_kib,
-    options->iterations,
-    options->parallelism,
-    base64_salt,
-    base64_digest);
+  const int out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s",
+    "$keepass$",          // 0. signature
+    4,                    // 1. keepassDB version
+    options->iterations,  // 2. iterations
+    argon_uuid,           // 3. KDF UUID
+    options->memory_usage_in_kib*1024,  // 4. memoryUsageInBytes
+    options->version,     // 5. Argon version
+    options->parallelism, // 6. parallelism
+    masterseed_hex,       // 7. masterseed
+    salt_hex,             // 8. transformseed (salt)
+    header_hex,           // 9. header
+    digest_hex            // 10. headerhmac (digest)
+  );
 
   return out_len;
 }

@@ -42,7 +42,7 @@ typedef struct argon2_tmp
 
 } argon2_tmp_t;
 
-KERNEL_FQ KERNEL_FA void m13450_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
+KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
 {
   const u64 gid = get_global_id (0);
 
@@ -123,7 +123,7 @@ KERNEL_FQ KERNEL_FA void m13450_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
   argon2_init (&pw, &salt_bufs[SALT_POS_HOST], &options, argon2_block);
 }
 
-KERNEL_FQ KERNEL_FA void m13450_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
+KERNEL_FQ KERNEL_FA void m34300_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
 {
   const u64 gid = get_global_id (0);
   const u64 bid = get_group_id (0);
@@ -194,7 +194,7 @@ KERNEL_FQ KERNEL_FA void m13450_loop (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
   }
 }
 
-KERNEL_FQ KERNEL_FA void m13450_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
+KERNEL_FQ KERNEL_FA void m34300_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepass4_t))
 {
   const u64 gid = get_global_id (0);
 

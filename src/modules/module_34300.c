@@ -19,7 +19,7 @@ static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_8_16;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
 static const char *HASH_NAME      = "Keepass4 (no keyfile support)";
-static const u64   KERN_TYPE      = 13450;
+static const u64   KERN_TYPE      = 34300;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE

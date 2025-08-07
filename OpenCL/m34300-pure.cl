@@ -65,29 +65,15 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
-  const u32 pw_len = pws[gid].pw_len;
-
-  u32 w[64] = { 0 };
-
-  for (u32 i = 0, idx = 0; i < pw_len; i += 4, idx += 1)
-  {
-    w[idx] = pws[gid].i[idx];
-  }
-
-  for (u32 i = 0, idx = 0; i < pw_len; i += 4, idx += 1)
-  {
-    w[idx] = hc_swap32_S (w[idx]);
-  }
-
   sha256_ctx_t ctx0;
   sha256_init (&ctx0);
-  sha256_update (&ctx0, w, pw_len);
+  sha256_update_global_swap (&ctx0, ((u32 *) pws[gid].i), pws[gid].pw_len);
   sha256_final (&ctx0);
 
-  u32x w0[4];
-  u32x w1[4];
-  u32x w2[4];
-  u32x w3[4];
+  u32 w0[4];
+  u32 w1[4];
+  u32 w2[4];
+  u32 w3[4];
 
   sha256_ctx_t ctx;
 

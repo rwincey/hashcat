@@ -7,6 +7,7 @@
 
 import sys
 import json
+import os
 
 # Replace LUKS v1 hashes, they're too big: Github no longer shows the .md "(Sorry about that, but we can’t show files that are this big right now.)"
 EXAMPLE_HASH_REPLACEMENTS = {
@@ -23,6 +24,20 @@ EXAMPLE_HASH_REPLACEMENTS = {
     "29542": "https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_serpent_xts-plain64_256.txt",
     "29543": "https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_twofish_cbc-plain64_128.txt",
 }
+
+OPENCL_DIR = "OpenCL"
+
+def find_opencl_icons(zfilled_key):
+    """Return markdown icons for any OpenCL files containing the key."""
+    icons = []
+    if not os.path.isdir(OPENCL_DIR):
+        return ""
+    for fname in sorted(os.listdir(OPENCL_DIR)):
+        if zfilled_key in fname:
+            file_url = f"/{OPENCL_DIR}/{fname}"
+            # Using a small gear emoji as an icon
+            icons.append(f"[<sup>*</sup>]({file_url})")
+    return " " + " ".join(icons) if icons else ""
 
 def main():
     input_data = sys.stdin.read()
@@ -52,7 +67,10 @@ def main():
                 footnote_counter += 1
             footnote = f"[^{footnote_map[example_pass]}]"
 
-        row = f"| [`{key}`](/src/modules/module_{key.zfill(5)}.c) | `{name}`{footnote} | `{example_hash}` |"
+        zkey = key.zfill(5)
+        opencl_links = find_opencl_icons(zkey)
+
+        row = f"| [`{key}`](/src/modules/module_{zkey}.c) | `{name}`{opencl_links}{footnote} | `{example_hash}` |"
         table_rows.append(row)
 
     # Print the table

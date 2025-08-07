@@ -66,3 +66,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# to convert the markdown to docuwiki formatting for https://hashcat.net/wiki/doku.php?id=example_hashes you can use:
+#  cat docs/hashcat-example-hashes.md | sed -E 's/\[\^(.+)\]/<sup>\1<\/sup>/g' | sed 's/| hash-Mode | hash-Name | Example |/\^ hash-Mode \^ hash-Name \^ Example \^/g' | grep -Fv '|:-----------|:-----------|:---------------|' | sed 's/`//g' | sed -E 's/\[([0-9]+)\]\(\/src\/modules\/module_([0-9]{5})\.c\)/[[\1|https:\/\/github.com\/hashcat\/hashcat\/tree\/master\/src\/modules\/module_\2.c]]/'
+# replaces footnotes
+# replaces header
+# removes un-necessary table style
+# removes backticks
+# replaces urls

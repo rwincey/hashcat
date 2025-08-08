@@ -37,8 +37,8 @@ DECLSPEC void m40000m (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
      */
 
     u64x A[2048] = { 0 }; // min 1753 for MD6-256
-    u64x N[89]   = { 0 };
-    u64x B[64]   = { 0 };
+    u64x N[33]   = { 0 };
+    u64x B[8]    = { 0 };
 
     B[0] = hl32_to_64 (w0[1], w0lr);
     B[1] = hl32_to_64 (w0[3], w0[2]);
@@ -112,15 +112,6 @@ DECLSPEC void m40000m (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
     #endif
     for (j = 0, i = md6_n; j < rXc; j += md6_c)
     {
-      #define loop_body(rs,ls,step)                                       \
-        x = S;                                /* feedback constant     */ \
-        x ^= A[i+step-t5];                    /* end-around feedback   */ \
-        x ^= A[i+step-t0];                    /* linear feedback       */ \
-        x ^= ( A[i+step-t1] & A[i+step-t2] ); /* first quadratic term  */ \
-        x ^= ( A[i+step-t3] & A[i+step-t4] ); /* second quadratic term */ \
-        x ^= (x >> rs);                       /* right-shift           */ \
-        A[i+step] = x ^ (x << ls);            /* left-shift            */
-
       /*
       ** Unroll loop c=16 times. (One "round" of computation.)
       ** Shift amounts are embedded in macros RLnn.
@@ -196,8 +187,8 @@ DECLSPEC void m40000s (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
      */
 
     u64x A[2048] = { 0 }; // min 1753 for MD6-256
-    u64x N[89]   = { 0 };
-    u64x B[64]   = { 0 };
+    u64x N[33]   = { 0 };
+    u64x B[8]    = { 0 };
 
     B[0] = hl32_to_64 (w0[1], w0lr);
     B[1] = hl32_to_64 (w0[3], w0[2]);
@@ -271,15 +262,6 @@ DECLSPEC void m40000s (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
     #endif
     for (j = 0, i = md6_n; j < rXc; j += md6_c)
     {
-      #define loop_body(rs,ls,step)                                       \
-        x = S;                                /* feedback constant     */ \
-        x ^= A[i+step-t5];                    /* end-around feedback   */ \
-        x ^= A[i+step-t0];                    /* linear feedback       */ \
-        x ^= ( A[i+step-t1] & A[i+step-t2] ); /* first quadratic term  */ \
-        x ^= ( A[i+step-t3] & A[i+step-t4] ); /* second quadratic term */ \
-        x ^= (x >> rs);                       /* right-shift           */ \
-        A[i+step] = x ^ (x << ls);            /* left-shift            */
-
       /*
       ** Unroll loop c=16 times. (One "round" of computation.)
       ** Shift amounts are embedded in macros RLnn.

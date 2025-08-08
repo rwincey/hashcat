@@ -51,7 +51,8 @@ KERNEL_FQ KERNEL_FA void m40000_m04 (KERN_ATTR_RULES ())
     u32x w2[4] = { 0 };
     u32x w3[4] = { 0 };
 
-    const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w0, w1);
+    const u32x out_len_tmp = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w0, w1);
+    const u64x out_len = hl32_to_64 (0, out_len_tmp);
 
     /**
      * md6-256
@@ -71,9 +72,9 @@ KERNEL_FQ KERNEL_FA void m40000_m04 (KERN_ATTR_RULES ())
     B[2] = hc_swap64 (B[2]);
     B[3] = hc_swap64 (B[3]);
 
-    u32x databitlen = out_len * 8;
-    u32x p = md6_b * md6_w - databitlen;
-    u64x V = (MD6_Vs | (((u64x) p) << 20) | MD6_Ve); // only p change, so we can use precomputed values
+    u64x databitlen = (u64x) (out_len * 8);
+    u64x p = (u64x) (md6_b * md6_w - databitlen);
+    u64x V = (MD6_Vs | (p << 20) | MD6_Ve); // only p change, so we can use precomputed values
 
     N[ 0] = MD6_Q[ 0];
     N[ 1] = MD6_Q[ 1];
@@ -216,7 +217,8 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
     u32x w2[4] = { 0 };
     u32x w3[4] = { 0 };
 
-    const u32x out_len = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w0, w1);
+    const u32x out_len_tmp = apply_rules_vect_optimized (pw_buf0, pw_buf1, pw_len, rules_buf, il_pos, w0, w1);
+    const u64x out_len = hl32_to_64 (0, out_len_tmp);
 
     /**
      * md6-256
@@ -280,9 +282,9 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
 
     // - append CONTROL_WORD
 
-    u32x databitlen = out_len * 8;
-    u32x p = md6_b * md6_w - databitlen;
-    u64x V = (MD6_Vs | (((u64x) p) << 20) | MD6_Ve); // only p change, so we can use precomputed values
+    u64x databitlen = (u64x) (out_len * 8);
+    u64x p = (u64x) (md6_b * md6_w - databitlen);
+    u64x V = (MD6_Vs | (p << 20) | MD6_Ve); // only p change, so we can use precomputed values
 
 //    N[i] = V;
 //    i++;

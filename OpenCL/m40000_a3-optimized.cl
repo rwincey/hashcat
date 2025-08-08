@@ -58,9 +58,10 @@ DECLSPEC void m40000m (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
     B[6] = hc_swap64 (B[6]);
     B[7] = hc_swap64 (B[7]);
 
-    u32x databitlen = pw_len * 8;
-    u32x p = md6_b * md6_w - databitlen;
-    u64x V = (MD6_Vs | (((u64x) p) << 20) | MD6_Ve); // only p change, so we can use precomputed values
+    const u64x _pw_len = hl32_to_64 (0, pw_len);
+    u64x databitlen = (u64x) (_pw_len * 8);
+    u64x p = (u64x) (md6_b * md6_w - databitlen);
+    u64x V = (MD6_Vs | (p << 20) | MD6_Ve); // only p change, so we can use precomputed values
 
     N[ 0] = MD6_Q[ 0];
     N[ 1] = MD6_Q[ 1];
@@ -208,9 +209,10 @@ DECLSPEC void m40000s (PRIVATE_AS u32 *w0, PRIVATE_AS u32 *w1, PRIVATE_AS u32 *w
     B[6] = hc_swap64 (B[6]);
     B[7] = hc_swap64 (B[7]);
 
-    u32x databitlen = pw_len * 8;
-    u32x p = md6_b * md6_w - databitlen;
-    u64x V = (MD6_Vs | (((u64x) p) << 20) | MD6_Ve); // only p change, so we can use precomputed values
+    const u64x _pw_len = hl32_to_64 (0, pw_len);
+    u64x databitlen = (u64x) (_pw_len * 8);
+    u64x p = (u64x) (md6_b * md6_w - databitlen);
+    u64x V = (MD6_Vs | (p << 20) | MD6_Ve); // only p change, so we can use precomputed values
 
     N[ 0] = MD6_Q[ 0];
     N[ 1] = MD6_Q[ 1];

@@ -64,7 +64,7 @@ def find_opencl(zfilled_key, visited=None):
                         kernels.append(link)
                         break
     if kernels:
-        return " " + ", ".join(sort_abbrevs(kernels))
+        return " " + ",&nbsp;".join(sort_abbrevs(kernels))
 
     # No kernels found → check module file for redirect
     module_file = os.path.join(MODULES_DIR, f"module_{zfilled_key}.c")

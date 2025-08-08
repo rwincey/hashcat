@@ -8,6 +8,7 @@
 import sys
 import json
 import os
+import re
 
 # Replace LUKS v1 hashes, they're too big: Github no longer shows the .md "(Sorry about that, but we can’t show files that are this big right now.)"
 EXAMPLE_HASH_REPLACEMENTS = {
@@ -26,18 +27,55 @@ EXAMPLE_HASH_REPLACEMENTS = {
 }
 
 OPENCL_DIR = "OpenCL"
+MODULES_DIR = "src/modules"
 
-def find_opencl_icons(zfilled_key):
-    """Return markdown icons for any OpenCL files containing the key."""
-    icons = []
-    if not os.path.isdir(OPENCL_DIR):
-        return ""
-    for fname in sorted(os.listdir(OPENCL_DIR)):
-        if zfilled_key in fname:
-            file_url = f"/{OPENCL_DIR}/{fname}"
-            # Using a small gear emoji as an icon
-            icons.append(f"[<sup>*</sup>]({file_url})")
-    return " " + " ".join(icons) if icons else ""
+OPENCL_ABBREV = {
+    "_a0-pure": "a0p",
+    "_a0-optimized": "a0o",
+    "_a1-pure": "a1p",
+    "_a1-optimized": "a1o",
+    "_a3-pure": "a3p",
+    "_a3-optimized": "a3o",
+    "pure": "p",
+    "optimized": "o",
+}
+OPENCL_ABBREV_SORT_ORDER = ["p", "o", "a0p", "a0o", "a1p", "a1o", "a3p", "a3o"]
+order_map = {v: i for i, v in enumerate(OPENCL_ABBREV_SORT_ORDER)}
+
+def sort_abbrevs(links):
+    """Sort markdown links by their abbreviation order."""
+    return sorted(links, key=lambda link: order_map.get(link.split("]")[0][1:], 999))
+
+def find_opencl(zfilled_key, visited=None):
+    """Return markdown links for OpenCL kernels, following redirect if needed."""
+    if visited is None:
+        visited = set()
+    if zfilled_key in visited:
+        return ""  # Avoid infinite loops
+    visited.add(zfilled_key)
+
+    kernels = []
+    if os.path.isdir(OPENCL_DIR):
+        for filename in os.listdir(OPENCL_DIR):
+            if zfilled_key in filename:
+                for key, abbr in OPENCL_ABBREV.items():
+                    if key in filename:
+                        link = f"[{abbr}](/OpenCL/{filename})"
+                        kernels.append(link)
+                        break
+    if kernels:
+        return " " + ", ".join(sort_abbrevs(kernels))
+
+    # No kernels found → check module file for redirect
+    module_file = os.path.join(MODULES_DIR, f"module_{zfilled_key}.c")
+    if os.path.isfile(module_file):
+        with open(module_file, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                m = re.search(r"static\s+const\s+u64\s+KERN_TYPE\s*=\s*(\d+);", line)
+                if m:
+                    redirect_key = str(m.group(1)).zfill(5)
+                    return find_opencl(redirect_key, visited)
+    return ""
 
 def main():
     input_data = sys.stdin.read()
@@ -68,9 +106,9 @@ def main():
             footnote = f"[^{footnote_map[example_pass]}]"
 
         zkey = key.zfill(5)
-        opencl_links = find_opencl_icons(zkey)
+        opencl_links = find_opencl(zkey)
 
-        row = f"| [`{key}`](/src/modules/module_{zkey}.c) | `{name}`{opencl_links}{footnote} | `{example_hash}` |"
+        row = f"| [`{key}`](/src/modules/module_{zkey}.c) | `{name}`{footnote} | <sup> {opencl_links} </sup> | `{example_hash}` |"
         table_rows.append(row)
 
     # Print the table

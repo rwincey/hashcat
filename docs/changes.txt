@@ -37,6 +37,7 @@
 - Update default benchmark selection for --benchmark and tools/benchmark_deep.pl
 - Warn instead of waiting on high GPU memory usage
 - Suppress optimization advice in final approach mode
+- Add early syntax check for -j and -k rules
 
 ## Existing Plugin and Crypto Library Improvements
 

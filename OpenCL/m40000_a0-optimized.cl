@@ -128,7 +128,7 @@ KERNEL_FQ KERNEL_FA void m40000_m04 (KERN_ATTR_RULES ())
         x ^= ( A[i+step-t1] & A[i+step-t2] ); /* first quadratic term  */ \
         x ^= ( A[i+step-t3] & A[i+step-t4] ); /* second quadratic term */ \
         x ^= (x >> rs);                       /* right-shift           */ \
-        A[i+step] = x ^ (x << ls);            /* left-shift            */   
+        A[i+step] = x ^ (x << ls);            /* left-shift            */
 
       /*
       ** Unroll loop c=16 times. (One "round" of computation.)
@@ -340,7 +340,7 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
         x ^= ( A[i+step-t1] & A[i+step-t2] ); /* first quadratic term  */ \
         x ^= ( A[i+step-t3] & A[i+step-t4] ); /* second quadratic term */ \
         x ^= (x >> rs);                       /* right-shift           */ \
-        A[i+step] = x ^ (x << ls);            /* left-shift            */   
+        A[i+step] = x ^ (x << ls);            /* left-shift            */
 
       /*
       ** Unroll loop c=16 times. (One "round" of computation.)

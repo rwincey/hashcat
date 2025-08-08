@@ -578,7 +578,7 @@
 - New: hashcat-python-plugin-development-guide.md
 - New: BUILD_macOS.md
 - New: BUILD_Docker.md
-- New: hashcat-example_hashes.md (auto-generated)
+- New: hashcat-example-hashes.md (auto-generated)
 - New: hashcat-help.md (auto-generated)
 - New: device_status_code.txt
 

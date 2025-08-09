@@ -1,5 +1,5 @@
 /**
- * Author......: See docs/credits.txt
+ * Author......: Netherlands Forensic Institute
  * License.....: MIT
  */
 
@@ -16,22 +16,19 @@ static const u32   DGST_POS0      = 0;
 static const u32   DGST_POS1      = 1;
 static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
-static const u32   DGST_SIZE      = DGST_SIZE_4_4;
-static const u32   HASH_CATEGORY  = HASH_CATEGORY_CRYPTOCURRENCY_WALLET;
-static const char *HASH_NAME      = "MetaMask Wallet (needs all data, checks AES-GCM tag)";
-static const u64   KERN_TYPE      = 26600;
+static const u32   DGST_SIZE      = DGST_SIZE_8_16;
+static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
+static const char *HASH_NAME      = "Keepass4 (no keyfile support)";
+static const u64   KERN_TYPE      = 34300;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
-                                  | OPTI_TYPE_REGISTER_LIMIT
-                                  | OPTI_TYPE_SLOW_HASH_SIMD_LOOP;
+                                  | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
-                                  | OPTS_TYPE_PT_GENERATE_LE;
+                                  | OPTS_TYPE_PT_GENERATE_LE
+                                  | OPTS_TYPE_THREAD_MULTI_DISABLE
+                                  | OPTS_TYPE_MP_MULTI_DISABLE;
 static const u32   SALT_TYPE      = SALT_TYPE_EMBEDDED;
-static const char *ST_PASS        = "hashcat1";
-// hash generated using with python3 tools/metamask/metamask2hashcat.py --vault tools/2hashcat_tests/metamask2hashcat.json
-static const char *ST_HASH        = "$metamask$jfGI3TXguhb8GPnKSXFrMzRk2NCEc131Gt5G3kZr5+s=$h+BoIf2CQ5BEjaIOShFE7g==$R95fzGt4UQ0uwrcrVYnIi4UcSlWn9wlmer+//526ZDwYAp50K82F1u1oacYcdjjhuEvbZnWk/uBG00UkgLLlO3WbINljqmu2QWdDEwjTgo/qWR6MU9d/82rxNiONHQE8UrZ8SV+htVr6XIB0ze3aCV0E+fwI93EeP79ZeDxuOEhuHoiYT0bHWMv5nA48AdluG4DbOo7SrDAWBVCBsEdXsOfYsS3/TIh0a/iFCMX4uhxY2824JwcWp4H36SFWyBYMZCJ3/U4DYFbbjWZtGRthoJlIik5BJq4FLu3Y1jEgza0AWlAvu4MKTEqrYSpUIghfxf1a1f+kPvxsHNq0as0kRwCXu09DObbdsiggbmeoBkxMZiFq0d9ar/3Gon0r3hfc3c124Wlivzbzu1JcZ3wURhLSsUS7b5cfG86aXHJkxmQDA5urBz6lw3bsIvlEUB2ErkQy/zD+cPwCG1Rs/WKt7KNh45lppCUkHccbf+xlpdc8OfUwj01Xp7BdH8LMR7Vx1C4hZCvSdtURVl0VaAMxHDX0MjRkwmqS";
-
-static const u32   ROUNDS_METAMASK    = 10000;
-
+static const char *ST_PASS        = "hashcat";
+static const char *ST_HASH        = "$keepass$*4*2*ef636ddf*67108864*19*2*e4e48422ecb07da38401597150a7326fdd1519007b28c306c6e7418fb8ed29cb*af527945ec56bbb37f84ef85093735b689139f46c8003f82cad269837eb69d5f*03d9a29a67fb4bb500000400021000000031c1f2e6bf714350be5805216afc5aff0304000000010000000420000000e4e48422ecb07da38401597150a7326fdd1519007b28c306c6e7418fb8ed29cb0b8b00000000014205000000245555494410000000ef636ddf8c29444b91f7a9a403e30a0c040100000056040000001300000005010000004908000000020000000000000005010000004d080000000000000400000000040100000050040000000200000042010000005320000000af527945ec56bbb37f84ef85093735b689139f46c8003f82cad269837eb69d5f000710000000257fccc1e57ecdea03bbc06aab7cd13200040000000d0a0d0a*63249b86a7539e2bbdbf0ac7f196d460e781e221d1c580d4c718dcc1493eefa9"; // tools/2hashcat_tests/keepass/keepass4_keepass.info_2.59_argon2d_defaultsettings.hash
 u32         module_attack_exec    (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ATTACK_EXEC;     }
 u32         module_dgst_pos0      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS0;       }
 u32         module_dgst_pos1      (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS1;       }
@@ -47,284 +44,254 @@ u32         module_salt_type      (MAYBE_UNUSED const hashconfig_t *hashconfig, 
 const char *module_st_hash        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ST_HASH;         }
 const char *module_st_pass        (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ST_PASS;         }
 
-typedef struct pbkdf2_sha256_tmp
+typedef struct argon2_tmp
 {
-  u32  ipad[8];
-  u32  opad[8];
+  u32 state[4]; // just something.. why do we need this? It's always empty
 
-  u32  dgst[32];
-  u32  out[32];
+} argon2_tmp_t;
 
-} pbkdf2_sha256_tmp_t;
 
-typedef struct pbkdf2_sha256_aes_gcm
+typedef struct keepass4
 {
-  u32 salt_buf[64];
-  u32 iv_buf[4];
-  u32 iv_len;
-  u32 ct_buf[784];
-  u32 ct_len;
+  u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
+  u32 header[64];
 
-} pbkdf2_sha256_aes_gcm_t;
+  //TODO support keyfile
+} keepass4_t;
 
-static const char *SIGNATURE_METAMASK_WALLET = "$metamask$";
-
-char *module_jit_build_options (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra, MAYBE_UNUSED const hashes_t *hashes, MAYBE_UNUSED const hc_device_param_t *device_param)
+typedef struct argon2_options
 {
-  char *jit_build_options = NULL;
+  u32 type;
+  u32 version;
 
-  // Extra treatment for Apple systems
-  if (device_param->opencl_platform_vendor_id == VENDOR_ID_APPLE)
-  {
-    return jit_build_options;
-  }
+  u32 iterations;
+  u32 parallelism;
+  u32 memory_usage_in_kib;
 
-  // HIP
-  if (device_param->opencl_device_vendor_id == VENDOR_ID_AMD_USE_HIP)
-  {
-    hc_asprintf (&jit_build_options, "-D _unroll");
-  }
+  u32 segment_length;
+  u32 lane_length;
+  u32 memory_block_count;
 
-  // ROCM
-  if ((device_param->opencl_device_vendor_id == VENDOR_ID_AMD) && (device_param->has_vperm == true))
-  {
-    hc_asprintf (&jit_build_options, "-D _unroll");
-  }
+  u32 digest_len;
 
-  return jit_build_options;
-}
+  keepass4_t keepass4;
+
+} argon2_options_t;
+
+#include "argon2_common.c"
+
+static const char *SIGNATURE_ARGON2D_UUID  = "ef636ddf";
+static const char *SIGNATURE_ARGON2ID_UUID = "9e298b19";
 
 u64 module_esalt_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
-  const u64 esalt_size = (const u64) sizeof (pbkdf2_sha256_aes_gcm_t);
+  const u64 esalt_size = (const u64) sizeof (argon2_options_t);
 
   return esalt_size;
-}
-
-u64 module_tmp_size (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
-{
-  const u64 tmp_size = (const u64) sizeof (pbkdf2_sha256_tmp_t);
-
-  return tmp_size;
-}
-
-u32 module_pw_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
-{
-  const u32 pw_min = 8;
-
-  return pw_min;
 }
 
 int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED void *digest_buf, MAYBE_UNUSED salt_t *salt, MAYBE_UNUSED void *esalt_buf, MAYBE_UNUSED void *hook_salt_buf, MAYBE_UNUSED hashinfo_t *hash_info, const char *line_buf, MAYBE_UNUSED const int line_len)
 {
   u32 *digest = (u32 *) digest_buf;
 
-  pbkdf2_sha256_aes_gcm_t *metamask = (pbkdf2_sha256_aes_gcm_t *) esalt_buf;
-
-  #define CT_MAX_LEN_BASE64 (((3136+16) * 8) / 6) + 3
+  argon2_options_t *options  = (argon2_options_t *) esalt_buf;
+  keepass4_t *keepass4  = &options->keepass4;
 
   hc_token_t token;
 
   memset (&token, 0, sizeof (hc_token_t));
 
-  token.token_cnt  = 4;
+  token.token_cnt  = 11;
 
+  // 0. signature
   token.signatures_cnt    = 1;
-  token.signatures_buf[0] = SIGNATURE_METAMASK_WALLET;
-
+  token.signatures_buf[0] = "$keepass$*";
   token.len[0]     = 10;
-  token.attr[0]    = TOKEN_ATTR_FIXED_LENGTH
-                   | TOKEN_ATTR_VERIFY_SIGNATURE;
+  token.sep[0]     = 0;
+  token.attr[0]    = TOKEN_ATTR_VERIFY_SIGNATURE;
 
-  token.sep[1]     = '$';
-  token.len_min[1] = 0;
-  token.len_max[1] = 60;
-  token.attr[1]    = TOKEN_ATTR_VERIFY_LENGTH
-                   | TOKEN_ATTR_OPTIONAL_ROUNDS;
+  // 1. keepassDB version
+  token.len[1]     = 1;
+  token.sep[1]     = '*';
+  token.attr[1]    = TOKEN_ATTR_FIXED_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
 
-  token.sep[2]     = '$';
-  token.len[2]     = 24;
-  token.attr[2]    = TOKEN_ATTR_FIXED_LENGTH
-                   | TOKEN_ATTR_VERIFY_BASE64A;
+  // 2. iterations
+  token.len_min[2] = 1;
+  token.len_max[2] = 5;
+  token.sep[2]     = '*';
+  token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
 
-  token.sep[3]     = '$';
-  token.len_min[3] = 64;
-  token.len_max[3] = CT_MAX_LEN_BASE64;
-  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH
-                   | TOKEN_ATTR_VERIFY_BASE64A;
+  // 3. KDF UUID
+  token.len_min[3] = 8;
+  token.len_max[3] = 8;
+  token.sep[3]     = '*';
+  token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 4. memoryUsageInBytes
+  token.len_min[4] = 3;
+  token.len_max[4] = 12;
+  token.sep[4]     = '*';
+  token.attr[4]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
+
+  // 5. Argon version
+  token.len_min[5] = 1;
+  token.len_max[5] = 3;
+  token.sep[5]     = '*';
+  token.attr[5]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
+
+  // 6. parallelism
+  token.len_min[6] = 1;
+  token.len_max[6] = 3;
+  token.sep[6]     = '*';
+  token.attr[6]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_DIGIT;
+
+  // 7. masterseed
+  token.len_min[7] = 64;
+  token.len_max[7] = 64;
+  token.sep[7]     = '*';
+  token.attr[7]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 8. transformseed (salt)
+  token.len_min[8] = 64;
+  token.len_max[8] = 64;
+  token.sep[8]     = '*';
+  token.attr[8]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 9. header
+  token.len_min[9] = 506;
+  token.len_max[9] = 506;
+  token.sep[9]     = '*';
+  token.attr[9]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
+
+  // 10. headerhmac (digest)
+  token.len_min[10] = 64;
+  token.len_max[10] = 64;
+  token.sep[10]     = '*';
+  token.attr[10]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
 
   if (rc_tokenizer != PARSER_OK) return (rc_tokenizer);
 
-  u8 tmp_buf[CT_MAX_LEN_BASE64] = { 0 };
+  // 0. signature:
+  const int sig_len = token.len[0];
+  const u8 *sig_pos = token.buf[0];
+  if (memcmp (token.signatures_buf[0],  sig_pos, sig_len) != 0) return (PARSER_SIGNATURE_UNMATCHED);
 
-  size_t tmp_len = 0;
+  // 1. keepassDB version
+  const u8 *keepassdb_version_pos = token.buf[1];
+  const u32 keepassdb_version = hc_strtoul ((const char *) keepassdb_version_pos, NULL, 10);
+  if (keepassdb_version != 4) return (PARSER_HASH_VALUE); // we don't support anything else than 4
 
-  // iter
+  // 2. iterations
+  const u8 *it_pos  = token.buf[2];
+  options->iterations          = hc_strtoul ((const char *) it_pos, NULL, 10);
 
-  salt->salt_iter = ROUNDS_METAMASK - 1;
+  // 3. KDF UUID: sets argon2 type
+  const int kdf_uuid_len = token.len[3];
+  const u8 *kdf_uuid_pos = token.buf[3];
+  const u8 kdf_uuid[8] = {0};
+  hex_decode ((const u8 *) kdf_uuid_pos, kdf_uuid_len, (u8 *) kdf_uuid);
+  if      (memcmp (SIGNATURE_ARGON2D_UUID,  kdf_uuid_pos, kdf_uuid_len) == 0) options->type = 0;
+  else if (memcmp (SIGNATURE_ARGON2ID_UUID, kdf_uuid_pos, kdf_uuid_len) == 0) options->type = 2;
+  else
+    return (PARSER_HASH_VALUE);
 
-  if (token.opt_len != -1)
-  {
-    salt->salt_iter = hc_strtoul ((const char *) token.opt_buf + 7, NULL, 10) - 1; // 7 = "rounds="
-  }
+  // 4. memoryUsageInBytes
+  const u8 *mem_pos = token.buf[4];
+  options->memory_usage_in_kib = hc_strtoul ((const char *) mem_pos, NULL, 10)/1024; // /1024 to go from bytes to KiB
 
-  // salt
+  // 5. Argon version
+  const u8 *ver_pos = token.buf[5];
+  options->version             = hc_strtoul ((const char *) ver_pos, NULL, 10);
 
-  const u8 *salt_pos = token.buf[1];
-  const int salt_len = token.len[1];
+  // 6. parallelism
+  const u8 *par_pos = token.buf[6];
+  options->parallelism         = hc_strtoul ((const char *) par_pos, NULL, 10);
 
-  memset (tmp_buf, 0, sizeof (tmp_buf));
+  // 7. masterseed
+  const int masterseed_len = token.len[7];
+  const u8 *masterseed_pos = token.buf[7];
+  hex_decode ((const u8 *) masterseed_pos, masterseed_len, (u8 *) keepass4->masterseed);
 
-  tmp_len = base64_decode (base64_to_int, salt_pos, salt_len, tmp_buf);
+  // 8. transformseed (salt)
+  const int salt_len = token.len[8];
+  const u8 *salt_pos = token.buf[8];
 
-  if (tmp_len != 32) return (PARSER_SALT_LENGTH);
+  salt->salt_iter = options->iterations * ARGON2_SYNC_POINTS;
+  salt->salt_dimy = options->parallelism;
+  salt->salt_len = hex_decode ((const u8 *) salt_pos, salt_len, (u8 *) salt->salt_buf);
 
-  memcpy (salt->salt_buf, tmp_buf, tmp_len);
+  // 9. header
+  const int header_len = token.len[9];
+  const u8 *header_pos = token.buf[9];
+  hex_decode ((const u8 *) header_pos, header_len, (u8 *) keepass4->header);
 
-  salt->salt_len = tmp_len;
+  // 10. headerhmac (digest): digest/ target hash
+  const int digest_len = token.len[10];
+  const u8 *digest_pos = token.buf[10];
+  options->digest_len = hex_decode ((const u8 *) digest_pos, digest_len, (u8 *) digest);
 
-  metamask->salt_buf[0] = salt->salt_buf[0];
-  metamask->salt_buf[1] = salt->salt_buf[1];
-  metamask->salt_buf[2] = salt->salt_buf[2];
-  metamask->salt_buf[3] = salt->salt_buf[3];
-  metamask->salt_buf[4] = salt->salt_buf[4];
-  metamask->salt_buf[5] = salt->salt_buf[5];
-  metamask->salt_buf[6] = salt->salt_buf[6];
-  metamask->salt_buf[7] = salt->salt_buf[7];
+  // check argon2 config
+  if (options->version != 19 && options->version != 16) return (PARSER_HASH_VALUE);
+  if (options->memory_usage_in_kib < 1) return (PARSER_HASH_VALUE);
+  if (options->iterations < 1) return (PARSER_HASH_VALUE);
+  if (options->parallelism < 1 || options->parallelism > 32) return (PARSER_HASH_VALUE);
 
-  // iv
-
-  const u8 *iv_pos = token.buf[2];
-  const int iv_len = token.len[2];
-
-  memset (tmp_buf, 0, sizeof (tmp_buf));
-
-  tmp_len = base64_decode (base64_to_int, iv_pos, iv_len, tmp_buf);
-
-  if (tmp_len != 16) return (PARSER_IV_LENGTH);
-
-  memcpy ((u8 *) metamask->iv_buf, tmp_buf, tmp_len);
-
-  metamask->iv_buf[0] = byte_swap_32 (metamask->iv_buf[0]);
-  metamask->iv_buf[1] = byte_swap_32 (metamask->iv_buf[1]);
-  metamask->iv_buf[2] = byte_swap_32 (metamask->iv_buf[2]);
-  metamask->iv_buf[3] = byte_swap_32 (metamask->iv_buf[3]);
-
-  metamask->iv_len = tmp_len;
-
-  // ciphertext
-
-  const u8 *ct_pos = token.buf[3];
-  const int ct_len = token.len[3];
-
-  memset (tmp_buf, 0, sizeof (tmp_buf));
-
-  tmp_len = base64_decode (base64_to_int, ct_pos, ct_len, tmp_buf);
-
-  if (tmp_len <= 16) return (PARSER_CT_LENGTH);
-
-  tmp_len -= 16;
-
-  if (tmp_len < 30 || tmp_len > 3136) return (PARSER_CT_LENGTH);
-
-  memcpy ((u8 *) metamask->ct_buf, tmp_buf, tmp_len);
-
-  u32 j = tmp_len / 4;
-
-  if ((tmp_len % 4) > 0) j++;
-
-  for (u32 i = 0; i < j; i++) metamask->ct_buf[i] = byte_swap_32 (metamask->ct_buf[i]);
-
-  metamask->ct_len = tmp_len;
-
-  // tag
-
-  u32 tag_buf[4] = { 0 };
-
-  memcpy ((u8 *) tag_buf, tmp_buf+metamask->ct_len, 16);
-
-  digest[0] = byte_swap_32 (tag_buf[0]);
-  digest[1] = byte_swap_32 (tag_buf[1]);
-  digest[2] = byte_swap_32 (tag_buf[2]);
-  digest[3] = byte_swap_32 (tag_buf[3]);
+  options->segment_length     = MAX (2, (options->memory_usage_in_kib / (ARGON2_SYNC_POINTS * options->parallelism)));
+  options->lane_length        = options->segment_length * ARGON2_SYNC_POINTS;
+  options->memory_block_count = options->lane_length * options->parallelism;
 
   return (PARSER_OK);
 }
 
 int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const void *digest_buf, MAYBE_UNUSED const salt_t *salt, MAYBE_UNUSED const void *esalt_buf, MAYBE_UNUSED const void *hook_salt_buf, MAYBE_UNUSED const hashinfo_t *hash_info, char *line_buf, MAYBE_UNUSED const int line_size)
 {
-  const u32 *digest = (const u32 *) digest_buf;
+  u32 *digest = (u32 *) digest_buf;
 
-  const pbkdf2_sha256_aes_gcm_t *metamask = (const pbkdf2_sha256_aes_gcm_t *) esalt_buf;
+  argon2_options_t *options  = (argon2_options_t *) esalt_buf;
+  keepass4_t *keepass4  = &options->keepass4;
 
-  // salt
+  // 7. masterseed
+  char masterseed_hex[64] = { 0 };
+  hex_encode( (const u8 *) keepass4->masterseed, 32, (u8 *) masterseed_hex);
 
-  #define SALT_LEN_BASE64   ((32 * 8) / 6) + 3
-  #define IV_LEN_BASE64     ((16 * 8) / 6) + 3
-  #define CT_MAX_LEN_BASE64 (((3136+16) * 8) / 6) + 3
+  // 8. transformseed (salt)
+  char salt_hex[64] = { 0 };
+  hex_encode( (const u8 *) salt->salt_buf, 32, (u8 *) salt_hex);
 
-  u8 salt_buf[SALT_LEN_BASE64] = { 0 };
+  // 9. header
+  char header_hex[506] = { 0 };
+  hex_encode( (const u8 *) keepass4->header, 253, (u8 *) header_hex);
 
-  base64_encode (int_to_base64, (const u8 *) salt->salt_buf, (const int) salt->salt_len, salt_buf);
+  // 10. headerhmac (digest)
+  char digest_hex[64] = { 0 };
+  hex_encode( (const u8 *) digest, 32, (u8 *) digest_hex);
 
-  // iv
-
-  u32 tmp_iv_buf[4] = { 0 };
-
-  tmp_iv_buf[0] = byte_swap_32 (metamask->iv_buf[0]);
-  tmp_iv_buf[1] = byte_swap_32 (metamask->iv_buf[1]);
-  tmp_iv_buf[2] = byte_swap_32 (metamask->iv_buf[2]);
-  tmp_iv_buf[3] = byte_swap_32 (metamask->iv_buf[3]);
-
-  u8 iv_buf[IV_LEN_BASE64+1] = { 0 };
-
-  base64_encode (int_to_base64, (const u8 *) tmp_iv_buf, (const int) metamask->iv_len, iv_buf);
-
-  // ct
-
-  u32 ct_len = metamask->ct_len;
-
-  u32 j = ct_len / 4;
-
-  if ((ct_len % 4) > 0) j++;
-
-  u32 tmp_buf[788] = { 0 };
-
-  for (u32 i = 0; i < j; i++) tmp_buf[i] = byte_swap_32 (metamask->ct_buf[i]);
-
-  u32 tmp_tag[4] = { 0 };
-
-  tmp_tag[0] = byte_swap_32 (digest[0]);
-  tmp_tag[1] = byte_swap_32 (digest[1]);
-  tmp_tag[2] = byte_swap_32 (digest[2]);
-  tmp_tag[3] = byte_swap_32 (digest[3]);
-
-  u8 *tmp_buf_str = (u8 *) tmp_buf;
-  u8 *tmp_tag_str = (u8 *) tmp_tag;
-
-  memcpy (tmp_buf_str+metamask->ct_len, tmp_tag_str, 16);
-
-  u8 ct_buf[CT_MAX_LEN_BASE64] = { 0 };
-
-  base64_encode (int_to_base64, (const u8 *) tmp_buf, (const int) metamask->ct_len+16, ct_buf);
+  const char *argon_uuid = NULL;
+  switch (options->type)
+  {
+    case 0: argon_uuid = SIGNATURE_ARGON2D_UUID;  break;
+    case 2: argon_uuid = SIGNATURE_ARGON2ID_UUID; break;
+  }
 
   u8 *out_buf = (u8 *) line_buf;
-  
-  if (salt->salt_iter + 1 != ROUNDS_METAMASK)
-    return snprintf ((char *) out_buf, line_size, "%srounds=%d$%s$%s$%s",
-      SIGNATURE_METAMASK_WALLET,
-      salt->salt_iter + 1,
-      salt_buf,
-      iv_buf,
-      ct_buf);
-  else
-    return snprintf ((char *) out_buf, line_size, "%s%s$%s$%s",
-        SIGNATURE_METAMASK_WALLET,
-        salt_buf,
-        iv_buf,
-        ct_buf);
+
+  const int out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s",
+    "$keepass$",          // 0. signature
+    4,                    // 1. keepassDB version
+    options->iterations,  // 2. iterations
+    argon_uuid,           // 3. KDF UUID
+    options->memory_usage_in_kib*1024,  // 4. memoryUsageInBytes
+    options->version,     // 5. Argon version
+    options->parallelism, // 6. parallelism
+    masterseed_hex,       // 7. masterseed
+    salt_hex,             // 8. transformseed (salt)
+    header_hex,           // 9. header
+    digest_hex            // 10. headerhmac (digest)
+  );
+
+  return out_len;
 }
 
 void module_init (module_ctx_t *module_ctx)
@@ -350,9 +317,9 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_dgst_size                = module_dgst_size;
   module_ctx->module_dictstat_disable         = MODULE_DEFAULT;
   module_ctx->module_esalt_size               = module_esalt_size;
-  module_ctx->module_extra_buffer_size        = MODULE_DEFAULT;
-  module_ctx->module_extra_tmp_size           = MODULE_DEFAULT;
-  module_ctx->module_extra_tuningdb_block     = MODULE_DEFAULT;
+  module_ctx->module_extra_buffer_size        = argon2_module_extra_buffer_size;
+  module_ctx->module_extra_tmp_size           = argon2_module_extra_tmp_size;
+  module_ctx->module_extra_tuningdb_block     = argon2_module_extra_tuningdb_block;
   module_ctx->module_forced_outfile_format    = MODULE_DEFAULT;
   module_ctx->module_hash_binary_count        = MODULE_DEFAULT;
   module_ctx->module_hash_binary_parse        = MODULE_DEFAULT;
@@ -378,7 +345,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_hook23                   = MODULE_DEFAULT;
   module_ctx->module_hook_salt_size           = MODULE_DEFAULT;
   module_ctx->module_hook_size                = MODULE_DEFAULT;
-  module_ctx->module_jit_build_options        = module_jit_build_options;
+  module_ctx->module_jit_build_options        = argon2_module_jit_build_options;
   module_ctx->module_jit_cache_disable        = MODULE_DEFAULT;
   module_ctx->module_kernel_accel_max         = MODULE_DEFAULT;
   module_ctx->module_kernel_accel_min         = MODULE_DEFAULT;
@@ -397,14 +364,15 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_potfile_keep_all_hashes  = MODULE_DEFAULT;
   module_ctx->module_pwdump_column            = MODULE_DEFAULT;
   module_ctx->module_pw_max                   = MODULE_DEFAULT;
-  module_ctx->module_pw_min                   = module_pw_min;
+  module_ctx->module_pw_min                   = MODULE_DEFAULT;
   module_ctx->module_salt_max                 = MODULE_DEFAULT;
   module_ctx->module_salt_min                 = MODULE_DEFAULT;
   module_ctx->module_salt_type                = module_salt_type;
   module_ctx->module_separator                = MODULE_DEFAULT;
   module_ctx->module_st_hash                  = module_st_hash;
   module_ctx->module_st_pass                  = module_st_pass;
-  module_ctx->module_tmp_size                 = module_tmp_size;
+  module_ctx->module_tmp_size                 = argon2_module_tmp_size;
   module_ctx->module_unstable_warning         = MODULE_DEFAULT;
   module_ctx->module_warmup_disable           = MODULE_DEFAULT;
 }
+

@@ -16,6 +16,8 @@
 
 - Added hash-mode: sha224($pass.$salt)
 - Added hash-mode: sha224($salt.$pass)
+- Added hash-mode: sha224(sha1($pass))
+- Added hash-mode: sha224(sha224($pass))
 
 ##
 ## Features

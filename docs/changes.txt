@@ -12,6 +12,11 @@
 - Added hash-mode: SAP CODVN H (PWDSALTEDHASH) isSHA512
 - Added hash-mode: sm3crypt $sm3$, SM3 (Unix)
 
+## Constructs
+
+- Added hash-mode: sha224($pass.$salt)
+- Added hash-mode: sha224($salt.$pass)
+
 ##
 ## Features
 ##

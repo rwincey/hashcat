@@ -18,7 +18,7 @@ static const u32   DGST_POS3      = 5;
 static const u32   DGST_SIZE      = DGST_SIZE_8_25;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_RAW_HASH;
 static const char *HASH_NAME      = "MD6 (256)";
-static const u64   KERN_TYPE      = 40000;
+static const u64   KERN_TYPE      = 34600;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_USES_BITS_64
                                   | OPTI_TYPE_NOT_SALTED

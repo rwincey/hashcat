@@ -233,20 +233,14 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
     B[2] = hl32_to_64 (w1[1], w1[0]);
     B[3] = hl32_to_64 (w1[3], w1[2]);
 
-    // 1. swap data
-
     B[0] = hc_swap64 (B[0]);
     B[1] = hc_swap64 (B[1]);
     B[2] = hc_swap64 (B[2]);
     B[3] = hc_swap64 (B[3]);
 
-    u32 i = 0;
-    u32 j = 0;
-
-    // 2. creating N
-
-    // - append Q
-//    for (; i < md6_q; i++) N[i] = MD6_Q[i];
+    u64x databitlen = (u64x) (out_len * 8);
+    u64x p = (u64x) (md6_b * md6_w - databitlen);
+    u64x V = (MD6_Vs | (p << 20) | MD6_Ve); // only p change, so we can use precomputed values
 
     N[ 0] = MD6_Q[ 0];
     N[ 1] = MD6_Q[ 1];
@@ -263,9 +257,6 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
     N[12] = MD6_Q[12];
     N[13] = MD6_Q[13];
     N[14] = MD6_Q[14];
-
-    // - append K
-//    for (; i < md6_q+md6_k; i++) N[i] = 0;
     N[15] = 0;
     N[16] = 0;
     N[17] = 0;
@@ -274,52 +265,23 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
     N[20] = 0;
     N[21] = 0;
     N[22] = 0;
-
-    // - append NODE_ID
-//    N[i] = MD6_256_DEFAULT_NODEID;
-//    i++;
     N[23] = MD6_256_DEFAULT_NODEID;
-
-    // - append CONTROL_WORD
-
-    u64x databitlen = (u64x) (out_len * 8);
-    u64x p = (u64x) (md6_b * md6_w - databitlen);
-    u64x V = (MD6_Vs | (p << 20) | MD6_Ve); // only p change, so we can use precomputed values
-
-//    N[i] = V;
-//    i++;
     N[24] = V;
-
-    // - append PASSWORD
-//    for (j = 0; i < 89; i++, j++) N[i] = B[j];
     N[25] = B[0];
     N[26] = B[1];
     N[27] = B[2];
     N[28] = B[3];
 
-    // NOW copy to A and perform MD6 ROUNDS
-
-    // copy to A
-//    for (j = 0; j < 89; j++) A[j] = N[j];
-    for (j = 0; j < 29; j++) A[j] = N[j];
-
-/*
-    if (gid == 0)
-    {
-      printf("N final:");
-      for (j = 0; j < 89; j++) printf(" %lx", N[j]);
-      printf("\n");
-    }
-*/
-
     u64x x;
 
     u64x S = MD6_S0;
 
-    i = 0;
-    j = 0;
+    u32 i = 0;
+    u32 j = 0;
 
     u32 rXc = MD6_256_ROUNDS * md6_c;
+
+    for (j = 0; j < 29; j++) A[j] = N[j];
 
     #ifdef _unroll
     #pragma unroll
@@ -356,19 +318,6 @@ KERNEL_FQ KERNEL_FA void m40000_s04 (KERN_ATTR_RULES ())
     }
 
     u32 off = (MD6_256_ROUNDS - 1) * md6_c + md6_n;
-
-/*
-    // copy 16 element to output, reversed
-
-    u64x out[16] = { 0 };
-
-    for (j = 0; j < 16; j++) out[j] = A[off+j];
-
-    const u32x r0 = l32_from_64 (out[15]);
-    const u32x r1 = h32_from_64 (out[15]);
-    const u32x r2 = l32_from_64 (out[14]);
-    const u32x r3 = h32_from_64 (out[14]);
-*/
 
     const u32x r0 = l32_from_64 (A[off+15]);
     const u32x r1 = h32_from_64 (A[off+15]);

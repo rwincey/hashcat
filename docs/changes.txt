@@ -13,6 +13,13 @@
 - Added hash-mode: SAP CODVN H (PWDSALTEDHASH) isSHA512
 - Added hash-mode: sm3crypt $sm3$, SM3 (Unix)
 
+## Constructs
+
+- Added hash-mode: sha224($pass.$salt)
+- Added hash-mode: sha224($salt.$pass)
+- Added hash-mode: sha224(sha1($pass))
+- Added hash-mode: sha224(sha224($pass))
+
 ##
 ## Features
 ##
@@ -23,8 +30,10 @@
 
 ## Developer Features
 
+- Argon2: Add argon2_init() wrappers to support private address space
 - Building: Add MAINTAINER_MODE flag to disable hardcoded CPU optimization flags
 - Kernel: Move common code from kernels to inc_cipher_blowfish.c/.h
+- Kernel: Move common code from kernels to inc_cipher_des.c/.h
 
 ##
 ## Improvements
@@ -35,6 +44,8 @@
 - Change hash-category for hash-modes 25600, 25800, 28400 and 30600 to HASH_CATEGORY_RAW_HASH_SALTED
 - Update default benchmark selection for --benchmark and tools/benchmark_deep.pl
 - Warn instead of waiting on high GPU memory usage
+- Suppress optimization advice in final approach mode
+- Add early syntax check for -j and -k rules
 
 ## Existing Plugin and Crypto Library Improvements
 
@@ -575,7 +586,7 @@
 - New: hashcat-python-plugin-development-guide.md
 - New: BUILD_macOS.md
 - New: BUILD_Docker.md
-- New: hashcat-example_hashes.md (auto-generated)
+- New: hashcat-example-hashes.md (auto-generated)
 - New: hashcat-help.md (auto-generated)
 - New: device_status_code.txt
 

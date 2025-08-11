@@ -89,7 +89,7 @@ static const char *SIGNATURE_RACF_KDFAES = "$racf-kdfaes$";
 
 u32 module_kernel_accel_min (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra)
 {
-  const u32 kernel_accel_min = 64;
+  const u32 kernel_accel_min = 16;
 
   return kernel_accel_min;
 }

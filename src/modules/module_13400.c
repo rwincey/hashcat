@@ -256,6 +256,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   keepass->version = hc_strtoul ((const char *) version_pos, NULL, 10);
 
+  if (keepass->version > 2) return (PARSER_HASH_VALUE); // this hash-type only supports versions 1 and 2; version 4 is supported by hash-type 13450
+
   // iter
 
   const u8 *rounds_pos = token.buf[2];

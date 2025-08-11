@@ -15,6 +15,8 @@
 #include "backend.h"
 #include "user_options.h"
 #include "outfile.h"
+#include "rp.h"
+#include "rp_cpu.h"
 
 #ifdef WITH_BRAIN
 #include "brain.h"
@@ -1733,6 +1735,36 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
     event_log_error (hashcat_ctx, "You must specify --bypass-delay and --bypass-threshold together.");
 
     return -1;
+  }
+
+  if (user_options->rule_buf_l_chgd == true)
+  {
+    char rule_buf_in[RP_PASSWORD_SIZE]  = { 0 };
+    char rule_buf_out[RP_PASSWORD_SIZE] = { 0 };
+
+    const int rc = _old_apply_rule (user_options->rule_buf_l, strlen (user_options->rule_buf_l), rule_buf_in, 0, rule_buf_out);
+
+    if (rc == RULE_RC_SYNTAX_ERROR)
+    {
+      event_log_error (hashcat_ctx, "Invalid or unsupported rule specified -j/--rule-left: %s", user_options->rule_buf_l);
+
+      return -1;
+    }
+  }
+
+  if (user_options->rule_buf_r_chgd == true)
+  {
+    char rule_buf_in[RP_PASSWORD_SIZE]  = { 0 };
+    char rule_buf_out[RP_PASSWORD_SIZE] = { 0 };
+
+    const int rc = _old_apply_rule (user_options->rule_buf_r, strlen (user_options->rule_buf_r), rule_buf_in, 0, rule_buf_out);
+
+    if (rc == RULE_RC_SYNTAX_ERROR)
+    {
+      event_log_error (hashcat_ctx, "Invalid or unsupported rule specified -k/--rule-right: %s", user_options->rule_buf_r);
+
+      return -1;
+    }
   }
 
   // argc / argv checks

@@ -8,6 +8,7 @@
 
 - Added hash-mode: AS/400 DES
 - Added hash-mode: AS/400 SSHA1
+- Added hash-mode: Blockchain, My Wallet, Legacy Wallets
 - Added hash-mode: Cisco-ISE Hashed Password (SHA256)
 - Added hash-mode: Keepass4
 - Added hash-mode: SAP CODVN H (PWDSALTEDHASH) isSHA512

@@ -218,7 +218,7 @@ bool need_hexify (const u8 *buf, const size_t len, const char separator, bool al
 
   // check if the password ends in whitespace
 
-  if (len > 0 && isspace(buf[len - 1]))
+  if (len > 0 && isspace (buf[len - 1]))
   {
     return true;
   }

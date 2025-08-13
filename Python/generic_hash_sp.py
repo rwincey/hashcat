@@ -37,17 +37,8 @@ def extract_esalts(esalts_buf):
 def kernel_loop(ctx,passwords,salt_id,is_selftest):
   return hcsp.handle_queue(ctx,passwords,salt_id,is_selftest)
 
-def dump_hashcat_ctx(ctx):
-  print("")
-  print("Dump hashcat's ctx to allow for the (e)salts to be populated correctly")
-  print("  enable this code, run hashcat with -m73000, update the ctx-variable at the top of __main__, and disable this code again")
-  hcshared.pprint_bytes_runs(ctx, prefix="ctx")
-  # import pprint
-  # pprint.pprint(ctx) #this this prints without sumarizing runs of zero-bytes outputting a big struct..
-  exit()
-
 def init(ctx):
-  # dump_hashcat_ctx(ctx) #enable this to dump the ctx from hashcat
+  # hcshared.dump_hashcat_ctx(ctx) #enable this to dump the ctx from hashcat
   hcsp.init(ctx,extract_esalts)
 
 def term(ctx):
@@ -61,12 +52,7 @@ if __name__ == '__main__':
   # we've been called by Python (debugger) directly
   # this codepath is never called by hashcat
 
-  # add the hashcat path to the environment to import the hcshared and hcmp libraries
-  script_dir = Path(__file__).resolve().parent
-  if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
-    sys.path.insert(0, script_dir)
-  else:
-    print("generic_hash_mp.py is not running from Python folder, so we debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)
+  hcshared.add_hashcat_path_to_environment()
 
   # the default example is a salted hash, we've dumped hashcat's ctx and added it here
   #  to dump the ctx of a different hashlist enable dump_hashcat_ctx() in init()

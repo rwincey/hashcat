@@ -135,8 +135,27 @@ def _render(obj, indent=0, step=2):
     return repr(obj)
 
 def pprint_bytes_runs(obj, *, indent=2, prefix=None):
-    rendered = _render(obj, indent=0, step=indent)
+    rendered = _render(obj, indent=indent, step=indent)
     if prefix:
-        print(f"{prefix} = {rendered}")
+        pad = " " * indent
+        print(f"{pad}{prefix} = {rendered}")
     else:
         print(rendered)
+
+def dump_hashcat_ctx(ctx):
+  print("")
+  print("Dump hashcat's ctx to allow for the (e)salts to be populated correctly")
+  print("  enable this code, run hashcat with -m73000, update the ctx-variable at the top of __main__, and disable this code again")
+  pprint_bytes_runs(ctx, prefix="ctx")
+  # import pprint
+  # pprint.pprint(ctx) #this this prints without sumarizing runs of zero-bytes outputting a big struct..
+  print("")
+  exit()
+
+def add_hashcat_path_to_environment():
+  # add the hashcat path to the environment to import the hcshared and hcmp libraries
+  script_dir = Path(__file__).resolve().parent
+  if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
+    sys.path.insert(0, script_dir)
+  else:
+    print("generic_hash_mp.py is not running from Python folder, so we debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)

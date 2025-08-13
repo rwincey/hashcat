@@ -149,7 +149,7 @@ def dump_hashcat_ctx(ctx):
   print("  enable this code, run hashcat with -m73000, update the ctx-variable at the top of __main__, and disable this code again")
   pprint_bytes_runs(ctx, prefix="ctx")
   # import pprint
-  # pprint.pprint(ctx) #this this prints without sumarizing runs of zero-bytes outputting a big struct..
+  # pprint.pprint(ctx) #this this prints without summarizing runs of zero-bytes outputting a big struct..
   print("")
   exit()
 

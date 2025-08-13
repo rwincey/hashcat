@@ -12,7 +12,7 @@ ST_PASS = "hashcat"
 # In theory, you only have to re-implement this function...
 def calc_hash(password: bytes, salt: dict) -> str:
   salt_buf = hcshared.get_salt_buf(salt)
-  hash = hashlib.sha256(salt_buf + password)
+  hash = hashlib.sha256(salt_buf + password)  # the salt is prepended to the password as is (not as hex-bytes but as ASCII)
   for i in range(10000):
     hash = hashlib.sha256(hash.digest())
   return hash.hexdigest()

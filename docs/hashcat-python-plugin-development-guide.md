@@ -254,5 +254,5 @@ It reads passwords from stdin and prints the result of `calc_hash()`:
 echo "password" | python3 generic_hash_mp.py
 ```
 
-Note that you probably want to inline the correct salt value, see the `main` section in the code. TBD: Add some sample
+Note to allow use of the correct salt value, you need to dump hashcat's ctx: only hashcat knows of the hashlist containing the salt. Python doesn't have the hashlist, nor do we want to duplicate decoding the hashes. See the `main` section of `generic_hash_mp.py` how to dump the ctx (containing salts) for your hashlist.
 

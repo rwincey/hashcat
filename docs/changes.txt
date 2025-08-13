@@ -43,7 +43,7 @@
 - Building: Add MAINTAINER_MODE flag to disable hardcoded CPU optimization flags
 - Kernel: Move common code from kernels to inc_cipher_blowfish.c/.h
 - Kernel: Move common code from kernels to inc_cipher_des.c/.h
-- Python: Support salts when debugging Python bridge (generic_hash_mpy.py)
+- Python: Support salts when debugging Python bridge (generic_hash_mp.py)
 - Python: Allow debugging of supporting Python files (hcmp.py and hcshared.py)
 
 ##

@@ -72,3 +72,71 @@ def _worker_batch(passwords, salt_id, is_selftest, user_fn, salts, st_salts):
             print(e, file=sys.stderr)
             hashes.append("invalid-password")
     return hashes
+
+def _bytes_expr(b: bytes, zero_run_fold_min: int = 9) -> str:
+    n = len(b)
+    if n == 0:
+        return "bytes(0)"
+    if b.rstrip(b"\x00") == b"":
+        # all zeros
+        return f"bytes({n})"
+
+    parts = []
+    hex_buf = []
+
+    def flush_hex():
+        if hex_buf:
+            parts.append(f'bytes.fromhex("{"".join(hex_buf)}")')
+            hex_buf.clear()
+
+    i = 0
+    while i < n:
+        if b[i] != 0:
+            hex_buf.append(f"{b[i]:02x}")
+            i += 1
+            continue
+        # count zero run
+        j = i
+        while j < n and b[j] == 0:
+            j += 1
+        run = j - i
+        if run >= zero_run_fold_min:
+            flush_hex()
+            parts.append(f'b"\\x00"*{run}')
+        else:
+            hex_buf.extend(["00"] * run)
+        i = j
+    flush_hex()
+    return " + ".join(parts) if parts else "bytes(0)"
+
+def _render(obj, indent=0, step=2):
+    pad = " " * indent
+    if isinstance(obj, (bytes, bytearray, memoryview)):
+        return _bytes_expr(bytes(obj))
+    if isinstance(obj, dict):
+        if not obj:
+            return "{}"
+        items = []
+        for k, v in obj.items():
+            key = repr(k)
+            val = _render(v, indent + step, step)
+            items.append(f'{" "*(indent+step)}{key}: {val}')
+        return "{\n" + ",\n".join(items) + f"\n{pad}" + "}"
+    if isinstance(obj, (list, tuple)):
+        if not obj:
+            return "[]" if isinstance(obj, list) else "()"
+        open_, close_ = ("[", "]") if isinstance(obj, list) else ("(", ")")
+        items = [f'{" "*(indent+step)}{_render(v, indent + step, step)}' for v in obj]
+        # single-item tuple needs a trailing comma
+        if isinstance(obj, tuple) and len(obj) == 1:
+            items[0] += ","
+        return open_ + "\n" + ",\n".join(items) + f"\n{pad}" + close_
+    # primitives
+    return repr(obj)
+
+def pprint_bytes_runs(obj, *, indent=2, prefix=None):
+    rendered = _render(obj, indent=0, step=indent)
+    if prefix:
+        print(f"{prefix} = {rendered}")
+    else:
+        print(rendered)

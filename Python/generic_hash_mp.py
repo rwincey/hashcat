@@ -9,9 +9,9 @@ ST_HASH = "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348
 ST_PASS = "hashcat"
 
 # In theory, you only have to implement this function...
+
 def calc_hash(password: bytes, salt: dict) -> str:
   salt_buf = hcshared.get_salt_buf(salt)
-
   hash = hashlib.sha256(salt_buf + password)
   for i in range(10000):
     hash = hashlib.sha256(hash.digest())
@@ -56,6 +56,7 @@ def term(ctx):
 # This code is only intended to enable debugging via a standalone Python interpreter.
 # It makes development easier as you don't have to use a hashcat to test your changes.
 # Read passwords from stdin
+
 if __name__ == '__main__':
   # we've been called by Python (debugger) directly
   # this codepath is never called by hashcat

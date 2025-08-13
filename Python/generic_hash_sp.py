@@ -3,7 +3,7 @@ import struct
 import hashlib
 import hcshared
 import hcsp
-import os
+from pathlib import Path
 
 ST_HASH = "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343"
 ST_PASS = "hashcat"
@@ -62,8 +62,8 @@ if __name__ == '__main__':
   # this codepath is never called by hashcat
 
   # add the hashcat path to the environment to import the hcshared and hcmp libraries
-  script_dir = os.path.dirname(os.path.abspath(__file__))
-  if script_dir.endswith("hashcat/Python"):
+  script_dir = Path(__file__).resolve().parent
+  if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
     sys.path.insert(0, script_dir)
   else:
     print("generic_hash_mp.py is not running from Python folder, so we debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)

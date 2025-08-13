@@ -29,6 +29,10 @@
 ## Features
 ##
 
+## User Features
+
+- Use 64-bit counters for amplifier keyspace
+
 ## Docker Support
 
 - Add initial support for running hashcat inside Docker

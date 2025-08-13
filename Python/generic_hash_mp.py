@@ -56,6 +56,13 @@ if __name__ == '__main__':
   # we've been called by Python (debugger) directly
   # this codepath is never called by hashcat
 
+  # hcmp.py and hcshared.py need to be added to the path before we can debug them
+  script_dir = os.path.dirname(os.path.abspath(__file__))
+  if script_dir.endswith("hashcat/Python"):
+    sys.path.insert(0, script_dir)
+  else:
+    print("generic_hash_mp.py is not running from Python folder, so we debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)
+
   # the default example is a salted hash, we've dumped hashcat's ctx and added it here
   #  to dump the ctx of a different hash-list checkout init()
   ctx = {

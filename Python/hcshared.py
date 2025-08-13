@@ -1,5 +1,6 @@
 import struct
 import sys
+from pathlib import Path
 
 # Extract a blob that is a list of salt_t entries and convert it to a list of dictionaries
 # The salt_t is a fixed data-type so we can handle it here
@@ -158,4 +159,4 @@ def add_hashcat_path_to_environment():
   if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
     sys.path.insert(0, script_dir)
   else:
-    print("generic_hash_mp.py is not running from Python folder, so we debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)
+    print("script is not running from the hashcat/Python folder, so the debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)

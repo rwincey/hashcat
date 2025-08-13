@@ -3,7 +3,6 @@ import struct
 import hashlib
 import hcshared
 import hcmp
-from pathlib import Path
 
 ST_HASH = "33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343"
 ST_PASS = "hashcat"

@@ -62,7 +62,7 @@ if __name__ == '__main__':
     if len(passwords) == hashcat_passwords:
       hashes = kernel_loop(ctx,passwords,0,False)
       passwords.clear()
-  hashes = kernel_loop(ctx,passwords,0,False) ## remaining entries
+  hashes = kernel_loop(ctx,passwords,0,False) # remaining entries
   if hashes:
     print(hashes[-1])
   term(ctx)

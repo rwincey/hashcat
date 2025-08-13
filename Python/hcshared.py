@@ -159,4 +159,4 @@ def add_hashcat_path_to_environment():
   if script_dir.name == "Python" and script_dir.parent.name == "hashcat":
     sys.path.insert(0, script_dir)
   else:
-    print("script is not running from the hashcat/Python folder, so the debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)
+    print(f"script ({script_dir}) is not running from the hashcat/Python folder, so the debugging of hcmp.py and hcshared.py is disabled", file=sys.stderr)

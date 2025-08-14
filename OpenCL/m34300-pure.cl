@@ -64,7 +64,8 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     case 3: V = d_extra3_buf; break;
   }
 
-  const argon2_options_t options = esalt_bufs[DIGESTS_OFFSET_HOST].options;
+  const keepass4_t keepass4 = esalt_bufs[DIGESTS_OFFSET_HOST];
+  const argon2_options_t options = keepass4.options;
 
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
@@ -91,21 +92,29 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
   w1[2] = ctx0.h[6];
   w1[3] = ctx0.h[7];
 
+  w2[0] = 0;
+  w2[1] = 0;
+  w2[2] = 0;
+  w2[3] = 0;
+  w3[0] = 0;
+  w3[1] = 0;
+  w3[2] = 0;
+  w3[3] = 0;
 
-  if (esalt_bufs[DIGESTS_OFFSET_HOST].keyfile_len != 0)
+  sha256_update_64 (&ctx, w0, w1, w2, w3, 32);
+
+  if (keepass4.keyfile_len != 0)
   {
-      // TODO add keyfile here
-      w2[0] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[0];
-      w2[1] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[1];
-      w2[2] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[2];
-      w2[3] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[3];
-      w3[0] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[4];
-      w3[1] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[5];
-      w3[2] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[6];
-      w3[3] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[7];
-  }
-  else
-  {
+    // TODO add keyfile here
+    w2[0] = (keepass4.keyfile[0]);
+    w2[1] = (keepass4.keyfile[1]);
+    w2[2] = (keepass4.keyfile[2]);
+    w2[3] = (keepass4.keyfile[3]);
+    w3[0] = (keepass4.keyfile[4]);
+    w3[1] = (keepass4.keyfile[5]);
+    w3[2] = (keepass4.keyfile[6]);
+    w3[3] = (keepass4.keyfile[7]);
+    printf ("\nw2[0]=%08x", w2[0]);
     w2[0] = 0;
     w2[1] = 0;
     w2[2] = 0;
@@ -114,9 +123,8 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     w3[1] = 0;
     w3[2] = 0;
     w3[3] = 0;
+    sha256_update_64 (&ctx, w0, w1, w2, w3, 32);
   }
-
-  sha256_update_64 (&ctx, w0, w1, w2, w3, 32);
   sha256_final (&ctx);
 
   pw_t pw;

@@ -270,6 +270,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
     keepass4->keyfile_len = 32;
 
     keepass4->keyfile[0] = hex_to_u32 (&keyfile_pos[ 0]);
+    printf ("\nkeepass4->keyfile[0]=%08x\n", keepass4->keyfile[0]);
+
     keepass4->keyfile[1] = hex_to_u32 (&keyfile_pos[ 8]);
     keepass4->keyfile[2] = hex_to_u32 (&keyfile_pos[16]);
     keepass4->keyfile[3] = hex_to_u32 (&keyfile_pos[24]);

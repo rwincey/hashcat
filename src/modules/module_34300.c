@@ -56,7 +56,10 @@ typedef struct keepass4
   u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
   u32 header[64];
 
-  //TODO support keyfile
+  /* key-file handling */
+  u32 keyfile_len;
+  u32 keyfile[8];
+
 } keepass4_t;
 
 typedef struct argon2_options
@@ -96,6 +99,11 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   argon2_options_t *options  = (argon2_options_t *) esalt_buf;
   keepass4_t *keepass4  = &options->keepass4;
+
+  bool is_keyfile_present = false;
+  if ((line_buf[line_len - (64 + 1 + 2 + 1 + 2)] == '*')
+   && (line_buf[line_len - (64 + 1 + 2 + 1 + 1)] == '1')
+   && (line_buf[line_len - (64 + 1 + 2 + 1 + 0)] == '*')) is_keyfile_present = true;
 
   hc_token_t token;
 
@@ -169,6 +177,26 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   token.sep[10]     = '*';
   token.attr[10]    = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
+  if (is_keyfile_present == true)
+  {
+    token.token_cnt = 14;
+
+    token.sep[11]     = '*';
+    token.len[11]     = 1;
+    token.attr[11]    = TOKEN_ATTR_FIXED_LENGTH
+                      | TOKEN_ATTR_VERIFY_DIGIT;
+
+    token.sep[12]     = '*';
+    token.len[12]     = 2;
+    token.attr[12]    = TOKEN_ATTR_FIXED_LENGTH
+                      | TOKEN_ATTR_VERIFY_DIGIT;
+
+    token.sep[13]     = '*';
+    token.len[13]     = 64;
+    token.attr[13]    = TOKEN_ATTR_FIXED_LENGTH
+                      | TOKEN_ATTR_VERIFY_HEX;
+  }
+
   const int rc_tokenizer = input_tokenizer ((const u8 *) line_buf, line_len, &token);
 
   if (rc_tokenizer != PARSER_OK) return (rc_tokenizer);
@@ -231,6 +259,35 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   const int digest_len = token.len[10];
   const u8 *digest_pos = token.buf[10];
   options->digest_len = hex_decode ((const u8 *) digest_pos, digest_len, (u8 *) digest);
+
+
+  const u8 *keyfile_pos = NULL;
+
+  if (is_keyfile_present == true)
+  {
+    keyfile_pos = token.buf[13];
+
+    keepass4->keyfile_len = 32;
+
+    keepass4->keyfile[0] = hex_to_u32 (&keyfile_pos[ 0]);
+    keepass4->keyfile[1] = hex_to_u32 (&keyfile_pos[ 8]);
+    keepass4->keyfile[2] = hex_to_u32 (&keyfile_pos[16]);
+    keepass4->keyfile[3] = hex_to_u32 (&keyfile_pos[24]);
+    keepass4->keyfile[4] = hex_to_u32 (&keyfile_pos[32]);
+    keepass4->keyfile[5] = hex_to_u32 (&keyfile_pos[40]);
+    keepass4->keyfile[6] = hex_to_u32 (&keyfile_pos[48]);
+    keepass4->keyfile[7] = hex_to_u32 (&keyfile_pos[56]);
+
+    keepass4->keyfile[0] = byte_swap_32 (keepass4->keyfile[0]);
+    keepass4->keyfile[1] = byte_swap_32 (keepass4->keyfile[1]);
+    keepass4->keyfile[2] = byte_swap_32 (keepass4->keyfile[2]);
+    keepass4->keyfile[3] = byte_swap_32 (keepass4->keyfile[3]);
+    keepass4->keyfile[4] = byte_swap_32 (keepass4->keyfile[4]);
+    keepass4->keyfile[5] = byte_swap_32 (keepass4->keyfile[5]);
+    keepass4->keyfile[6] = byte_swap_32 (keepass4->keyfile[6]);
+    keepass4->keyfile[7] = byte_swap_32 (keepass4->keyfile[7]);
+
+  }
 
   // check argon2 config
   if (options->version != 19 && options->version != 16) return (PARSER_HASH_VALUE);

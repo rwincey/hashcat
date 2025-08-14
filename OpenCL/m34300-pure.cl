@@ -6,7 +6,7 @@
 
 /*
 Pseudocode:
-1. sha256(sha256(password=masterkey)||keyfile=none) = argon.in //TODO support keyfile
+1. sha256(sha256(password=masterkey)||keyfile) = argon.in
 2. argon2(salt=transformseed, password=argon2.in) = argon2.out
 2. sha512(masterseed||argon2.out||0x01) = final
 3. sha512(0xFFFFFFFFFFFFFFFF||final) = out
@@ -33,7 +33,10 @@ typedef struct keepass4
   u32 masterseed[32]; // needs to be this big because of sha512 not sure why it cannot be 512bit
   u32 header[64];
 
-  //TODO support keyfile
+  /* key-file handling */
+  u32 keyfile_len;
+  u32 keyfile[8];
+
 } keepass4_t;
 
 typedef struct argon2_tmp
@@ -67,7 +70,7 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
 
   sha256_ctx_t ctx0;
   sha256_init (&ctx0);
-  sha256_update_global_swap (&ctx0, ((u32 *) pws[gid].i), pws[gid].pw_len);
+  sha256_update_global_swap (&ctx0, ((GLOBAL_AS const u32 *) pws[gid].i), pws[gid].pw_len);
   sha256_final (&ctx0);
 
   u32 w0[4];
@@ -88,14 +91,30 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
   w1[2] = ctx0.h[6];
   w1[3] = ctx0.h[7];
 
-  w2[0] = 0;
-  w2[1] = 0;
-  w2[2] = 0;
-  w2[3] = 0;
-  w3[0] = 0;
-  w3[1] = 0;
-  w3[2] = 0;
-  w3[3] = 0;
+
+  if (esalt_bufs[DIGESTS_OFFSET_HOST].keyfile_len != 0)
+  {
+      // TODO add keyfile here
+      w2[0] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[0];
+      w2[1] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[1];
+      w2[2] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[2];
+      w2[3] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[3];
+      w3[0] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[4];
+      w3[1] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[5];
+      w3[2] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[6];
+      w3[3] = esalt_bufs[DIGESTS_OFFSET_HOST].keyfile[7];
+  }
+  else
+  {
+    w2[0] = 0;
+    w2[1] = 0;
+    w2[2] = 0;
+    w2[3] = 0;
+    w3[0] = 0;
+    w3[1] = 0;
+    w3[2] = 0;
+    w3[3] = 0;
+  }
 
   sha256_update_64 (&ctx, w0, w1, w2, w3, 32);
   sha256_final (&ctx);

@@ -310,14 +310,14 @@ KERNEL_FQ KERNEL_FA void m24901_s04 (KERN_ATTR_RULES ())
     c += make_u32x (MD5M_C);
     d += make_u32x (MD5M_D);
 
-    const u32x a0 = (((a >>  0) & 0xff) + ((a >>  8) & 0xff)) % 62;
-    const u32x a1 = (((a >> 16) & 0xff) + ((a >> 24) & 0xff)) % 62;
-    const u32x b0 = (((b >>  0) & 0xff) + ((b >>  8) & 0xff)) % 62;
-    const u32x b1 = (((b >> 16) & 0xff) + ((b >> 24) & 0xff)) % 62;
-    const u32x c0 = (((c >>  0) & 0xff) + ((c >>  8) & 0xff)) % 62;
-    const u32x c1 = (((c >> 16) & 0xff) + ((c >> 24) & 0xff)) % 62;
-    const u32x d0 = (((d >>  0) & 0xff) + ((d >>  8) & 0xff)) % 62;
-    const u32x d1 = (((d >> 16) & 0xff) + ((d >> 24) & 0xff)) % 62;
+    const u32x a0 = ((((a >>  0) & 0xff) + ((a >>  8) & 0xff)) & 0xff) % 62;
+    const u32x a1 = ((((a >> 16) & 0xff) + ((a >> 24) & 0xff)) & 0xff) % 62;
+    const u32x b0 = ((((b >>  0) & 0xff) + ((b >>  8) & 0xff)) & 0xff) % 62;
+    const u32x b1 = ((((b >> 16) & 0xff) + ((b >> 24) & 0xff)) & 0xff) % 62;
+    const u32x c0 = ((((c >>  0) & 0xff) + ((c >>  8) & 0xff)) & 0xff) % 62;
+    const u32x c1 = ((((c >> 16) & 0xff) + ((c >> 24) & 0xff)) & 0xff) % 62;
+    const u32x d0 = ((((d >>  0) & 0xff) + ((d >>  8) & 0xff)) & 0xff) % 62;
+    const u32x d1 = ((((d >> 16) & 0xff) + ((d >> 24) & 0xff)) & 0xff) % 62;
 
     const u32x ax = (a0 <<  0) | (a1 <<  8);
     const u32x bx = (b0 <<  0) | (b1 <<  8);

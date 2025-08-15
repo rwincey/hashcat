@@ -64,9 +64,8 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     case 3: V = d_extra3_buf; break;
   }
 
-  const keepass4_t keepass4 = esalt_bufs[DIGESTS_OFFSET_HOST];
-  const argon2_options_t options = keepass4.options;
-
+  GLOBAL_AS const keepass4_t keepass4 = esalt_bufs[DIGESTS_OFFSET_HOST];
+  GLOBAL_AS const argon2_options_t options = keepass4.options;
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
   sha256_ctx_t ctx0;
@@ -114,7 +113,7 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     w3[1] = (keepass4.keyfile[5]);
     w3[2] = (keepass4.keyfile[6]);
     w3[3] = (keepass4.keyfile[7]);
-    printf ("\nw2[0]=%08x", w2[0]);
+    printf ("\nw2[0]=%08x", w2[0]); //TODO remove debug
     w2[0] = 0;
     w2[1] = 0;
     w2[2] = 0;
@@ -125,6 +124,7 @@ KERNEL_FQ KERNEL_FA void m34300_init (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     w3[3] = 0;
     sha256_update_64 (&ctx, w0, w1, w2, w3, 32);
   }
+
   sha256_final (&ctx);
 
   pw_t pw;
@@ -226,9 +226,8 @@ KERNEL_FQ KERNEL_FA void m34300_comp (KERN_ATTR_TMPS_ESALT (argon2_tmp_t, keepas
     case 3: V = d_extra3_buf; break;
   }
 
-  keepass4_t keepass4 = esalt_bufs[DIGESTS_OFFSET_HOST];
-  argon2_options_t options = keepass4.options;
-
+  GLOBAL_AS const keepass4_t keepass4 = esalt_bufs[DIGESTS_OFFSET_HOST];
+  GLOBAL_AS const argon2_options_t options = keepass4.options;
   GLOBAL_AS argon2_block_t *argon2_block = get_argon2_block (&options, V, gd4);
 
   u32 out[32] = { 0 }; // needs to be this big because of sha512 not sure why it cannot be 512bit

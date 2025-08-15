@@ -350,6 +350,8 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
     digest_hex            // 10. headerhmac (digest)
   );
 
+  // TODO add keyfile support here
+
   return out_len;
 }
 

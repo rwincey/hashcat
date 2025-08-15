@@ -256,8 +256,8 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   const u8 *digest_pos = token.buf[10];
   argon2_options->digest_len = hex_decode ((const u8 *) digest_pos, digest_len, (u8 *) digest);
 
-
   const u8 *keyfile_pos = NULL;
+  keepass4->keyfile_len = 0;
 
   if (is_keyfile_present == true)
   {
@@ -266,8 +266,6 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
     keepass4->keyfile_len = 32;
 
     keepass4->keyfile[0] = hex_to_u32 (&keyfile_pos[ 0]);
-    printf ("\nkeepass4->keyfile[0]=%08x\n", keepass4->keyfile[0]);
-
     keepass4->keyfile[1] = hex_to_u32 (&keyfile_pos[ 8]);
     keepass4->keyfile[2] = hex_to_u32 (&keyfile_pos[16]);
     keepass4->keyfile[3] = hex_to_u32 (&keyfile_pos[24]);
@@ -335,21 +333,47 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   u8 *out_buf = (u8 *) line_buf;
 
-  const int out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s",
-    "$keepass$",          // 0. signature
-    4,                    // 1. keepassDB version
-    argon2_options->iterations,  // 2. iterations
-    argon_uuid,           // 3. KDF UUID
-    argon2_options->memory_usage_in_kib*1024,  // 4. memoryUsageInBytes
-    argon2_options->version,     // 5. Argon version
-    argon2_options->parallelism, // 6. parallelism
-    masterseed_hex,       // 7. masterseed
-    salt_hex,             // 8. transformseed (salt)
-    header_hex,           // 9. header
-    digest_hex            // 10. headerhmac (digest)
-  );
+  int out_len = 0;
 
-  // TODO add keyfile support here
+  if (keepass4->keyfile_len)
+  {
+    char keyfile_hex[keepass4->keyfile_len*2];
+    memset(keyfile_hex, 0, keepass4->keyfile_len*2);
+
+    hex_encode( (const u8 *) keepass4->keyfile, keepass4->keyfile_len, (u8 *) keyfile_hex);
+
+    out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s*1*%d*%s",
+      "$keepass$",          // 0. signature
+      4,                    // 1. keepassDB version
+      argon2_options->iterations,  // 2. iterations
+      argon_uuid,           // 3. KDF UUID
+      argon2_options->memory_usage_in_kib*1024,  // 4. memoryUsageInBytes
+      argon2_options->version,     // 5. Argon version
+      argon2_options->parallelism, // 6. parallelism
+      masterseed_hex,       // 7. masterseed
+      salt_hex,             // 8. transformseed (salt)
+      header_hex,           // 9. header
+      digest_hex,            // 10. headerhmac (digest)
+      keepass4->keyfile_len*2,
+      keyfile_hex
+    );
+  }
+  else
+  {
+    out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s",
+      "$keepass$",          // 0. signature
+      4,                    // 1. keepassDB version
+      argon2_options->iterations,  // 2. iterations
+      argon_uuid,           // 3. KDF UUID
+      argon2_options->memory_usage_in_kib*1024,  // 4. memoryUsageInBytes
+      argon2_options->version,     // 5. Argon version
+      argon2_options->parallelism, // 6. parallelism
+      masterseed_hex,       // 7. masterseed
+      salt_hex,             // 8. transformseed (salt)
+      header_hex,           // 9. header
+      digest_hex            // 10. headerhmac (digest)
+    );
+  }
 
   return out_len;
 }

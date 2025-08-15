@@ -17,8 +17,8 @@ static const u32   DGST_POS1      = 1;
 static const u32   DGST_POS2      = 2;
 static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_8_16;
-static const u32   HASH_CATEGORY  = HASH_CATEGORY_GENERIC_KDF;
-static const char *HASH_NAME      = "Keepass4 (no keyfile support)";
+static const u32   HASH_CATEGORY  = HASH_CATEGORY_PASSWORD_MANAGER;
+static const char *HASH_NAME      = "KeePass (KDBX v4)";
 static const u64   KERN_TYPE      = 34300;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE
                                   | OPTI_TYPE_SLOW_HASH_DIMY_LOOP;
@@ -49,7 +49,6 @@ typedef struct argon2_tmp
   u32 state[4]; // just something.. why do we need this? It's always empty
 
 } argon2_tmp_t;
-
 
 typedef struct keepass4
 {

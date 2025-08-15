@@ -261,9 +261,12 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   if (is_keyfile_present == true)
   {
-    keyfile_pos = token.buf[13];
-
+    const u8 *keyfile_len_pos = token.buf[12];
+    const u32 keyfile_len = hc_strtoul ((const char *) keyfile_len_pos, NULL, 10);
+    if (keyfile_len != 64) return (PARSER_HASH_VALUE); // we don't support anything else than 64 characters or 32 bytes
     keepass4->keyfile_len = 32;
+
+    keyfile_pos = token.buf[13];
 
     keepass4->keyfile[0] = hex_to_u32 (&keyfile_pos[ 0]);
     keepass4->keyfile[1] = hex_to_u32 (&keyfile_pos[ 8]);
@@ -337,9 +340,7 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   if (keepass4->keyfile_len)
   {
-    char keyfile_hex[keepass4->keyfile_len*2];
-    memset(keyfile_hex, 0, keepass4->keyfile_len*2);
-
+    char keyfile_hex[64];
     hex_encode( (const u8 *) keepass4->keyfile, keepass4->keyfile_len, (u8 *) keyfile_hex);
 
     out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s*1*%d*%s",

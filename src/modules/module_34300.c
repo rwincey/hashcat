@@ -312,19 +312,19 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   const keepass4_t *keepass4 = &merged_options->keepass4;
 
   // 7. masterseed
-  char masterseed_hex[64] = { 0 };
+  char masterseed_hex[65] = { 0 };
   hex_encode( (const u8 *) keepass4->masterseed, 32, (u8 *) masterseed_hex);
 
   // 8. transformseed (salt)
-  char salt_hex[64] = { 0 };
+  char salt_hex[65] = { 0 };
   hex_encode( (const u8 *) salt->salt_buf, 32, (u8 *) salt_hex);
 
   // 9. header
-  char header_hex[506] = { 0 };
+  char header_hex[507] = { 0 };
   hex_encode( (const u8 *) keepass4->header, 253, (u8 *) header_hex);
 
   // 10. headerhmac (digest)
-  char digest_hex[64] = { 0 };
+  char digest_hex[65] = { 0 };
   hex_encode( (const u8 *) digest, 32, (u8 *) digest_hex);
 
   const char *argon_uuid = NULL;
@@ -340,8 +340,19 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   if (keepass4->keyfile_len)
   {
-    char keyfile_hex[64];
-    hex_encode( (const u8 *) keepass4->keyfile, keepass4->keyfile_len, (u8 *) keyfile_hex);
+    u32 keyfile_swap[8];
+
+    keyfile_swap[0] = byte_swap_32 (keepass4->keyfile[0]);
+    keyfile_swap[1] = byte_swap_32 (keepass4->keyfile[1]);
+    keyfile_swap[2] = byte_swap_32 (keepass4->keyfile[2]);
+    keyfile_swap[3] = byte_swap_32 (keepass4->keyfile[3]);
+    keyfile_swap[4] = byte_swap_32 (keepass4->keyfile[4]);
+    keyfile_swap[5] = byte_swap_32 (keepass4->keyfile[5]);
+    keyfile_swap[6] = byte_swap_32 (keepass4->keyfile[6]);
+    keyfile_swap[7] = byte_swap_32 (keepass4->keyfile[7]);
+
+    char keyfile_hex[65];
+    hex_encode( (const u8 *) keyfile_swap, 32, (u8 *) keyfile_hex);
 
     out_len = snprintf ((char *) out_buf, line_size, "%s*%d*%d*%s*%d*%d*%d*%s*%s*%s*%s*1*%d*%s",
       "$keepass$",          // 0. signature

@@ -128,8 +128,12 @@ jobs:
           git add docs/hashcat-example-hashes.md
           if ! git diff --staged --quiet; then
             if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-              git commit -m "Automatically updated docs/hashcat-help.md or docs/hashcat-example-hashes.md (by Github Action)"
-              git push
+              if [ "$GITHUB_REF_NAME" = "master" ]; then
+                git commit -m "Automatically updated docs/hashcat-help.md or docs/hashcat-example-hashes.md (by Github Action)"
+                git push
+              else
+                echo "Not on master branch (currently: $GITHUB_REF_NAME): skipping commit because otherwise we may be in detached head"
+              fi
             else
               echo "docs/hashcat-help.md or docs/hashcat-example-hashes.md are not up-to-date:"
               echo "..."

@@ -53,10 +53,12 @@ cpanm Authen::Passphrase::LANManager   \
       Crypt::DES_EDE3                  \
       Crypt::Digest::BLAKE2s_256       \
       Crypt::Digest::RIPEMD160         \
+      Crypt::Digest::RIPEMD320         \
       Crypt::Digest::Whirlpool         \
       Crypt::ECB                       \
       Crypt::Eksblowfish::Bcrypt       \
       Crypt::Mode::CBC                 \
+      Crypt::Mode::CFB                 \
       Crypt::Mode::ECB                 \
       Crypt::MySQL                     \
       Crypt::OpenSSH::ChachaPoly       \

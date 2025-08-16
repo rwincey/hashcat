@@ -80,6 +80,61 @@ def find_opencl(zfilled_key, visited=None):
 
 def find_test(zfilled_key):
     """Return markdown links for Perl tests"""
+    # List of TrueCrypt modes which have test containers
+    TC_MODES = [
+        "6211", "6212", "6213",
+        "6221", "6222", "6223",
+        "6231", "6232", "6233",
+        "6241", "6242", "6243",
+        "29311", "29312", "29313",
+        "29321", "29322", "29323",
+        "29331", "29332", "29333",
+        "29341", "29342", "29343"
+    ]
+
+    # List of VeraCrypt modes which have test containers
+    VC_MODES = [
+        "13711", "13712", "13713",
+        "13721", "13722", "13723",
+        "13731", "13732", "13733",
+        "13741", "13742", "13743",
+        "13751", "13752", "13753",
+        "13761", "13762", "13763",
+        "13771", "13772", "13773",
+        "13781", "13782", "13783",
+        "29411", "29412", "29413",
+        "29421", "29422", "29423",
+        "29431", "29432", "29433",
+        "29441", "29442", "29443",
+        "29451", "29452", "29453",
+        "29461", "29462", "29463",
+        "29471", "29472", "29473",
+        "29481", "29482", "29483"
+    ]
+
+    # List of LUKS modes which have test containers
+    LUKS_MODES = [
+        "14600",
+        "29511", "29512", "29513",
+        "29521", "29522", "29523",
+        "29531", "29532", "29533",
+        "29541", "29542", "29543"
+    ]
+
+    # Cryptoloop mode which have test containers
+    CL_MODES = [
+        "14511", "14512", "14513",
+        "14521", "14522", "14523",
+        "14531", "14532", "14533",
+        "14541", "14542", "14543",
+        "14551", "14552", "14553"
+    ]
+
+    ALL_MODES = TC_MODES + VC_MODES + LUKS_MODES + CL_MODES
+
+    if zfilled_key in [m.zfill(5) for m in ALL_MODES]:
+        return f"[:white_check_mark:](/tools/test.sh)"
+
     if os.path.isdir(TESTS_DIR):
         for filename in os.listdir(TESTS_DIR):
             if zfilled_key in filename:

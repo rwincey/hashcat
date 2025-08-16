@@ -1129,7 +1129,7 @@ char *status_get_time_estimated_absolute (const hashcat_ctx_t *hashcat_ctx)
 
   char *etc;
 
-  if (overflow_check_u64_add (now, sec_etc) == false)
+  if (overflow_check_u64_add (now, sec_etc) == true)
   {
     etc = (char *) ETA_ABSOLUTE_MAX_EXCEEDED;
   }

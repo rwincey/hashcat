@@ -2834,7 +2834,7 @@ void status_display_status_json (hashcat_ctx_t *hashcat_ctx)
 
   time_t sec_etc = status_get_sec_etc (hashcat_ctx);
 
-  if (overflow_check_u64_add (time_now, sec_etc) == false)
+  if (overflow_check_u64_add (time_now, sec_etc) == true)
   {
     end = 1;
   }

@@ -7,7 +7,7 @@
            |_____|     /___________/     |_____|  /_____/        /_______|
                  :                             :                         :
 
-hashcat v7.0.0
+hashcat v7.1.0
 ==============
 
 AMD GPUs on Linux require "AMD Radeon Software for Linux" with "ROCm"
@@ -60,6 +60,7 @@ NVIDIA GPUs require "NVIDIA CUDA Toolkit"
 - SHA3-512
 - RIPEMD-160
 - RIPEMD-320
+- BLAKE2b-256
 - BLAKE2b-512
 - BLAKE2s-256
 - GOST R 34.11-2012 (Streebog) 256-bit, big-endian
@@ -77,6 +78,8 @@ NVIDIA GPUs require "NVIDIA CUDA Toolkit"
 - sha256(utf16le($pass))
 - sha384(utf16le($pass))
 - sha512(utf16le($pass))
+- BLAKE2b-256($pass.$salt)
+- BLAKE2b-256($salt.$pass)
 - BLAKE2b-512($pass.$salt)
 - BLAKE2b-512($salt.$pass)
 - md5($pass.$salt)

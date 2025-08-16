@@ -16,10 +16,13 @@
 
 ## Primitives, KDFs, Libraries
 
+- Added hash-mode: BLAKE2b-256
 - Added hash-mode: MD6 (256)
 
 ## Constructs
 
+- Added hash-mode: BLAKE2b-256($pass.$salt)
+- Added hash-mode: BLAKE2b-256($salt.$pass)
 - Added hash-mode: sha224($pass.$salt)
 - Added hash-mode: sha224($salt.$pass)
 - Added hash-mode: sha224(sha1($pass))

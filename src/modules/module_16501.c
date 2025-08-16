@@ -116,18 +116,18 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   // '--' as separator
   token.sep[2]     = '-';
-  token.len_min[2] = 0; 
+  token.len_min[2] = 0;
   token.len_max[2] = 0;
   token.attr[2]    = TOKEN_ATTR_VERIFY_LENGTH;
 
   // '--' as separator
   token.sep[3]     = '-';
-  token.len_min[3] = 0; 
+  token.len_min[3] = 0;
   token.len_max[3] = 0;
   token.attr[3]    = TOKEN_ATTR_VERIFY_LENGTH;
 
   // signature: hmac_sha256 hex encoded
-  token.len_min[4] = 64; 
+  token.len_min[4] = 64;
   token.len_max[4] = 64;
   token.attr[4] = TOKEN_ATTR_VERIFY_LENGTH | TOKEN_ATTR_VERIFY_HEX;
 
@@ -150,7 +150,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   mojolicious->salt_len = esalt_len;
 
   // salt
-  
+
   // Create a hash of the esalt because esalt buffer can change somewhere behind salt->salt_buf size
   // Not a regular MD5 but good enough
 
@@ -202,7 +202,7 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   digest[5] = byte_swap_32 (digest[5]);
   digest[6] = byte_swap_32 (digest[6]);
   digest[7] = byte_swap_32 (digest[7]);
-  
+
 
   return (PARSER_OK);
 }
@@ -258,7 +258,7 @@ void module_init (module_ctx_t *module_ctx)
   module_ctx->module_benchmark_charset        = MODULE_DEFAULT;
   module_ctx->module_benchmark_salt           = module_benchmark_salt;
   module_ctx->module_bridge_name              = MODULE_DEFAULT;
-  module_ctx->module_bridge_type              = MODULE_DEFAULT;  
+  module_ctx->module_bridge_type              = MODULE_DEFAULT;
   module_ctx->module_build_plain_postprocess  = MODULE_DEFAULT;
   module_ctx->module_deep_comp_kernel         = MODULE_DEFAULT;
   module_ctx->module_deprecated_notice        = MODULE_DEFAULT;

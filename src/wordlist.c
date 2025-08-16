@@ -569,12 +569,12 @@ int count_words (hashcat_ctx_t *hashcat_ctx, HCFILE *fp, const char *dictfile, u
   u64 cnt2 = 0;
 
   while (!hc_feof (fp))
-  {   
+  {
     if (load_segment (hashcat_ctx, fp) == -1)
     {
       return -2;
     }
-    
+
     comp += wl_data->cnt;
 
     u64 i = 0;

@@ -28,6 +28,7 @@ EXAMPLE_HASH_REPLACEMENTS = {
 
 OPENCL_DIR = "OpenCL"
 MODULES_DIR = "src/modules"
+TESTS_DIR = "tools/test_modules"
 
 OPENCL_ABBREV = {
     "_a0-pure": "a0p",
@@ -60,7 +61,7 @@ def find_opencl(zfilled_key, visited=None):
             if zfilled_key in filename:
                 for key, abbr in OPENCL_ABBREV.items():
                     if key in filename:
-                        link = f"[{abbr}](/OpenCL/{filename})"
+                        link = f"[{abbr}](/{OPENCL_DIR}/{filename})"
                         kernels.append(link)
                         break
     if kernels:
@@ -76,6 +77,16 @@ def find_opencl(zfilled_key, visited=None):
                     redirect_key = str(m.group(1)).zfill(5)
                     return find_opencl(redirect_key, visited)
     return ""
+
+def find_test(zfilled_key):
+    """Return markdown links for Perl tests"""
+    if os.path.isdir(TESTS_DIR):
+        for filename in os.listdir(TESTS_DIR):
+            if zfilled_key in filename:
+                return f"[:white_check_mark:](/{TESTS_DIR}/{filename})"
+
+    #test not found
+    return ":x:"
 
 def main():
     input_data = sys.stdin.read()
@@ -105,10 +116,11 @@ def main():
                 footnote_counter += 1
             footnote = f"[^{footnote_map[example_pass]}]"
 
-        zkey = key.zfill(5)
-        opencl_links = find_opencl(zkey)
+        zfilled_key = key.zfill(5)
+        opencl_links = find_opencl(zfilled_key)
+        test_link = find_test(zfilled_key)
 
-        row = f"| [`{key}`](/src/modules/module_{zkey}.c) | `{name}`{footnote} | <sup> {opencl_links} </sup> | `{example_hash}` |"
+        row = f"| [`{key}`](/src/modules/module_{zfilled_key}.c) | `{name}`{footnote} | <sup> {opencl_links} </sup> | {test_link} | `{example_hash}` |"
         table_rows.append(row)
 
     # Print the table

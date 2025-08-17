@@ -169,6 +169,9 @@ else
   pip3 install setuptools
   ERRORS=$((ERRORS+$?))
 
+  pip install argon2-cffi
+  ERRORS=$((ERRORS+$?))
+
 fi
 
 echo

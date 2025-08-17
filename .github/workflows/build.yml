@@ -98,7 +98,9 @@ jobs:
         if: matrix.os_name_lowercase == 'linux' && matrix.shared == 0
         env:
           SHARED: ${{ matrix.shared }}
-        run: bash -v ./.github/workflows/generate_docs.sh || true # make sure return code of generate docs is always successful (we don't want a build to break because of it..)
+        run: |
+         cd .github/workflows/
+         bash -v ./generate_docs.sh || true # make sure return code of generate docs is always successful (we don't want a build to break because of it..)
 
       - name: Commit changes to docs
         if: matrix.os_name_lowercase == 'linux' && matrix.shared == 0

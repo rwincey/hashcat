@@ -26,9 +26,9 @@ EXAMPLE_HASH_REPLACEMENTS = {
     "29543": "https://hashcat.net/misc/example_hashes/hashcat_luks_ripemd160_twofish_cbc-plain64_128.txt",
 }
 
-OPENCL_DIR = "OpenCL"
-MODULES_DIR = "src/modules"
-TESTS_DIR = "tools/test_modules"
+OPENCL_DIR = "../../OpenCL"
+MODULES_DIR = "../../src/modules"
+TESTS_DIR = "../../tools/test_modules"
 
 OPENCL_ABBREV = {
     "_a0-pure": "a0p",
@@ -175,6 +175,10 @@ def main():
         opencl_links = find_opencl(zfilled_key)
         test_link = find_test(zfilled_key)
 
+        # Make sure we refer to root for display
+        opencl_links = opencl_links.replace('/../../', '/')
+        test_link = test_link.replace('/../../', '/')
+
         row = f"| [`{key}`](/src/modules/module_{zfilled_key}.c) | `{name}`{footnote} | <sup> {opencl_links} </sup> | {test_link} | `{example_hash}` |"
         table_rows.append(row)
 
@@ -189,12 +193,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# to convert the markdown to docuwiki formatting for https://hashcat.net/wiki/doku.php?id=example_hashes you can use:
-#  cat docs/hashcat-example-hashes.md | sed -E 's/\[\^(.+)\]/<sup>\1<\/sup>/g' | sed 's/| hash-Mode | hash-Name | Example |/\^ hash-Mode \^ hash-Name \^ Example \^/g' | grep -Fv '|:-----------|:-----------|:---------------|' | sed 's/`//g' | sed -E 's/\[([0-9]+)\]\(\/src\/modules\/module_([0-9]{5})\.c\)/[[\1|https:\/\/github.com\/hashcat\/hashcat\/tree\/master\/src\/modules\/module_\2.c]]/'
-# replaces footnotes
-# replaces header
-# removes un-necessary table style
-# removes backticks
-# replaces urls

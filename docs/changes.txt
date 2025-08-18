@@ -1,4 +1,4 @@
-* changes v7.1.0 -> v7.x.x
+* changes v7.1.0 -> v7.1.1
 
 ##
 ## Improvements

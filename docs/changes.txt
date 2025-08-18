@@ -4,8 +4,14 @@
 ## Improvements
 ##
 
-- Libraries: CRC restructure
-- Libraries: GOST R 34.11-94 restructure
+- CRC Libraries: CRC restructure
+- GOST Libraries: GOST R 34.11-94 restructure
+
+##
+## Bugs
+##
+
+- Argon2 Libraries: Fix call to vector datatype helper function using scalar datatype buffers
 
 * changes v7.1.0 -> v7.1.1
 

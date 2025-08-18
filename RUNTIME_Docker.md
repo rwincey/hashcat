@@ -47,7 +47,7 @@ Here is an example for amd on ubuntu:
 
 ```bash
 docker build -f docker/runtime.amd.ubuntu24.release -t hashcat .
-docker run --device /dev/kfd --device /dev/dri/renderD128 --device /dev/dri/renderD129 -it hashcat bash
+docker run --rm --device /dev/kfd --device /dev/dri/renderD128 --device /dev/dri/renderD129 -it hashcat bash
 rocm-user@ae67788b1d87:~/hashcat$ ./hashcat.bin --help
 ```
 
@@ -69,7 +69,7 @@ Here is an example for amd on ubuntu:
 ```bash
 docker build -f docker/BinaryPackage.ubuntu20 -t hashcat-binaries .
 docker build -f docker/runtime.amd.ubuntu24.beta -t hashcat .
-docker run --device /dev/kfd --device /dev/dri/renderD128 --device /dev/dri/renderD129 -it hashcat bash
+docker run --rm --device /dev/kfd --device /dev/dri/renderD128 --device /dev/dri/renderD129 -it hashcat bash
 rocm-user@ae67788b1d87:~/hashcat$ ./hashcat.bin --help
 ```
 

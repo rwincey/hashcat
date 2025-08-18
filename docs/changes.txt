@@ -5,6 +5,7 @@
 ##
 
 - Libraries: CRC restructure
+- Libraries: GOST R 34.11-94 restructure
 
 * changes v7.1.0 -> v7.1.1
 

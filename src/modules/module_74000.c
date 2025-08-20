@@ -21,7 +21,7 @@ static const u32   DGST_POS3      = 3;
 static const u32   DGST_SIZE      = DGST_SIZE_4_4;
 static const u32   HASH_CATEGORY  = HASH_CATEGORY_UNDEFINED;
 static const char *HASH_NAME      = "Generic Hash [Bridged: Rust]";
-static const u64   KERN_TYPE      = 74000;
+static const u64   KERN_TYPE      = 72000;
 static const u32   OPTI_TYPE      = OPTI_TYPE_ZERO_BYTE;
 static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_PT_GENERATE_LE

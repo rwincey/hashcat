@@ -197,6 +197,8 @@ void *platform_init(user_options_t *user_options)
   {
     fprintf(stderr, "ERROR: %s: %s\n\n", bridge_context->dynlib_filename, strerror(errno));
 
+    hcfree(bridge_context);
+
     return NULL;
   }
 
@@ -207,6 +209,7 @@ void *platform_init(user_options_t *user_options)
     if (!(ptr)->name)                                                                          \
     {                                                                                          \
       fprintf(stderr, "%s is missing from %s shared library.", #name, (ptr)->dynlib_filename); \
+      hcfree(bridge_context);                                                                  \
       return NULL;                                                                             \
     }                                                                                          \
   } while (0)

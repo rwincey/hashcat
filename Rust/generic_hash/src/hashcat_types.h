@@ -42,7 +42,7 @@ typedef struct salt
 // Sync with:
 // src/bridges/bridge_rust_generic_hash.c
 // src/modules/module_74000.c
-// OpenCL/m74000-pure.cl
+// OpenCL/m72000-pure.cl
 
 typedef struct
 {

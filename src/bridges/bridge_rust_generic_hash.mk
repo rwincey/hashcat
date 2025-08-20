@@ -21,6 +21,7 @@ ifeq ($(CARGO_PRESENT),true)
 $(GENERIC_HASH_SO):
 	@echo "Building Rust library (.so)..."
 	cargo build --release --manifest-path Rust/generic_hash/Cargo.toml || true
+	@- mv $(RUST_RELEASE_DIR)/libgeneric_hash.dylib $(GENERIC_HASH_SO)
 $(GENERIC_HASH_DLL):
 	@echo "Building Rust library (.dll)..."
 	cargo build --release --manifest-path Rust/generic_hash/Cargo.toml --target x86_64-pc-windows-gnu || true

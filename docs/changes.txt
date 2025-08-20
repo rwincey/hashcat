@@ -1,6 +1,14 @@
 * changes v7.1.1 -> v7.1.x
 
 ##
+## New Algorithms
+##
+
+## Endpoint
+
+- Added hash-mode: Besder Authentication MD5
+
+##
 ## Improvements
 ##
 

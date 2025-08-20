@@ -557,6 +557,8 @@ clean:
 	$(RM) -rf *.induct
 	$(RM) -rf *.outfiles
 	$(RM) -rf kernels
+	$(RM) -f Rust/generic_hash/target/release/*.so
+	$(RM) -f Rust/generic_hash/target/release/*.dll
 
 .PHONY: distclean
 distclean: clean

@@ -5,6 +5,7 @@
 ##
 
 - CRC Libraries: CRC restructure
+- GOST Libraries: GOST R 34.11-94 restructure
 
 ##
 ## Bugs

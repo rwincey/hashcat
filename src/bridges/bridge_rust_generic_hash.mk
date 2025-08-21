@@ -2,8 +2,14 @@ CARGO_PRESENT := false
 RUSTUP_PRESENT := false
 
 CARGO_VERSION := $(word 2, $(shell cargo version 2>/dev/null))
+CARGO_BUILD_FLAGS := --release --manifest-path Rust/generic_hash/Cargo.toml
+RUSTUP_FLAGS :=
 ifneq ($(filter 1.%,$(CARGO_VERSION)),)
 	CARGO_PRESENT := true
+ifeq (s,$(findstring s,$(MAKEFLAGS)))
+    CARGO_BUILD_FLAGS += --quiet
+    RUSTUP_FLAGS += --quiet
+endif
 endif
 
 RUSTUP_VERSION := $(word 2, $(shell rustup --version 2>/dev/null))
@@ -25,14 +31,12 @@ RESET = \033[0m
 
 ifeq ($(CARGO_PRESENT),true)
 $(GENERIC_HASH_SO):
-	@echo "Building Rust library (.so)..."
-	cargo build --release --manifest-path Rust/generic_hash/Cargo.toml || true
-	@- mv $(RUST_TARGET_DIR)/release/libgeneric_hash.dylib $(GENERIC_HASH_SO)
+	cargo build $(CARGO_BUILD_FLAGS) || true
+	@- mv $(RUST_TARGET_DIR)/release/libgeneric_hash.dylib $(GENERIC_HASH_SO) 2>/dev/null
 ifeq ($(RUSTUP_PRESENT),true)
 $(GENERIC_HASH_DLL):
-	@echo "Building Rust library (.dll)..."
-	rustup target add x86_64-pc-windows-gnu && \
-	cargo build --release --manifest-path Rust/generic_hash/Cargo.toml --target x86_64-pc-windows-gnu || true
+	rustup target add x86_64-pc-windows-gnu $(RUSTUP_FLAGS) && \
+	cargo build $(CARGO_BUILD_FLAGS) --target x86_64-pc-windows-gnu || true
 else
 $(GENERIC_HASH_DLL):
 	@echo ""

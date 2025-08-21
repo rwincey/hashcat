@@ -12,12 +12,12 @@ use crate::generic_hash::{calc_hash, thread_init, thread_term};
 
 #[repr(C)]
 pub(crate) struct Context {
-    module_name: String,
+    pub module_name: String,
 
-    salts: Vec<salt_t>,
-    esalts: Vec<generic_io_t>,
-    st_salts: Vec<salt_t>,
-    st_esalts: Vec<generic_io_t>,
+    pub salts: Vec<salt_t>,
+    pub esalts: Vec<generic_io_t>,
+    pub st_salts: Vec<salt_t>,
+    pub st_esalts: Vec<generic_io_t>,
 }
 
 impl Context {

@@ -1,13 +1,19 @@
 CARGO_PRESENT := false
+RUSTUP_PRESENT := false
 
 CARGO_VERSION := $(word 2, $(shell cargo version 2>/dev/null))
 ifneq ($(filter 1.%,$(CARGO_VERSION)),)
 	CARGO_PRESENT := true
 endif
 
-RUST_RELEASE_DIR := Rust/generic_hash/target/release
-GENERIC_HASH_SO := $(RUST_RELEASE_DIR)/libgeneric_hash.so
-GENERIC_HASH_DLL := $(RUST_RELEASE_DIR)/generic_hash.dll
+RUSTUP_VERSION := $(word 2, $(shell rustup --version 2>/dev/null))
+ifneq ($(filter 1.%,$(RUSTUP_VERSION)),)
+	RUSTUP_PRESENT := true
+endif
+
+RUST_TARGET_DIR := Rust/generic_hash/target
+GENERIC_HASH_SO := $(RUST_TARGET_DIR)/release/libgeneric_hash.so
+GENERIC_HASH_DLL := $(RUST_TARGET_DIR)/x86_64-pc-windows-gnu/release/generic_hash.dll
 ifeq ($(BRIDGE_SUFFIX),so)
 GENERIC_HASH_DEFAULT := $(GENERIC_HASH_SO)
 else
@@ -21,10 +27,21 @@ ifeq ($(CARGO_PRESENT),true)
 $(GENERIC_HASH_SO):
 	@echo "Building Rust library (.so)..."
 	cargo build --release --manifest-path Rust/generic_hash/Cargo.toml || true
-	@- mv $(RUST_RELEASE_DIR)/libgeneric_hash.dylib $(GENERIC_HASH_SO)
+	@- mv $(RUST_TARGET_DIR)/release/libgeneric_hash.dylib $(GENERIC_HASH_SO)
+ifeq ($(RUSTUP_PRESENT),true)
 $(GENERIC_HASH_DLL):
 	@echo "Building Rust library (.dll)..."
+	rustup target add x86_64-pc-windows-gnu && \
 	cargo build --release --manifest-path Rust/generic_hash/Cargo.toml --target x86_64-pc-windows-gnu || true
+else
+$(GENERIC_HASH_DLL):
+	@echo ""
+	@echo -e "$(RED)WARNING$(RESET): Skipping regular plugin 74000: rustup not found."
+	@echo "         To use -m 74000, you must install Rust (with cargo and rustup)."
+	@echo "         Otherwise, you can safely ignore this warning."
+	@echo "         For more information, see 'docs/hashcat-rust-plugin-requirements.md'."
+	@echo ""
+endif
 else
 $(GENERIC_HASH_SO):
 	@echo ""
@@ -36,7 +53,7 @@ $(GENERIC_HASH_SO):
 $(GENERIC_HASH_DLL):
 	@echo ""
 	@echo -e "$(RED)WARNING$(RESET): Skipping regular plugin 74000: Rust not found."
-	@echo "         To use -m 74000, you must install Rust."
+	@echo "         To use -m 74000, you must install Rust (with cargo and rustup)."
 	@echo "         Otherwise, you can safely ignore this warning."
 	@echo "         For more information, see 'docs/hashcat-rust-plugin-requirements.md'."
 	@echo ""

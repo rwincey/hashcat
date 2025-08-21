@@ -176,7 +176,7 @@ static void units_term(bridge_context_t *bridge_context)
 }
 
 #if defined(_WIN)
-static char *DEFAULT_DYNLIB_FILENAME = ".\\Rust\\generic_hash\\target\\release\\generic_hash.dll";
+static char *DEFAULT_DYNLIB_FILENAME = "./Rust/generic_hash/target/x86_64-pc-windows-gnu/release/generic_hash.dll";
 #else
 static char *DEFAULT_DYNLIB_FILENAME = "./Rust/generic_hash/target/release/libgeneric_hash.so";
 #endif

@@ -2683,6 +2683,9 @@ void status_display_machine_readable (hashcat_ctx_t *hashcat_ctx)
   if (bridge_ctx->enabled == true)
   {
     printf ("%" PRIu64 "\t", (u64) (hashcat_status->hashes_msec_all * 1000));
+
+    // that 1000\t is for backward compatibility
+    printf ("1000\t");
   }
   else
   {
@@ -2694,11 +2697,11 @@ void status_display_machine_readable (hashcat_ctx_t *hashcat_ctx)
       if (device_info->skipped_warning_dev == true) continue;
 
       printf ("%" PRIu64 "\t", (u64) (device_info->hashes_msec_dev * 1000));
+
+      // that 1000\t is for backward compatibility
+      printf ("1000\t");
     }
   }
-
-  // that 1000\t is for backward compatibility
-  printf ("1000\t");
 
   printf ("EXEC_RUNTIME\t");
 

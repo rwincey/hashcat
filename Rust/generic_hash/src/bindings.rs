@@ -190,10 +190,7 @@ pub type uint_fast32_t = ::std::os::raw::c_ulong;
 pub type uint_fast64_t = ::std::os::raw::c_ulong;
 pub type intmax_t = __intmax_t;
 pub type uintmax_t = __uintmax_t;
-pub type u8_ = u8;
-pub type u16_ = u8;
 pub type u32_ = u32;
-pub type u64_ = u64;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct salt {

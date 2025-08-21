@@ -25,10 +25,10 @@ pub(crate) fn calc_hash(password: &[u8], salt: &[u8]) -> Vec<String> {
     vec![hex::encode(hash)]
 }
 
-#[allow(unused)]
+#[allow(unused_variables)]
 pub(crate) fn thread_init(ctx: &mut Context) {}
 
-#[allow(unused)]
+#[allow(unused_variables)]
 pub(crate) fn thread_term(ctx: &mut Context) {}
 
 #[cfg(test)]

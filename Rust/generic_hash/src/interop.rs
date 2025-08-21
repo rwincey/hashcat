@@ -21,7 +21,7 @@ pub(crate) struct Context {
 }
 
 impl Context {
-    fn get_esalt(&self, salt_id: usize, is_selftest: bool) -> &generic_io_t {
+    fn get_raw_esalt(&self, salt_id: usize, is_selftest: bool) -> &generic_io_t {
         if is_selftest {
             &self.st_esalts[salt_id]
         } else {
@@ -93,7 +93,6 @@ pub extern "C" fn drop_context(ctx: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-#[allow(unused)]
 pub extern "C" fn init(ctx: *mut c_void) {
     assert!(!ctx.is_null());
     let ctx = unsafe { &mut *ctx.cast::<Context>() };
@@ -101,7 +100,6 @@ pub extern "C" fn init(ctx: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-#[allow(unused)]
 pub extern "C" fn term(ctx: *mut c_void) {
     assert!(!ctx.is_null());
     let ctx = unsafe { &mut *ctx.cast::<Context>() };
@@ -152,7 +150,7 @@ fn process_batch(
     salt_id: usize,
     is_selftest: bool,
 ) -> Vec<Vec<String>> {
-    let esalt = ctx.get_esalt(salt_id, is_selftest);
+    let esalt = ctx.get_raw_esalt(salt_id, is_selftest);
     let salt = unsafe {
         slice::from_raw_parts(
             esalt.salt_buf.as_ptr() as *const u8,

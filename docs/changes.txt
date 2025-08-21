@@ -20,6 +20,7 @@
 ##
 
 - Argon2 Libraries: Fix call to vector datatype helper function using scalar datatype buffers
+- Fixed bug in Argon2 for passwords of a certain (longer) length
 
 * changes v7.1.0 -> v7.1.1
 

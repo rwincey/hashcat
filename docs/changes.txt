@@ -22,6 +22,7 @@
 ##
 
 - Argon2 Libraries: Fix call to vector datatype helper function using scalar datatype buffers
+- Status View: fixed broken backward compatibility in machine-readable mode introduced in v7.1.0
 
 * changes v7.1.0 -> v7.1.1
 

@@ -17,7 +17,7 @@ pub(crate) fn calc_hash(password: &[u8], salt: &[u8]) -> Vec<String> {
     sha256.update(salt);
     sha256.update(password);
     let mut hash = sha256.finalize_reset();
-    for _ in 0..10000 {
+    for _ in 0..10_000 {
         sha256.update(hash);
         hash = sha256.finalize_reset();
     }

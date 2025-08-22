@@ -34,7 +34,7 @@ Linux, Windows, and macOS.
    - `ST_PASS`
    - The `calc_hash` function
 
-   You can also add unit tests before building. Run then with `cargo test`.
+   You can also add unit tests before building. Run them with `cargo test`.
 
 4. **Build the customized plugin**
 

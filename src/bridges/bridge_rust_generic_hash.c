@@ -38,11 +38,11 @@ typedef struct
 
 } generic_io_tmp_t;
 
-typedef void (*RsInit)(void *);
-typedef void (*RsTerm)(void *);
-typedef bool (*RsKernelLoop)(void *, generic_io_tmp_t *, u64, int, bool);
+typedef void (*RS_INIT)(void *);
+typedef void (*RS_TERM)(void *);
+typedef bool (*RS_KERNEL_LOOP)(void *, generic_io_tmp_t *, u64, int, bool);
 
-typedef void *(*RsNewContext)(
+typedef void *(*RS_NEW_CONTEXT)(
     const char *module_name,
 
     int salts_cnt,
@@ -60,7 +60,7 @@ typedef void *(*RsNewContext)(
     int st_esalts_cnt,
     int st_esalts_size,
     const char *st_esalts_buf);
-typedef void (*RsDropContext)(void *);
+typedef void (*RS_DROP_CONTEXT)(void *);
 
 typedef struct
 {
@@ -86,11 +86,11 @@ typedef struct
   char *dynlib_filename;
   hc_dynlib_t lib;
 
-  RsInit init;
-  RsTerm term;
-  RsKernelLoop kernel_loop;
-  RsNewContext new_context;
-  RsDropContext drop_context;
+  RS_INIT init;
+  RS_TERM term;
+  RS_KERNEL_LOOP kernel_loop;
+  RS_NEW_CONTEXT new_context;
+  RS_DROP_CONTEXT drop_context;
 
 } bridge_context_t;
 
@@ -214,11 +214,11 @@ void *platform_init(user_options_t *user_options)
     }                                                                                          \
   } while (0)
 
-  HC_LOAD_FUNC_RUST(bridge_context, init, RsInit);
-  HC_LOAD_FUNC_RUST(bridge_context, term, RsTerm);
-  HC_LOAD_FUNC_RUST(bridge_context, kernel_loop, RsKernelLoop);
-  HC_LOAD_FUNC_RUST(bridge_context, new_context, RsNewContext);
-  HC_LOAD_FUNC_RUST(bridge_context, drop_context, RsDropContext);
+  HC_LOAD_FUNC_RUST(bridge_context, init, RS_INIT);
+  HC_LOAD_FUNC_RUST(bridge_context, term, RS_TERM);
+  HC_LOAD_FUNC_RUST(bridge_context, kernel_loop, RS_KERNEL_LOOP);
+  HC_LOAD_FUNC_RUST(bridge_context, new_context, RS_NEW_CONTEXT);
+  HC_LOAD_FUNC_RUST(bridge_context, drop_context, RS_DROP_CONTEXT);
 
   if (!units_init(bridge_context))
   {

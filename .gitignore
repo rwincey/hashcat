@@ -30,6 +30,7 @@ include/CL
 tools/luks_tests
 .vscode
 test_edge*
+Rust/generic_hash/target
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

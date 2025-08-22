@@ -79,6 +79,8 @@ DECLSPEC void blake2b_update_8 (PRIVATE_AS blake2b_ctx_t *ctx, const u32 w0, con
     if (ctx->len > 0) // if new block (pos == 0) AND the (old) len is not zero => transform
     {
       blake2b_transform (ctx->h, ctx->m, ctx->len, BLAKE2B_UPDATE);
+
+      for (u32 i = 0; i < 16; i++) ctx->m[i] = 0;
     }
   }
 

@@ -24,7 +24,8 @@
 - Argon2 Libraries: fixed esalt access pattern across Argon2, LUKS2, and KeePass KDBX4 kernels
 - Argon2 Libraries: fixed false negatives for password and salt combinations longer than 64 characters
 - Status View: fixed broken backward compatibility in machine-readable mode introduced in v7.1.0
-- sha224(sha224($pass)): Fix hash category as unsalted
+- sha224(sha224($pass)) and sha224(sha1($pass)): Fix hash category as unsalted
+
 
 * changes v7.1.0 -> v7.1.1
 

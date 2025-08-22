@@ -15,6 +15,7 @@ mkdir -p $OUT
 
 mkdir -p $OUT/tools
 mkdir -p $OUT/Python
+mkdir -p $OUT/Rust
 
 cp    $IN/hashcat.exe                   $OUT/
 cp    $IN/hashcat.bin                   $OUT/
@@ -33,6 +34,7 @@ cp    $IN/example.dict                  $OUT/
 cp    $IN/example[0123456789]*.hash     $OUT/
 cp    $IN/example[0123456789]*.cmd      $OUT/
 cp -r $IN/Python/*.py                   $OUT/Python/
+cp -r $IN/Rust/*                        $OUT/Rust/
 cp -r $IN/OpenCL                        $OUT/
 cp    $IN/tools/*hashcat.pl             $OUT/tools/
 cp    $IN/tools/*hashcat.py             $OUT/tools/
@@ -94,6 +96,8 @@ chmod 755 $OUT/extra/tab_completion/*.sh
 chmod 755 $OUT/extra/tab_completion/install
 chmod 755 $OUT/Python
 chmod 644 $OUT/Python/*
+chmod 755 $OUT/Rust
+#chmod 644 $OUT/Python/*
 chmod 755 $OUT/OpenCL
 chmod 644 $OUT/OpenCL/*
 chmod 755 $OUT/tunings

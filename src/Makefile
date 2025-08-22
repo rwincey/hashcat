@@ -5,7 +5,7 @@
 
 SHARED                  ?= 0
 DEBUG                   := 0
-PRODUCTION              := 1
+PRODUCTION              := 0
 PRODUCTION_VERSION      := v7.1.1
 ENABLE_CUBIN            ?= 1
 ENABLE_BRAIN            ?= 1
@@ -557,6 +557,8 @@ clean:
 	$(RM) -rf *.induct
 	$(RM) -rf *.outfiles
 	$(RM) -rf kernels
+	$(RM) -f Rust/generic_hash/target/release/*.so
+	$(RM) -f Rust/generic_hash/target/release/*.dll
 
 .PHONY: distclean
 distclean: clean

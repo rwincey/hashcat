@@ -1,17 +1,30 @@
 * changes v7.1.1 -> v7.1.x
 
 ##
+## New Algorithms
+##
+
+## Endpoint
+
+- Added hash-mode: Besder Authentication MD5
+
+##
 ## Improvements
 ##
 
 - CRC Libraries: CRC restructure
+- GOST Libraries: GOST R 34.11-94 restructure
+- SAP CODVN H: Raised the maximum salt length for hash-mode 35000 (isSHA512) from 16 to 192
 
 ##
 ## Bugs
 ##
 
-- Argon2 Libraries: Fix call to vector datatype helper function using scalar datatype buffers
-- Fix hash category for 34400: it is unsalted
+- Argon2 Libraries: fixed call to vector helper functions when only using scalar buffers
+- Argon2 Libraries: fixed esalt access pattern across Argon2, LUKS2, and KeePass KDBX4 kernels
+- Argon2 Libraries: fixed false negatives for password and salt combinations longer than 64 characters
+- Status View: fixed broken backward compatibility in machine-readable mode introduced in v7.1.0
+- sha224(sha224($pass)): Fix hash category as unsalted
 
 * changes v7.1.0 -> v7.1.1
 

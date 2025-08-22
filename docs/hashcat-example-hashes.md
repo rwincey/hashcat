@@ -582,6 +582,7 @@ All manual changes will be overwritten!
 | [`70200`](/src/modules/module_70200.c) | `scrypt [Bridged: Scrypt-Yescrypt]` | <sup>  [p](/OpenCL/m70100-pure.cl) </sup> | [:white_check_mark:](/tools/test_modules/m70200.pm) | `SCRYPT:16384:8:1:OTEyNzU0ODg=:Cc8SPjRH1hFQhuIPCdF51uNGtJ2aOY/isuoMlMUsJ8c=` |
 | [`72000`](/src/modules/module_72000.c) | `Generic Hash [Bridged: Python Interpreter free-threading]` | <sup>  [p](/OpenCL/m72000-pure.cl) </sup> | [:white_check_mark:](/tools/test_modules/m72000.pm) | `33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343` |
 | [`73000`](/src/modules/module_73000.c) | `Generic Hash [Bridged: Python Interpreter with GIL]` | <sup>  [p](/OpenCL/m73000-pure.cl) </sup> | [:white_check_mark:](/tools/test_modules/m73000.pm) | `33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343` |
+| [`74000`](/src/modules/module_74000.c) | `Generic Hash [Bridged: Rust]` | <sup>  [p](/OpenCL/m72000-pure.cl) </sup> | [:white_check_mark:](/tools/test_modules/m74000.pm) | `33522b0fd9812aa68586f66dba7c17a8ce64344137f9c7d8b11f32a6921c22de*9348746780603343` |
 | [`99999`](/src/modules/module_99999.c) | `Plaintext` | <sup>  [a0p](/OpenCL/m00900_a0-pure.cl),&nbsp;[a0o](/OpenCL/m00900_a0-optimized.cl),&nbsp;[a1p](/OpenCL/m00900_a1-pure.cl),&nbsp;[a1o](/OpenCL/m00900_a1-optimized.cl),&nbsp;[a3p](/OpenCL/m00900_a3-pure.cl),&nbsp;[a3o](/OpenCL/m00900_a3-optimized.cl) </sup> | :x: | `hashcat` |
 
 [^1]: Password: `HASHCAT`

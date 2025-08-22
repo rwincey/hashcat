@@ -14,14 +14,14 @@ Linux, Windows, and macOS.
 
    If you are building Hashcat from source, run:
 
-   ```sh
+   ```
    make linux
    ```
 
    This should build the Rust bridge and the default plugin
    automatically. To verify, run:
 
-   ```sh
+   ```
    ./hashcat.bin -m 74000 -b
    ```
 
@@ -38,7 +38,7 @@ Linux, Windows, and macOS.
 
 4. **Build the customized plugin**
 
-   ```sh
+   ```
    cd Rust/generic_hash
    cargo build --release
    ```
@@ -47,7 +47,7 @@ Linux, Windows, and macOS.
 
 5. **Run Hashcat**
 
-   ```sh
+   ```
    hashcat -a 0 -m 74000 hashfile wordlist
    ```
 
@@ -55,7 +55,7 @@ Linux, Windows, and macOS.
 
    If you moved or renamed `libgeneric_hash.so`, specify it with:
 
-   ```sh
+   ```
    --bridge-parameter1 /path/to/libgeneric_hash.so
    ```
 
@@ -73,13 +73,13 @@ Linux, Windows, and macOS.
 
    From a WSL shell, run:
 
-   ```sh
+   ```
    make win
    ```
 
    To confirm the bridge was built, run:
 
-   ```sh
+   ```
    hashcat -m 74000 -b
    ```
 
@@ -104,7 +104,7 @@ Linux, Windows, and macOS.
 
    Then:
 
-   ```sh
+   ```
    cd Rust/generic_hash
    cargo build --release --target x86_64-pc-windows-gnu
    ```
@@ -114,13 +114,13 @@ Linux, Windows, and macOS.
 
 5. **Run Hashcat**
 
-   ```sh
+   ```
    hashcat -a 0 -m 74000 hashfile wordlist
    ```
 
    If you moved or renamed `generic_hash.dll`, specify it with:
 
-   ```sh
+   ```
    --bridge-parameter1 /path/to/generic_hash.dll
    ```
 
@@ -133,11 +133,11 @@ the bridge and the plugin yourself.
 2. On macOS, Rust produces `.dylib` files. After building a customized
    plugin with `cargo build --release`, either:
    - Rename:
-     ```sh
+     ```
      mv Rust/generic_hash/target/release/libgeneric_hash.dylib \
         Rust/generic_hash/target/release/libgeneric_hash.so
      ```
    - Or run Hashcat with:
-     ```sh
+     ```
      --bridge-parameter1 /path/to/libgeneric_hash.dylib
      ```

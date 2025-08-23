@@ -24,6 +24,7 @@ RUN pacman -Sy --noconfirm \
     mingw-w64-winpthreads \
     p7zip \
     dos2unix \
+    rustup \
     && pacman -Scc --noconfirm
 
 # Set source working directory
@@ -48,6 +49,9 @@ WORKDIR /opt/win-python
 RUN wget https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar.zst && \
     zstd -d mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar.zst && \
     tar -xf mingw-w64-x86_64-python-3.12.10-1-any.pkg.tar
+
+# Init rust
+RUN rustup default stable
 
 ## Custom patches
 WORKDIR /root

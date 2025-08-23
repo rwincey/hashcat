@@ -12,3 +12,6 @@ crate-type = ["cdylib"]
 
 [build-dependencies]
 bindgen = "0.72.0"
+
+[profile.release]
+strip = "symbols"

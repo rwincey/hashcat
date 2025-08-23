@@ -35,7 +35,7 @@ $(GENERIC_HASH_SO):
 	@- mv $(RUST_TARGET_DIR)/release/libgeneric_hash.dylib $(GENERIC_HASH_SO) 2>/dev/null
 ifeq ($(RUSTUP_PRESENT),true)
 $(GENERIC_HASH_DLL):
-	rustup target add x86_64-pc-windows-gnu $(RUSTUP_FLAGS) && \
+	rustup $(RUSTUP_FLAGS) target add x86_64-pc-windows-gnu && \
 	cargo build $(CARGO_BUILD_FLAGS) --target x86_64-pc-windows-gnu || true
 else
 $(GENERIC_HASH_DLL):

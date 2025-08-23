@@ -1,15 +1,10 @@
-* changes v7.1.1 -> v7.1.x
+* changes v7.1.1 -> v7.1.2
 
 ##
 ## New Algorithms
 ##
 
-## Bridged
-
 - Added hash-mode: Generic Hash [Bridged: Rust] with the new Rust Bridge
-
-## Endpoint
-
 - Added hash-mode: Besder Authentication MD5
 
 ##
@@ -30,7 +25,6 @@
 - Folders: fixed hc_mkdir_rec(), which was not creating directories correctly
 - Status View: fixed broken backward compatibility in machine-readable mode introduced in v7.1.0
 - sha224(sha224($pass)) and sha224(sha1($pass)): Fix hash category as unsalted
-
 
 * changes v7.1.0 -> v7.1.1
 

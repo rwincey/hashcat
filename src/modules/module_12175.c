@@ -26,8 +26,8 @@ static const u64   OPTS_TYPE      = OPTS_TYPE_STOCK_MODULE
                                   | OPTS_TYPE_ST_BASE64
                                   | OPTS_TYPE_HASH_COPY;
 static const u32   SALT_TYPE      = SALT_TYPE_GENERIC;
-static const char *ST_PASS        = "hashcat";
-static const char *ST_HASH        = "$shiro1$SHA-256$1024$WobJGSjbUhsMdaILomMOdw==$2c26b46b68ffc68ff99b453c1d30413413422f1640e491091223e4d3ef1d7a1f";
+static const char *ST_PASS        = "test";
+static const char *ST_HASH        = "$shiro1$SHA-256$500000$nuZh+LBKs4tAiNGs6xUrXg==$hIyDNdwz+5l+LmoayKNYBuXU/mUPdKB6ZBwwy4S8wjE=";
 
 u32 module_attack_exec       (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return ATTACK_EXEC;     }
 u32 module_dgst_pos0         (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSED const user_options_t *user_options, MAYBE_UNUSED const user_options_extra_t *user_options_extra) { return DGST_POS0;       }
